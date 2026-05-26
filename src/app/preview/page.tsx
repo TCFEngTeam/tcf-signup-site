@@ -3,15 +3,17 @@ import Footer from "../components/Footer"
 import EventCard from "../components/EventCard"
 import EventDetails from "../components/EventDetails"
 import EventSignupForm from "../components/EventSignupForm"
+import { findMockEvent } from "../api/_mockData"
 
 export default function PreviewPage() {
-  const sampleEvent = {
-    id: 'preview-1',
+  const sampleEvent = findMockEvent('evt-001') ?? {
+    id: 'evt-001',
     title: 'Preview: Evening with TCF',
     date: '2026-06-14T19:00:00.000Z',
     location: 'Online — Zoom',
     capacity: 30,
     registered: 8,
+    active: true,
     isFull: false,
     description: 'This is a preview of the event details layout and signup form.'
   }

@@ -19,12 +19,13 @@ export default async function Home() {
 
   const sample = [
     {
-      id: "sample-1",
-      title: "Sample Event",
-      date: "June 1, 2026",
+      id: "evt-001",
+      title: "Introduction to TCF",
+      date: "2026-06-01T18:00:00.000Z",
       location: "Online",
       capacity: 20,
       registered: 3,
+      active: true,
       isFull: false,
     },
   ]

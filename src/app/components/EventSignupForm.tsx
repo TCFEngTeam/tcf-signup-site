@@ -12,6 +12,8 @@ export default function EventSignupForm({ eventId, prefillData }: SignupFormProp
   const [name, setName] = useState(prefillData?.name ?? '')
   const [email, setEmail] = useState(prefillData?.email ?? '')
   const [phone, setPhone] = useState(prefillData?.phone ?? '')
+  const [submitting, setSubmitting] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
 
   useEffect(() => {
     // Load saved profile if available
@@ -26,11 +28,31 @@ export default function EventSignupForm({ eventId, prefillData }: SignupFormProp
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setMessage(null)
+    setSubmitting(true)
     // Save profile locally for future autofill
     saveProfile({ name, email, phone })
 
-    // TODO: Call signup API endpoint to submit to HubSpot
-    alert('Submit simulated — signup endpoint not implemented yet')
+    ;(async () => {
+      try {
+        const res = await fetch('/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ eventId, data: { name, email, phone } }),
+        })
+
+        const payload = await res.json()
+        if (!res.ok) {
+          setMessage(payload?.error ?? 'Failed to signup')
+        } else {
+          setMessage('Successfully signed up!')
+        }
+      } catch (err: any) {
+        setMessage(err?.message ?? 'Network error')
+      } finally {
+        setSubmitting(false)
+      }
+    })()
   }
 
   return (
@@ -50,7 +72,12 @@ export default function EventSignupForm({ eventId, prefillData }: SignupFormProp
         <input name="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-1 w-full" />
       </label>
 
-      <button type="submit" className="rounded bg-blue-600 px-4 py-2 text-white">Submit</button>
+      <div className="flex items-center gap-4">
+        <button type="submit" disabled={submitting} className="rounded bg-blue-600 px-4 py-2 text-white">
+          {submitting ? 'Submitting…' : 'Submit'}
+        </button>
+        {message && <div className="text-sm text-zinc-700">{message}</div>}
+      </div>
     </form>
   )
 }
