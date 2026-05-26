@@ -12,15 +12,88 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* Note: removed automatic prefers-color-scheme dark override so the site defaults to
+   the light palette. If you want to support dark mode later, prefer using a
+   `.dark` class on the root and toggle it explicitly, or re-enable prefers-color-scheme
+   with colors you prefer. */
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Layout helpers */
+.container {
+  max-width: 1024px;
+  margin: 0 auto;
+}
+
+/* Header */
+.site-header {
+  background: linear-gradient(90deg, rgba(255,255,255,0.8), rgba(250,250,250,0.6));
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.site-header .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+}
+.site-header .logo {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* Footer */
+.site-footer {
+  margin-top: 48px;
+  padding: 16px 0;
+  border-top: 1px solid rgba(0,0,0,0.04);
+  text-align: center;
+  font-size: 13px;
+  color: rgba(0,0,0,0.65);
+}
+
+/* Event card */
+.event-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.event-card .event-image {
+  height: 140px;
+  background: linear-gradient(135deg,#eef2ff,#fff);
+  border-radius: 6px;
+}
+.event-card .event-body {
+  padding: 8px 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* Form styles */
+.event-signup-form input {
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 8px 10px;
+  border-radius: 6px;
+  width: 100%;
+}
+.event-signup-form label { display:block }
+.event-signup-form button { cursor: pointer }
+
+/* Capacity indicator */
+.capacity-indicator {
+  font-weight: 600;
+}
+.capacity-indicator.full {
+  color: #9b1c1c;
+}
+
+/* Responsive tweaks */
+@media (max-width: 640px) {
+  .site-header .container, .site-footer { padding-left: 12px; padding-right: 12px }
+  .event-card .event-image { height: 110px }
 }
