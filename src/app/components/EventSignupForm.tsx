@@ -56,27 +56,31 @@ export default function EventSignupForm({ eventId, prefillData }: SignupFormProp
   }
 
   return (
-    <form className="event-signup-form" onSubmit={handleSubmit}>
+    <form className="event-signup-form signup-card" onSubmit={handleSubmit}>
       <label className="block mb-2">
-        <div className="text-sm font-medium">Name</div>
+        <div className="field-label text-sm font-medium">Name</div>
         <input name="name" value={name} onChange={(e) => setName(e.target.value)} className="mt-1 w-full" />
       </label>
 
       <label className="block mb-2">
-        <div className="text-sm font-medium">Email</div>
+        <div className="field-label text-sm font-medium">Email</div>
         <input name="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 w-full" />
       </label>
 
       <label className="block mb-4">
-        <div className="text-sm font-medium">Phone (placeholder)</div>
+        <div className="field-label text-sm font-medium">Phone (placeholder)</div>
         <input name="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-1 w-full" />
       </label>
 
       <div className="flex items-center gap-4">
-        <button type="submit" disabled={submitting} className="rounded bg-blue-600 px-4 py-2 text-white">
+        <button type="submit" disabled={submitting} className="btn-primary">
           {submitting ? 'Submitting…' : 'Submit'}
         </button>
-        {message && <div className="text-sm text-zinc-700">{message}</div>}
+        {message && (
+          <div className={`text-sm ${message.toLowerCase().includes('success') ? 'success-chip' : 'error-chip'}`}>
+            {message}
+          </div>
+        )}
       </div>
     </form>
   )

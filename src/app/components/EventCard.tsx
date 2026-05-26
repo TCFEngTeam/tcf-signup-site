@@ -9,18 +9,21 @@ type EventCardProps = {
 
 export default function EventCard({ event }: EventCardProps) {
   return (
-    <article className="event-card border rounded-md p-4 bg-white">
-      <div className="event-image mb-3">{/* placeholder image */}</div>
+    <article className="event-card">
+      <div className="event-image">{/* placeholder image */}</div>
       <div className="event-body">
-        <h3 className="text-lg font-semibold">{event?.title ?? 'Event Title'}</h3>
-        <p className="meta text-sm text-zinc-600">{event?.date ?? 'Date • Time'}</p>
-        <p className="location text-sm">{event?.location ?? 'Location'}</p>
-        <p className="capacity text-sm mt-2">Seats: {event?.registered ?? 0} / {event?.capacity ?? '—'}</p>
+        <div className={`event-badge ${event?.isFull ? 'badge-full' : 'badge-open'}`}>
+          {event?.isFull ? 'Full' : 'Open'}
+        </div>
+        <h3 className="event-title text-lg font-semibold">{event?.title ?? 'Event Title'}</h3>
+        <p className="event-meta text-sm">{event?.date ?? 'Date • Time'}</p>
+        <p className="event-location text-sm">{event?.location ?? 'Location'}</p>
+        <p className="event-capacity text-sm mt-2">Seats: {event?.registered ?? 0} / {event?.capacity ?? '—'}</p>
 
         {event?.isFull ? (
-          <span className="inline-block mt-3 rounded-full bg-red-100 px-3 py-1 text-sm">Full</span>
+          <span className="btn-primary inline-flex justify-center mt-3 cursor-not-allowed opacity-60">Full</span>
         ) : (
-          <Link href={`/events/${event?.id}`} className="inline-block mt-3 rounded bg-blue-600 px-4 py-2 text-white text-sm">
+          <Link href={`/events/${event?.id}`} className="btn-primary inline-flex justify-center mt-3">
             Sign up
           </Link>
         )}

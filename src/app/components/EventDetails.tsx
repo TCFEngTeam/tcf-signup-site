@@ -6,11 +6,16 @@ type EventDetailsProps = {
 
 export default function EventDetails({ event }: EventDetailsProps) {
   return (
-    <section className="event-details">
-      <h1>{event?.title ?? 'Event Title'}</h1>
-      <p className="meta">{event?.date ?? 'Date • Time'}</p>
-      <p className="location">{event?.location ?? 'Location'}</p>
-      <div className="description">{event?.description ?? 'Event description goes here.'}</div>
+    <section className="event-details details-card">
+      <div className={`event-badge ${event?.isFull ? 'badge-full' : 'badge-open'}`}>
+        {event?.isFull ? 'Full' : 'Open for signups'}
+      </div>
+      <h1 className="text-3xl font-bold mt-4 mb-2">{event?.title ?? 'Event Title'}</h1>
+      <p className="text-sm helper-text">{event?.date ?? 'Date • Time'}</p>
+      <p className="text-sm helper-text">{event?.location ?? 'Location'}</p>
+      <div className="description mt-6 text-[15px] leading-7 text-slate-800">
+        {event?.description ?? 'Event description goes here.'}
+      </div>
       <div className="extras">{/* host info, map, image, etc. */}</div>
     </section>
   )

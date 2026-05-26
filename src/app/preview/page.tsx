@@ -23,23 +23,27 @@ export default function PreviewPage() {
       <Header />
 
       <main className="container mx-auto px-6 py-10">
-        <h1 className="text-2xl font-semibold mb-6">UI Preview</h1>
+        <div className="page-hero">
+          <div className="eyebrow">Preview</div>
+          <h1 className="text-3xl font-bold page-title">UI Preview</h1>
+          <p className="helper-text max-w-2xl">A quick layout check for event cards, event details, and the signup form using the TCF palette.</p>
+        </div>
 
-        <section className="mb-8">
-          <h2 className="text-lg font-medium mb-4">Event Card</h2>
+        <section className="mb-8 section-panel">
+          <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--primary-blue)' }}>Event Card</h2>
           <div className="max-w-sm">
             <EventCard event={sampleEvent} />
           </div>
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <h2 className="text-lg font-medium mb-4">Event Details</h2>
+          <div className="section-panel">
+            <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--primary-blue)' }}>Event Details</h2>
             <EventDetails event={sampleEvent} />
           </div>
 
-          <div>
-            <h2 className="text-lg font-medium mb-4">Signup Form</h2>
+          <div className="section-panel">
+            <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--primary-blue)' }}>Signup Form</h2>
             <EventSignupForm eventId={sampleEvent.id} prefillData={{ name: 'Jane Doe', email: 'jane@example.com' }} />
           </div>
         </section>
