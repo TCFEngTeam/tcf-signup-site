@@ -201,30 +201,44 @@ export async function associateContactToTraining(contactId: string, trainingId: 
   if (!API_KEY) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
+  // Use the CRM associations API and the configured training object type.
+  // The training object is a custom object; its type id (for example '0-410')
+  // should be configured in `HUBSPOT_TRAINING_OBJECT_ID`.
+  const trainingObjectType = process.env.HUBSPOT_TRAINING_OBJECT_ID || '0-410'
 
-  const associationLabel = process.env.HUBSPOT_TRAINING_ASSOCIATION_LABEL || 'training_signup'
+  // Use the batch associations endpoint which is the supported pattern
+  // for creating associations between two object types.
+  const url = `${HUBSPOT_API_BASE}/crm/v3/associations/contacts/${trainingObjectType}/batch/create`
+  const associationLabel = process.env.HUBSPOT_TRAINING_ASSOCIATION_LABEL || 'registrant'
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      inputs: [
+        {
+          from: { id: contactId },
+          to: { id: trainingId },
+          type: associationLabel,
+        },
+      ],
+    }),
+  })
 
-  const response = await fetch(
-    `${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${contactId}/associations/training/${trainingId}`,
-    {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        associationCategory: 'HUBSPOT_DEFINED',
-        associationTypeId: associationLabel,
-      }),
-    }
-  )
-
+  const parsed = await safeParseResponse(response)
   if (!response.ok) {
-    const error = await safeParseResponse(response)
-    console.error('Association error:', error)
-    const msg = (error && (error.message || error.error || error.text)) || response.statusText
+    console.error('Association error response:', parsed)
+    let msg = (parsed && (parsed.message || parsed.error || parsed.text)) || response.statusText
+    // Hide large HTML error bodies and give a concise message instead
+    if (typeof msg === 'string' && msg.trim().startsWith('<')) {
+      msg = `Non-JSON response (status ${response.status})`
+    }
     throw new Error(`Failed to associate contact with training: ${msg}`)
   }
+
+  console.debug('Associated contact to training:', { contactId, trainingId, trainingObjectType, parsed })
 }
 
 /**
