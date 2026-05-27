@@ -53,7 +53,7 @@ export default async function Home() {
       <Header />
 
       <main className="container mx-auto px-6 py-10">
-        <h1 className="text-2xl font-semibold mb-6">Upcoming Events</h1>
+        <h1 className="text-2xl font-semibold mb-6">Mental Health Training Sign Up</h1>
 
         {loading && <p>Loading events…</p>}
         {error && <p className="text-yellow-700">Error loading events; showing fallback list</p>}

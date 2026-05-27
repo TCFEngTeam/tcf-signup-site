@@ -13,7 +13,9 @@ export default function EventCard({ event }: EventCardProps) {
 
   return (
     <article className="event-card">
-      <div className="event-image">{/* placeholder image */}</div>
+      {
+      //<div className="event-image">{/* placeholder image */}</div>
+      }
       <div className="event-body">
         <div className={`event-badge ${event?.isFull ? 'badge-full' : 'badge-open'}`}>
           {event?.isFull ? 'Full' : 'Open'}
