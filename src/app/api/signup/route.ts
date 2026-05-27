@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { findMockEvent, registerMockEvent } from '../_mockData'
-import { createOrUpdateContact, associateContactToTraining, ContactData } from '@/lib/hubspotApi'
+import { createOrUpdateContact, associateContactToTraining, updateTrainingCapacity, ContactData, getTrainingObjects, mapTrainingToEvent } from '@/lib/hubspotApi'
 
 export async function POST(req: Request) {
   try {
@@ -32,11 +31,19 @@ export async function POST(req: Request) {
     }
 
     // Ensure the event exists and check capacity
-    const ev = findMockEvent(eventId)
-    if (!ev) return NextResponse.json({ error: 'Event not found' }, { status: 404 })
+    // Fetch training from HubSpot
+    const pipelineStage = process.env.HUBSPOT_TRAINING_PIPELINE_STAGE
+    const trainings = await getTrainingObjects(pipelineStage)
+    const training = trainings.find((t) => t.id === eventId)
 
-    if (ev.registered >= ev.capacity) {
-      return NextResponse.json({ error: 'Event is full' }, { status: 409 })
+    if (!training) {
+      return NextResponse.json({ error: 'Training event not found' }, { status: 404 })
+    }
+
+    // Convert to event format to check capacity
+    const ev = mapTrainingToEvent(training)
+    if (ev.availableCapacity <= 0) {
+      return NextResponse.json({ error: 'Training is full' }, { status: 409 })
     }
 
     // Contact data with all form fields
@@ -60,12 +67,17 @@ export async function POST(req: Request) {
     let hubspotError: string | null = null
 
     // Attempt HubSpot integration
+    let newAvailableCapacity = ev.availableCapacity - 1
+
     try {
       const contact = await createOrUpdateContact(contactData)
       hubspotContactId = contact.id
 
       // Associate contact with training event
       await associateContactToTraining(hubspotContactId, eventId)
+
+      // Update the training's available capacity
+      await updateTrainingCapacity(eventId, newAvailableCapacity)
     } catch (hsError: any) {
       // Log the error but allow signup to proceed locally
       // This ensures the site works even if HubSpot integration is incomplete
@@ -73,13 +85,10 @@ export async function POST(req: Request) {
       console.error('HubSpot integration error:', hubspotError)
     }
 
-    // Register in local mock data
-    const updated = registerMockEvent(eventId)
-
     // Return success with both local and HubSpot status
     return NextResponse.json({
       success: true,
-      event: { id: updated.id, registered: updated.registered },
+      event: { id: ev.id, availableCapacity: newAvailableCapacity },
       hubspotContactId,
       ...(hubspotError && { warning: `Contact created locally but HubSpot sync failed: ${hubspotError}` }),
     })

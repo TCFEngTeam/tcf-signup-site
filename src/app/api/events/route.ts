@@ -1,24 +1,26 @@
 import { NextResponse } from 'next/server'
-import { listMockEvents, type MockEvent } from '../_mockData'
+import { getTrainingObjects, mapTrainingToEvent } from '@/lib/hubspotApi'
 
-export async function GET() {
-  const now = Date.now()
-  const events = listMockEvents()
+export async function GET(req: Request) {
+  try {
+    const now = Date.now()
+    const pipelineStage = process.env.HUBSPOT_TRAINING_PIPELINE_STAGE
 
-  const filtered = events
-    .filter((ev: MockEvent) => new Date(ev.date).getTime() > now && ev.active)
-    .map((ev: MockEvent) => ({
-      ...ev,
-      isFull: ev.registered >= ev.capacity,
-    }))
+    // Fetch training objects from HubSpot
+    const trainings = await getTrainingObjects(pipelineStage)
 
-  return NextResponse.json(filtered)
+    // Map to app format and filter by future date and active status
+    const events = trainings
+      .map(mapTrainingToEvent)
+      .filter((ev) => new Date(ev.date).getTime() > now && ev.active)
+      .map((ev) => ({
+        ...ev,
+        isFull: ev.availableCapacity <= 0,
+      }))
+
+    return NextResponse.json(events)
+  } catch (error: any) {
+    console.error('Error fetching events:', error)
+    return NextResponse.json({ error: error?.message ?? 'Failed to fetch events' }, { status: 500 })
+  }
 }
-
-/*
-  Replace this mock route with a real HubSpot fetch later:
-  - Keep the fetch server-side in this route.
-  - Use a server env var for the HubSpot API key.
-  - Map HubSpot event properties into the same shape used by the UI.
-  - Keep the same filtering rules: active flag + future date.
-*/

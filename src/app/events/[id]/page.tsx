@@ -2,7 +2,7 @@ import EventDetails from "../../components/EventDetails"
 import EventSignupForm from "../../components/EventSignupForm"
 import Header from "../../components/Header"
 import Footer from "../../components/Footer"
-import { listMockEvents } from "../../api/_mockData"
+import { getTrainingObjects, mapTrainingToEvent, type TrainingEvent } from "@/lib/hubspotApi"
 import Link from "next/link"
 
 type Params = { params: { id: string } }
@@ -11,10 +11,18 @@ export default async function EventPage({ params }: Params) {
   const resolvedParams = await Promise.resolve(params)
   const { id } = resolvedParams
 
-  // Server-side lookup from shared mock data.
-  // When switching to HubSpot later, replace this with a server-side fetch or database lookup.
-  // For testing, we do NOT filter the event out here; instead we show badges/messages on the page.
-  const event = listMockEvents().find((e) => e.id === id) ?? null
+  // Server-side fetch from HubSpot
+  let event: TrainingEvent | null = null
+  try {
+    const pipelineStage = process.env.HUBSPOT_TRAINING_PIPELINE_STAGE
+    const trainings = await getTrainingObjects(pipelineStage)
+    const training = trainings.find((t) => t.id === id)
+    if (training) {
+      event = mapTrainingToEvent(training)
+    }
+  } catch (error) {
+    console.error('Error fetching training event:', error)
+  }
 
   // If event not found, show a simple fallback. Could call `notFound()` in Next.js.
   if (!event) {

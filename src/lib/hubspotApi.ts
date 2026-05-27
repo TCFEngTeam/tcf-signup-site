@@ -34,6 +34,25 @@ export interface HubSpotContact {
   }
 }
 
+  export interface HubSpotTraining {
+    id: string
+    properties: {
+      [key: string]: string
+    }
+  }
+
+  export interface TrainingEvent {
+    id: string
+    title: string
+    date: string
+    location: string
+    capacity: number
+    registered: number
+    availableCapacity: number
+    active: boolean
+    description?: string
+  }
+
 /**
  * Maps form data to HubSpot contact properties using environment variables
  */
@@ -149,3 +168,107 @@ export async function getContactByEmail(email: string): Promise<HubSpotContact |
   const data = await response.json()
   return data.results?.[0] ?? null
 }
+
+  /**
+   * Fetch training objects from HubSpot filtered by pipeline stage
+   * @param pipelineStage The pipeline stage to filter by (e.g., "Accepting Applications")
+   * @returns Array of training objects from HubSpot
+   */
+  export async function getTrainingObjects(pipelineStage?: string): Promise<HubSpotTraining[]> {
+    if (!API_KEY) {
+      throw new Error('HUBSPOT_API_KEY is not configured')
+    }
+
+    const limit = 100
+    let allResults: HubSpotTraining[] = []
+    let after: string | null = null
+
+    try {
+      // Fetch all training objects with pagination
+      do {
+        const url = new URL(`${HUBSPOT_API_BASE}/crm/v3/objects/trainings`)
+        url.searchParams.set('limit', limit.toString())
+        if (after) url.searchParams.set('after', after)
+        url.searchParams.set('properties', 'name,date,location,capacity,available_capacity,status,description,dealstage')
+        url.searchParams.set('associations', 'contacts')
+
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error(`HubSpot API error: ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        allResults = allResults.concat(data.results || [])
+        after = data.paging?.next?.after || null
+      } while (after)
+
+      // Filter by pipeline stage if provided
+      if (pipelineStage) {
+        allResults = allResults.filter(
+          (training) => training.properties.dealstage === pipelineStage
+        )
+      }
+
+      return allResults
+    } catch (error: any) {
+      console.error('Error fetching training objects:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Convert HubSpot training object to app TrainingEvent format
+   */
+  export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
+    const props = training.properties
+    const capacity = parseInt(props.capacity || '0', 10)
+    const availableCapacity = parseInt(props.available_capacity || '0', 10)
+
+    return {
+      id: training.id,
+      title: props.name || 'Untitled Training',
+      date: props.date || new Date().toISOString(),
+      location: props.location || 'TBD',
+      capacity,
+      registered: capacity - availableCapacity,
+      availableCapacity,
+      active: props.dealstage !== 'closed_lost' && props.dealstage !== 'closed_won',
+      description: props.description,
+    }
+  }
+
+  /**
+   * Update the availableCapacity of a training object
+   * @param trainingId HubSpot training ID
+   * @param newCapacity New available capacity value
+   */
+  export async function updateTrainingCapacity(trainingId: string, newCapacity: number): Promise<void> {
+    if (!API_KEY) {
+      throw new Error('HUBSPOT_API_KEY is not configured')
+    }
+
+    const response = await fetch(`${HUBSPOT_API_BASE}/crm/v3/objects/trainings/${trainingId}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        properties: {
+          available_capacity: newCapacity.toString(),
+        },
+      }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(`Failed to update training capacity: ${error.message || response.statusText}`)
+    }
+  }
