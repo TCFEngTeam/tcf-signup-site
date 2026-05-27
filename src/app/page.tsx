@@ -34,7 +34,8 @@ export default async function Home() {
     {
       id: "evt-001",
       title: "Introduction to TCF",
-      date: "2026-06-01T18:00:00.000Z",
+      startDate: "2026-06-01T18:00:00.000Z",
+      endDate: "2026-06-01T18:00:00.000Z",
       location: "Online",
       capacity: 20,
       registered: 3,

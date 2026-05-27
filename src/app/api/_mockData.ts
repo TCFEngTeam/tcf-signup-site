@@ -5,7 +5,8 @@
 export type MockEvent = {
   id: string
   title: string
-  date: string
+  startDate: string
+  endDate: string
   location: string
   capacity: number
   registered: number
@@ -17,7 +18,8 @@ export const MOCK_EVENTS: MockEvent[] = [
   {
     id: 'evt-001',
     title: 'Introduction to TCF',
-    date: '2026-06-01T18:00:00.000Z',
+    startDate: '2026-06-01T18:00:00.000Z',
+    endDate: '2026-06-01T18:00:00.000Z',
     location: 'Online',
     capacity: 50,
     registered: 12,
@@ -27,7 +29,8 @@ export const MOCK_EVENTS: MockEvent[] = [
   {
     id: 'evt-002',
     title: 'Past Event (should be hidden)',
-    date: '2024-01-10T18:00:00.000Z',
+    startDate: '2024-01-10T18:00:00.000Z',
+    endDate: '2024-01-10T18:00:00.000Z',
     location: 'Office',
     capacity: 30,
     registered: 30,
@@ -37,7 +40,8 @@ export const MOCK_EVENTS: MockEvent[] = [
   {
     id: 'evt-003',
     title: 'Hidden Event (inactive flag)',
-    date: '2026-07-15T18:00:00.000Z',
+    startDate: '2026-07-15T18:00:00.000Z',
+    endDate: '2026-07-15T18:00:00.000Z',
     location: 'New York',
     capacity: 40,
     registered: 5,

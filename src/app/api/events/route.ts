@@ -4,15 +4,16 @@ import { listMockEvents } from '../_mockData'
 
 export async function GET(req: Request) {
   try {
-    const now = Date.now()
     const pipelineStage = process.env.HUBSPOT_TRAINING_PIPELINE_STAGE
+    const pipelineType = process.env.HUBSPOT_TRAINING_PIPELINE_TYPE
 
     // Fetch training objects from HubSpot, but fall back to mock events on error
     let trainings = []
     try {
-      trainings = await getTrainingObjects(pipelineStage)
+      trainings = await getTrainingObjects(pipelineStage, pipelineType)
       console.debug('[api/events] HubSpot trainings fetched', {
         pipelineStage,
+        pipelineType,
         count: trainings.length,
       })
     } catch (hsErr) {
@@ -20,7 +21,7 @@ export async function GET(req: Request) {
       // Fallback to mock events if HubSpot is unavailable
       const mock = listMockEvents()
       const filteredMock = mock
-        .filter((ev) => new Date(ev.date).getTime() > now && ev.active)
+        .filter((ev) => ev.active)
         .map((ev) => ({ ...ev, isFull: ev.registered >= ev.capacity }))
       console.debug('[api/events] Falling back to mock events', {
         mockCount: mock.length,
@@ -29,10 +30,9 @@ export async function GET(req: Request) {
       return NextResponse.json(filteredMock)
     }
 
-    // Map to app format and filter by future date and active status
+    // Map to app format and preserve only pipeline-matched trainings
     const mappedEvents = trainings.map(mapTrainingToEvent)
     const events = mappedEvents
-      .filter((ev) => new Date(ev.date).getTime() > now && ev.active)
       .map((ev) => ({
         ...ev,
         isFull: ev.availableCapacity <= 0,

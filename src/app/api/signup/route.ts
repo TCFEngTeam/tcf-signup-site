@@ -33,7 +33,8 @@ export async function POST(req: Request) {
     // Ensure the event exists and check capacity
     // Fetch training from HubSpot
     const pipelineStage = process.env.HUBSPOT_TRAINING_PIPELINE_STAGE
-    const trainings = await getTrainingObjects(pipelineStage)
+    const pipelineType = process.env.HUBSPOT_TRAINING_PIPELINE_TYPE
+    const trainings = await getTrainingObjects(pipelineStage, pipelineType)
     const training = trainings.find((t) => t.id === eventId)
 
     if (!training) {

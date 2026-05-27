@@ -44,7 +44,8 @@ export interface HubSpotTraining {
 export interface TrainingEvent {
   id: string
   title: string
-  date: string
+  startDate?: string
+  endDate?: string
   location: string
   capacity: number
   registered: number
@@ -57,6 +58,31 @@ function parseDateProperty(value?: string) {
   if (!value) return null
   const parsed = new Date(value)
   return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+export function formatTrainingSchedule(startDate?: string, endDate?: string) {
+  if (!startDate && !endDate) return 'Date to be announced'
+
+  if (startDate && endDate) {
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+
+    if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+      if (start.getTime() === end.getTime()) {
+        return start.toLocaleString()
+      }
+
+      return `${start.toLocaleString()} – ${end.toLocaleString()}`
+    }
+
+    if (startDate === endDate) {
+      return startDate
+    }
+
+    return `${startDate} – ${endDate}`
+  }
+
+  return startDate || endDate || 'Date to be announced'
 }
 
 /**
@@ -180,9 +206,10 @@ export async function getContactByEmail(email: string): Promise<HubSpotContact |
  * The stage is matched against the custom object property `hs_pipeline`.
  *
  * @param pipelineStage The exact stage name from .env.local (for example, "Accepting Applications")
+ * @param pipelineType The exact pipeline stage name from .env.local
  * @returns Array of training objects from HubSpot
  */
-export async function getTrainingObjects(pipelineStage?: string): Promise<HubSpotTraining[]> {
+export async function getTrainingObjects(pipelineStage?: string, pipelineType?: string): Promise<HubSpotTraining[]> {
   if (!API_KEY) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
@@ -190,13 +217,21 @@ export async function getTrainingObjects(pipelineStage?: string): Promise<HubSpo
   const limit = 100
   let allResults: HubSpotTraining[] = []
   let after: string | null = null
+  const requestedProperties = (
+    process.env.HUBSPOT_TRAINING_PROPERTIES ||
+    'hs_pipeline,hs_pipeline_stage,start_date,end_date,available_capacity,name,location,capacity,description'
+  )
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
 
   try {
-    const objectType = process.env.HUBSPOT_TRAINING_OBJECT_ID || 'trainings'
+    const objectType = process.env.HUBSPOT_TRAINING_OBJECT_ID || '0-410'
 
     do {
       const url = new URL(`${HUBSPOT_API_BASE}/crm/v3/objects/${objectType}`)
       url.searchParams.set('limit', limit.toString())
+      url.searchParams.set('properties', requestedProperties.join(','))
       if (after) url.searchParams.set('after', after)
 
       const response = await fetch(url.toString(), {
@@ -222,20 +257,33 @@ export async function getTrainingObjects(pipelineStage?: string): Promise<HubSpo
       after = data.paging?.next?.after || null
     } while (after)
 
+    console.log(allResults)
+
     console.debug('[hubspotApi] raw training objects fetched', {
       objectType,
       pipelineStage,
+      pipelineType,
+      requestedProperties,
       count: allResults.length,
       sampleProperties: allResults[0]?.properties ? Object.keys(allResults[0].properties).slice(0, 20) : [],
       sampleHsPipeline: allResults[0]?.properties?.hs_pipeline,
     })
 
-    if (pipelineStage) {
-      const targetStage = pipelineStage.trim()
+    if (pipelineType) {
+      const targetStage = pipelineType.trim()
       allResults = allResults.filter((training) => {
         const stage = (training.properties?.hs_pipeline ?? '').trim()
+        console.debug('[hubspotApi] comparing pipeline stage', { trainingId: training.id, stage, targetStage })
         return stage === targetStage
       })
+    }
+    if (pipelineStage) {
+      const targetStage = pipelineStage.trim()
+        allResults = allResults.filter((training) => {
+            const stage = (training.properties?.hs_pipeline_stage ?? '').trim()
+            console.debug('[hubspotApi] comparing pipeline stage', { trainingId: training.id, stage, targetStage })
+            return stage === targetStage
+        })
     }
 
     return allResults
@@ -252,14 +300,18 @@ export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
   const props = training.properties
   const capacity = parseInt(props.capacity || '0', 10)
   const availableCapacity = parseInt(props.available_capacity || '0', 10)
-  const datePropertyName = process.env.HUBSPOT_TRAINING_DATE_PROPERTY || 'date'
-  const rawDate = props[datePropertyName] || props.date || props.start_date || props.hs_timestamp
-  const parsedDate = parseDateProperty(rawDate)
+  const startDatePropertyName = process.env.HUBSPOT_TRAINING_START_DATE_PROPERTY || 'start_date'
+  const endDatePropertyName = process.env.HUBSPOT_TRAINING_END_DATE_PROPERTY || 'end_date'
+  const startDateRaw = props[startDatePropertyName] || props.start_date
+  const endDateRaw = props[endDatePropertyName] || props.end_date
+  const parsedStartDate = parseDateProperty(startDateRaw)
+  const parsedEndDate = parseDateProperty(endDateRaw)
 
   return {
     id: training.id,
     title: props.name || 'Untitled Training',
-    date: parsedDate?.toISOString() || rawDate || new Date().toISOString(),
+    startDate: parsedStartDate?.toISOString() || startDateRaw,
+    endDate: parsedEndDate?.toISOString() || endDateRaw,
     location: props.location || 'TBD',
     capacity,
     registered: Math.max(0, capacity - availableCapacity),

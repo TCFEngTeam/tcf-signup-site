@@ -15,7 +15,8 @@ export default async function EventPage({ params }: Params) {
   let event: TrainingEvent | null = null
   try {
     const pipelineStage = process.env.HUBSPOT_TRAINING_PIPELINE_STAGE
-    const trainings = await getTrainingObjects(pipelineStage)
+    const pipelineType = process.env.HUBSPOT_TRAINING_PIPELINE_TYPE
+    const trainings = await getTrainingObjects(pipelineStage, pipelineType)
     const training = trainings.find((t) => t.id === id)
     if (training) {
       event = mapTrainingToEvent(training)
@@ -63,7 +64,6 @@ export default async function EventPage({ params }: Params) {
             <EventDetails event={event} />
             <div className="notice-card mt-4 text-sm text-zinc-700">
               {!event.active && <p>This event is currently hidden in the mock data.</p>}
-              {new Date(event.date).getTime() <= Date.now() && <p>This event has already passed in the mock data.</p>}
               {event.registered >= event.capacity && <p>This event is full.</p>}
             </div>
           </div>

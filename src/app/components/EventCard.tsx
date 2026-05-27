@@ -2,12 +2,15 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { formatTrainingSchedule } from '@/lib/hubspotApi'
 
 type EventCardProps = {
   event?: any
 }
 
 export default function EventCard({ event }: EventCardProps) {
+  const schedule = formatTrainingSchedule(event?.startDate, event?.endDate)
+
   return (
     <article className="event-card">
       <div className="event-image">{/* placeholder image */}</div>
@@ -16,7 +19,7 @@ export default function EventCard({ event }: EventCardProps) {
           {event?.isFull ? 'Full' : 'Open'}
         </div>
         <h3 className="event-title text-lg font-semibold">{event?.title ?? 'Event Title'}</h3>
-        <p className="event-meta text-sm">{event?.date ?? 'Date • Time'}</p>
+        <p className="event-meta text-sm">{schedule}</p>
         <p className="event-location text-sm">{event?.location ?? 'Location'}</p>
         <p className="event-capacity text-sm mt-2">Seats: {event?.registered ?? 0} / {event?.capacity ?? '—'}</p>
 
