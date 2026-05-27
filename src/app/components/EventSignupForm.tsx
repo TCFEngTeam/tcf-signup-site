@@ -18,7 +18,6 @@ export default function EventSignupForm({ eventId, prefillData }: SignupFormProp
   const [universityWebsite, setUniversityWebsite] = useState(prefillData?.universityWebsite ?? '')
   const [currentYear, setCurrentYear] = useState(prefillData?.currentYear ?? '')
   const [isVirginiaResident, setIsVirginiaResident] = useState(prefillData?.isVirginiaResident ?? '')
-  const [trainingDates, setTrainingDates] = useState(prefillData?.trainingDates ?? '')
   const [interestReason, setInterestReason] = useState(prefillData?.interestReason ?? '')
   const [communitySupport, setCommunitySupport] = useState(prefillData?.communitySupport ?? '')
   const [interestedInTeaching, setInterestedInTeaching] = useState(prefillData?.interestedInTeaching ?? '')
@@ -40,7 +39,6 @@ export default function EventSignupForm({ eventId, prefillData }: SignupFormProp
       setUniversityWebsite(saved.universityWebsite ?? universityWebsite)
       setCurrentYear(saved.currentYear ?? currentYear)
       setIsVirginiaResident(saved.isVirginiaResident ?? isVirginiaResident)
-      setTrainingDates(saved.trainingDates ?? trainingDates)
       setInterestReason(saved.interestReason ?? interestReason)
       setCommunitySupport(saved.communitySupport ?? communitySupport)
       setInterestedInTeaching(saved.interestedInTeaching ?? interestedInTeaching)
@@ -57,7 +55,7 @@ export default function EventSignupForm({ eventId, prefillData }: SignupFormProp
     // Client-side validation
     if (!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim() ||
         !hometownCity.trim() || !hometownState.trim() || !universityWebsite.trim() ||
-        !currentYear || !isVirginiaResident || !trainingDates || !interestReason.trim() ||
+        !currentYear || !isVirginiaResident || !interestReason.trim() ||
         !communitySupport.trim() || !interestedInTeaching) {
       setMessage('Please fill in all required fields')
       return
@@ -75,7 +73,6 @@ export default function EventSignupForm({ eventId, prefillData }: SignupFormProp
       universityWebsite,
       currentYear,
       isVirginiaResident,
-      trainingDates,
       interestReason,
       communitySupport,
       interestedInTeaching,
@@ -100,7 +97,6 @@ export default function EventSignupForm({ eventId, prefillData }: SignupFormProp
               universityWebsite,
               currentYear,
               isVirginiaResident,
-              trainingDates,
               interestReason,
               communitySupport,
               interestedInTeaching,
@@ -195,16 +191,6 @@ export default function EventSignupForm({ eventId, prefillData }: SignupFormProp
           </label>
         </div>
       </fieldset>
-
-      {/* Training Dates */}
-      <label className="block mb-4">
-        <div className="field-label text-sm font-medium">Note upcoming training dates *</div>
-        <select name="trainingDates" value={trainingDates} onChange={(e) => setTrainingDates(e.target.value)} className="mt-1 w-full" required>
-          <option value="">Select an option</option>
-          <option value="available">Available for any date</option>
-          <option value="not-available">Not available for any date</option>
-        </select>
-      </label>
 
       {/* Why interested */}
       <label className="block mb-4">
