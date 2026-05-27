@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createOrUpdateContact, associateContactToTraining, updateTrainingCapacity, ContactData, getTrainingObjects, mapTrainingToEvent } from '@/lib/hubspotApi'
+import { createOrUpdateContact, associateContactToTraining, ContactData, getTrainingObjects, mapTrainingToEvent } from '@/lib/hubspotApi'
 
 export async function POST(req: Request) {
   try {
@@ -22,7 +22,6 @@ export async function POST(req: Request) {
       !data.universityWebsite ||
       !data.currentYear ||
       !data.isVirginiaResident ||
-      !data.trainingDates ||
       !data.interestReason ||
       !data.communitySupport ||
       !data.interestedInTeaching
@@ -67,18 +66,12 @@ export async function POST(req: Request) {
     let hubspotContactId: string | null = null
     let hubspotError: string | null = null
 
-    // Attempt HubSpot integration
-    let newAvailableCapacity = ev.availableCapacity - 1
-
     try {
       const contact = await createOrUpdateContact(contactData)
       hubspotContactId = contact.id
 
       // Associate contact with training event
       await associateContactToTraining(hubspotContactId, eventId)
-
-      // Update the training's available capacity
-      await updateTrainingCapacity(eventId, newAvailableCapacity)
     } catch (hsError: any) {
       // Log the error but allow signup to proceed locally
       // This ensures the site works even if HubSpot integration is incomplete
@@ -89,7 +82,7 @@ export async function POST(req: Request) {
     // Return success with both local and HubSpot status
     return NextResponse.json({
       success: true,
-      event: { id: ev.id, availableCapacity: newAvailableCapacity },
+      event: { id: ev.id, availableCapacity: ev.availableCapacity },
       hubspotContactId,
       ...(hubspotError && { warning: `Contact created locally but HubSpot sync failed: ${hubspotError}` }),
     })

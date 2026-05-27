@@ -60,29 +60,43 @@ function parseDateProperty(value?: string) {
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
+function formatDateLabel(value?: string) {
+  if (!value) return ''
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return value
+
+  return new Intl.DateTimeFormat(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  }).format(parsed)
+}
+
 export function formatTrainingSchedule(startDate?: string, endDate?: string) {
   if (!startDate && !endDate) return 'Date to be announced'
 
   if (startDate && endDate) {
-    const start = new Date(startDate)
-    const end = new Date(endDate)
+    const formattedStart = formatDateLabel(startDate)
+    const formattedEnd = formatDateLabel(endDate)
 
-    if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
-      if (start.getTime() === end.getTime()) {
-        return start.toLocaleString()
-      }
+    if (formattedStart && formattedStart === formattedEnd) {
+      return formattedStart
+    }
 
-      return `${start.toLocaleString()} – ${end.toLocaleString()}`
+    if (formattedStart && formattedEnd) {
+      return `${formattedStart} – ${formattedEnd}`
     }
 
     if (startDate === endDate) {
-      return startDate
+      return formatDateLabel(startDate)
     }
 
-    return `${startDate} – ${endDate}`
+    return `${formatDateLabel(startDate) || startDate} – ${formatDateLabel(endDate) || endDate}`
   }
 
-  return startDate || endDate || 'Date to be announced'
+  return formatDateLabel(startDate || endDate) || startDate || endDate || 'Date to be announced'
 }
 
 /**
@@ -96,12 +110,29 @@ function mapContactProperties(data: ContactData): { [key: string]: string } {
     [process.env.HUBSPOT_PHONE_PROPERTY || 'phone']: data.phone,
     [process.env.HUBSPOT_HOMETOWN_CITY_PROPERTY || 'hometown_city']: data.hometownCity,
     [process.env.HUBSPOT_HOMETOWN_STATE_PROPERTY || 'hometown_state']: data.hometownState,
-    [process.env.HUBSPOT_UNIVERSITY_WEBSITE_PROPERTY || 'university_website']: data.universityWebsite,
+    // TODO: University website should be stored on the company object instead of the contact.
+    // [process.env.HUBSPOT_UNIVERSITY_WEBSITE_PROPERTY || 'university_website']: data.universityWebsite,
     [process.env.HUBSPOT_CURRENT_YEAR_PROPERTY || 'current_year_in_school']: data.currentYear,
     [process.env.HUBSPOT_VIRGINIA_RESIDENT_PROPERTY || 'virginia_resident']: data.isVirginiaResident,
     [process.env.HUBSPOT_INTEREST_REASON_PROPERTY || 'interest_reason']: data.interestReason,
     [process.env.HUBSPOT_COMMUNITY_SUPPORT_PROPERTY || 'community_support_plan']: data.communitySupport,
     [process.env.HUBSPOT_TEACHING_INTEREST_PROPERTY || 'interested_in_teaching']: data.interestedInTeaching,
+  }
+}
+
+async function safeParseResponse(res: Response): Promise<any> {
+  // Read text and attempt JSON.parse; return null for empty bodies
+  let text = ''
+  try {
+    text = await res.text()
+  } catch (e) {
+    return null
+  }
+  if (!text) return null
+  try {
+    return JSON.parse(text)
+  } catch (e) {
+    return { text }
   }
 }
 
@@ -116,6 +147,29 @@ export async function createOrUpdateContact(data: ContactData): Promise<HubSpotC
   }
 
   const properties = mapContactProperties(data)
+  const existing = await getContactByEmail(data.email)
+
+  if (existing?.id) {
+    const response = await fetch(`${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${existing.id}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        properties,
+      }),
+    })
+
+    if (!response.ok) {
+      const error = await safeParseResponse(response)
+      const msg = (error && (error.message || error.error || error.text)) || response.statusText
+      throw new Error(`HubSpot API error: ${msg}`)
+    }
+
+    const parsed = await safeParseResponse(response)
+    return parsed ?? { id: existing.id }
+  }
 
   const response = await fetch(`${HUBSPOT_API_BASE}/crm/v3/objects/contacts`, {
     method: 'POST',
@@ -129,11 +183,13 @@ export async function createOrUpdateContact(data: ContactData): Promise<HubSpotC
   })
 
   if (!response.ok) {
-    const error = await response.json()
-    throw new Error(`HubSpot API error: ${error.message || response.statusText}`)
+    const error = await safeParseResponse(response)
+    const msg = (error && (error.message || error.error || error.text)) || response.statusText
+    throw new Error(`HubSpot API error: ${msg}`)
   }
 
-  return await response.json()
+  const parsed = await safeParseResponse(response)
+  return parsed
 }
 
 /**
@@ -164,9 +220,10 @@ export async function associateContactToTraining(contactId: string, trainingId: 
   )
 
   if (!response.ok) {
-    const error = await response.json()
+    const error = await safeParseResponse(response)
     console.error('Association error:', error)
-    throw new Error(`Failed to associate contact with training: ${error.message || response.statusText}`)
+    const msg = (error && (error.message || error.error || error.text)) || response.statusText
+    throw new Error(`Failed to associate contact with training: ${msg}`)
   }
 }
 
@@ -180,25 +237,37 @@ export async function getContactByEmail(email: string): Promise<HubSpotContact |
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
 
-  const response = await fetch(
-    `${HUBSPOT_API_BASE}/crm/v3/objects/contacts?limit=1&after=0&properties=*&filterGroups=[{"filters":[{"propertyName":"email","operator":"EQ","value":"${encodeURIComponent(
-      email
-    )}"}]}]`,
-    {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  )
+  const response = await fetch(`${HUBSPOT_API_BASE}/crm/v3/objects/contacts/search`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      filterGroups: [
+        {
+          filters: [
+            {
+              propertyName: 'email',
+              operator: 'EQ',
+              value: email,
+            },
+          ],
+        },
+      ],
+      properties: ['email'],
+      limit: 1,
+    }),
+  })
 
   if (!response.ok) {
-    throw new Error(`HubSpot API error: ${response.statusText}`)
+    const error = await safeParseResponse(response)
+    const msg = (error && (error.message || error.error || error.text)) || response.statusText
+    throw new Error(`HubSpot API error: ${msg}`)
   }
 
-  const data = await response.json()
-  return data.results?.[0] ?? null
+  const data = await safeParseResponse(response)
+  return data?.results?.[0] ?? null
 }
 
 /**
@@ -257,7 +326,7 @@ export async function getTrainingObjects(pipelineStage?: string, pipelineType?: 
       after = data.paging?.next?.after || null
     } while (after)
 
-    console.log(allResults)
+    // console.log(allResults)
 
     console.debug('[hubspotApi] raw training objects fetched', {
       objectType,
@@ -270,18 +339,18 @@ export async function getTrainingObjects(pipelineStage?: string, pipelineType?: 
     })
 
     if (pipelineType) {
-      const targetStage = pipelineType.trim()
-      allResults = allResults.filter((training) => {
-        const stage = (training.properties?.hs_pipeline ?? '').trim()
-        console.debug('[hubspotApi] comparing pipeline stage', { trainingId: training.id, stage, targetStage })
-        return stage === targetStage
-      })
+        const targetStage = pipelineType.trim()
+        allResults = allResults.filter((training) => {
+            const stage = (training.properties?.hs_pipeline ?? '').trim()
+            //console.debug('[hubspotApi] comparing pipeline stage', { trainingId: training.id, stage, targetStage })
+            return stage === targetStage
+        })
     }
     if (pipelineStage) {
       const targetStage = pipelineStage.trim()
         allResults = allResults.filter((training) => {
             const stage = (training.properties?.hs_pipeline_stage ?? '').trim()
-            console.debug('[hubspotApi] comparing pipeline stage', { trainingId: training.id, stage, targetStage })
+            //console.debug('[hubspotApi] comparing pipeline stage', { trainingId: training.id, stage, targetStage })
             return stage === targetStage
         })
     }
@@ -298,21 +367,19 @@ export async function getTrainingObjects(pipelineStage?: string, pipelineType?: 
    */
 export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
   const props = training.properties
-  const capacity = parseInt(props.capacity || '0', 10)
+  const capacity = parseInt(props.hs_enrollment_capacity || '0', 10)
   const availableCapacity = parseInt(props.available_capacity || '0', 10)
-  const startDatePropertyName = process.env.HUBSPOT_TRAINING_START_DATE_PROPERTY || 'start_date'
-  const endDatePropertyName = process.env.HUBSPOT_TRAINING_END_DATE_PROPERTY || 'end_date'
-  const startDateRaw = props[startDatePropertyName] || props.start_date
-  const endDateRaw = props[endDatePropertyName] || props.end_date
+  const startDateRaw = props.training_start_date
+  const endDateRaw = props.training_end_date
   const parsedStartDate = parseDateProperty(startDateRaw)
   const parsedEndDate = parseDateProperty(endDateRaw)
 
   return {
     id: training.id,
-    title: props.name || 'Untitled Training',
+    title: props.hs_course_name || 'Untitled Training',
     startDate: parsedStartDate?.toISOString() || startDateRaw,
     endDate: parsedEndDate?.toISOString() || endDateRaw,
-    location: props.location || 'TBD',
+    location: 'Virtual',
     capacity,
     registered: Math.max(0, capacity - availableCapacity),
     availableCapacity,
@@ -320,32 +387,3 @@ export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
     description: props.description,
   }
 }
-
-  /**
-   * Update the availableCapacity of a training object
-   * @param trainingId HubSpot training ID
-   * @param newCapacity New available capacity value
-   */
-  export async function updateTrainingCapacity(trainingId: string, newCapacity: number): Promise<void> {
-    if (!API_KEY) {
-      throw new Error('HUBSPOT_API_KEY is not configured')
-    }
-
-    const response = await fetch(`${HUBSPOT_API_BASE}/crm/v3/objects/trainings/${trainingId}`, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        properties: {
-          available_capacity: newCapacity.toString(),
-        },
-      }),
-    })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(`Failed to update training capacity: ${error.message || response.statusText}`)
-    }
-  }

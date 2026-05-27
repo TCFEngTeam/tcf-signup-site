@@ -59,21 +59,20 @@ export default async function EventPage({ params }: Params) {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-2">
-            <EventDetails event={event} />
-            <div className="notice-card mt-4 text-sm text-zinc-700">
-              {!event.active && <p>This event is currently hidden in the mock data.</p>}
-              {event.registered >= event.capacity && <p>This event is full.</p>}
-            </div>
+        <div className="max-w-4xl mx-auto space-y-8">
+          <EventDetails event={event} />
+
+          <div className="notice-card text-sm text-zinc-700">
+            {!event.active && <p>This event is currently hidden in the mock data.</p>}
+            {event.registered >= event.capacity && <p>This event is full.</p>}
           </div>
 
-          <aside className="md:col-span-1">
-            <div className="sticky top-20">
-              <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--primary-blue)' }}>Sign up</h2>
+          <section className="section-panel">
+            <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--primary-blue)' }}>Sign up</h2>
+            <div className="w-full">
               <EventSignupForm eventId={event.id} prefillData={null} />
             </div>
-          </aside>
+          </section>
         </div>
       </main>
 
