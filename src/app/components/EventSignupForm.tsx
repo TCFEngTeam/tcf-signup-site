@@ -6,9 +6,10 @@ import { loadProfile, saveProfile } from '@/lib/localProfileStore'
 type SignupFormProps = {
   eventId: string
   prefillData?: any
+  submitUrl?: string
 }
 
-export default function EventSignupForm({ eventId, prefillData }: SignupFormProps) {
+export default function EventSignupForm({ eventId, prefillData, submitUrl }: SignupFormProps) {
   const [firstName, setFirstName] = useState(prefillData?.firstName ?? '')
   const [lastName, setLastName] = useState(prefillData?.lastName ?? '')
   const [email, setEmail] = useState(prefillData?.email ?? '')
@@ -82,7 +83,8 @@ export default function EventSignupForm({ eventId, prefillData }: SignupFormProp
 
     ;(async () => {
       try {
-        const res = await fetch('/api/signup', {
+        const endpoint = submitUrl || '/api/signup'
+        const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

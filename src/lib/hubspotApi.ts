@@ -34,24 +34,30 @@ export interface HubSpotContact {
   }
 }
 
-  export interface HubSpotTraining {
-    id: string
-    properties: {
-      [key: string]: string
-    }
+export interface HubSpotTraining {
+  id: string
+  properties: {
+    [key: string]: string
   }
+}
 
-  export interface TrainingEvent {
-    id: string
-    title: string
-    date: string
-    location: string
-    capacity: number
-    registered: number
-    availableCapacity: number
-    active: boolean
-    description?: string
-  }
+export interface TrainingEvent {
+  id: string
+  title: string
+  date: string
+  location: string
+  capacity: number
+  registered: number
+  availableCapacity: number
+  active: boolean
+  description?: string
+}
+
+function parseDateProperty(value?: string) {
+  if (!value) return null
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
 
 /**
  * Maps form data to HubSpot contact properties using environment variables
@@ -169,80 +175,99 @@ export async function getContactByEmail(email: string): Promise<HubSpotContact |
   return data.results?.[0] ?? null
 }
 
-  /**
-   * Fetch training objects from HubSpot filtered by pipeline stage
-   * @param pipelineStage The pipeline stage to filter by (e.g., "Accepting Applications")
-   * @returns Array of training objects from HubSpot
-   */
-  export async function getTrainingObjects(pipelineStage?: string): Promise<HubSpotTraining[]> {
-    if (!API_KEY) {
-      throw new Error('HUBSPOT_API_KEY is not configured')
-    }
+/**
+ * Fetch training objects from HubSpot filtered by pipeline stage.
+ * The stage is matched against the custom object property `hs_pipeline`.
+ *
+ * @param pipelineStage The exact stage name from .env.local (for example, "Accepting Applications")
+ * @returns Array of training objects from HubSpot
+ */
+export async function getTrainingObjects(pipelineStage?: string): Promise<HubSpotTraining[]> {
+  if (!API_KEY) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
 
-    const limit = 100
-    let allResults: HubSpotTraining[] = []
-    let after: string | null = null
+  const limit = 100
+  let allResults: HubSpotTraining[] = []
+  let after: string | null = null
 
-    try {
-      // Fetch all training objects with pagination
-      do {
-        const url = new URL(`${HUBSPOT_API_BASE}/crm/v3/objects/trainings`)
-        url.searchParams.set('limit', limit.toString())
-        if (after) url.searchParams.set('after', after)
-        url.searchParams.set('properties', 'name,date,location,capacity,available_capacity,status,description,dealstage')
-        url.searchParams.set('associations', 'contacts')
+  try {
+    const objectType = process.env.HUBSPOT_TRAINING_OBJECT_ID || 'trainings'
 
-        const response = await fetch(url.toString(), {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-        })
+    do {
+      const url = new URL(`${HUBSPOT_API_BASE}/crm/v3/objects/${objectType}`)
+      url.searchParams.set('limit', limit.toString())
+      if (after) url.searchParams.set('after', after)
 
-        if (!response.ok) {
-          throw new Error(`HubSpot API error: ${response.statusText}`)
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        let bodyText = ''
+        try {
+          bodyText = await response.text()
+        } catch {
+          bodyText = response.statusText
         }
-
-        const data = await response.json()
-        allResults = allResults.concat(data.results || [])
-        after = data.paging?.next?.after || null
-      } while (after)
-
-      // Filter by pipeline stage if provided
-      if (pipelineStage) {
-        allResults = allResults.filter(
-          (training) => training.properties.dealstage === pipelineStage
-        )
+        throw new Error(`HubSpot API error: ${response.status} ${bodyText}`)
       }
 
-      return allResults
-    } catch (error: any) {
-      console.error('Error fetching training objects:', error)
-      throw error
+      const data = await response.json()
+      allResults = allResults.concat(data.results || [])
+      after = data.paging?.next?.after || null
+    } while (after)
+
+    console.debug('[hubspotApi] raw training objects fetched', {
+      objectType,
+      pipelineStage,
+      count: allResults.length,
+      sampleProperties: allResults[0]?.properties ? Object.keys(allResults[0].properties).slice(0, 20) : [],
+      sampleHsPipeline: allResults[0]?.properties?.hs_pipeline,
+    })
+
+    if (pipelineStage) {
+      const targetStage = pipelineStage.trim()
+      allResults = allResults.filter((training) => {
+        const stage = (training.properties?.hs_pipeline ?? '').trim()
+        return stage === targetStage
+      })
     }
+
+    return allResults
+  } catch (error: any) {
+    console.error('Error fetching training objects:', error)
+    throw error
   }
+}
 
   /**
    * Convert HubSpot training object to app TrainingEvent format
    */
-  export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
-    const props = training.properties
-    const capacity = parseInt(props.capacity || '0', 10)
-    const availableCapacity = parseInt(props.available_capacity || '0', 10)
+export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
+  const props = training.properties
+  const capacity = parseInt(props.capacity || '0', 10)
+  const availableCapacity = parseInt(props.available_capacity || '0', 10)
+  const datePropertyName = process.env.HUBSPOT_TRAINING_DATE_PROPERTY || 'date'
+  const rawDate = props[datePropertyName] || props.date || props.start_date || props.hs_timestamp
+  const parsedDate = parseDateProperty(rawDate)
 
-    return {
-      id: training.id,
-      title: props.name || 'Untitled Training',
-      date: props.date || new Date().toISOString(),
-      location: props.location || 'TBD',
-      capacity,
-      registered: capacity - availableCapacity,
-      availableCapacity,
-      active: props.dealstage !== 'closed_lost' && props.dealstage !== 'closed_won',
-      description: props.description,
-    }
+  return {
+    id: training.id,
+    title: props.name || 'Untitled Training',
+    date: parsedDate?.toISOString() || rawDate || new Date().toISOString(),
+    location: props.location || 'TBD',
+    capacity,
+    registered: Math.max(0, capacity - availableCapacity),
+    availableCapacity,
+    active: true,
+    description: props.description,
   }
+}
 
   /**
    * Update the availableCapacity of a training object
