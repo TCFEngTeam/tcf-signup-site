@@ -50,6 +50,9 @@ export default async function Home() {
   // fallback when there was an error fetching the API.
   const list = error ? sample : events
 
+  // Sort events by date, latest first
+  list.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 text-slate-900">
       <Header />
