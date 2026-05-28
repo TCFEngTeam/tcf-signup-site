@@ -10,11 +10,7 @@ export default async function Home() {
   let error: any = null
 
   try {
-    // Server runtime cannot parse relative URLs with the global fetch in Node.
-    // Build an absolute URL using VERCEL_URL if present, otherwise localhost.
-    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `http://localhost:${process.env.PORT || 3000}`
-    const url = new URL('/api/events', base).toString()
-    const res = await fetch(url)
+    const res = await fetch('/api/events', { next: { revalidate: 60 } })
     if (res.ok) {
       events = await res.json()
     } else {
