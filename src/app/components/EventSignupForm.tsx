@@ -178,6 +178,18 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
 
     ;(async () => {
       try {
+        // Check if event is still available (not over capacity)
+        const eventRes = await fetch(`/api/events`)
+        if (eventRes.ok) {
+          const allEvents: any[] = await eventRes.json()
+          const currentEvent = allEvents.find((e: any) => e.id === eventId)
+          if (currentEvent && currentEvent.isFull) {
+            setMessage('Sorry, this event is now full. Please try another event.')
+            setSubmitting(false)
+            return
+          }
+        }
+
         const endpoint = submitUrl || '/api/signup'
         const res = await fetch(endpoint, {
           method: 'POST',
