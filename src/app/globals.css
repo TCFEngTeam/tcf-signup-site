@@ -211,6 +211,24 @@ h1, h2, h3 {
   box-shadow: none;
 }
 
+.event-signup-form select,
+.event-signup-form textarea {
+  border: 1px solid rgba(44, 96, 164, 0.16);
+  padding: 12px 14px;
+  border-radius: 14px;
+  width: 100%;
+  background: white;
+  color: var(--foreground);
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.event-signup-form select:focus,
+.event-signup-form textarea:focus {
+  border-color: var(--medium-blue);
+  box-shadow: 0 0 0 4px rgba(66, 156, 209, 0.12);
+}
+
 .event-signup-form button { cursor: pointer }
 
 .field-label {

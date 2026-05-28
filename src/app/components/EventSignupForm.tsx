@@ -274,7 +274,7 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
         </label>
         <label className="block">
           <div className={`field-label text-sm font-medium ${fieldHasError(requiredFieldLabels.hometownState) ? 'text-red-600' : ''}`}>Hometown State *</div>
-          <select name="hometownState" value={hometownState} onChange={(e) => setHometownState(e.target.value)} onBlur={() => markTouched(requiredFieldLabels.hometownState)} className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 shadow-sm focus:border-[var(--primary-blue)] focus:outline-none focus:ring-2 focus:ring-[rgba(44,96,164,0.15)]" required>
+          <select name="hometownState" value={hometownState} onChange={(e) => setHometownState(e.target.value)} onBlur={() => markTouched(requiredFieldLabels.hometownState)} className="mt-1 w-full" required>
             <option value="">Select a state</option>
             {US_STATES.map((state: string) => (
               <option key={state} value={state}>
@@ -297,7 +297,7 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
       {/* Current Year in School */}
       <label className="block mb-4">
         <div className={`field-label text-sm font-medium ${fieldHasError(requiredFieldLabels.currentYear) ? 'text-red-600' : ''}`}>Current Year in School *</div>
-        <select name="currentYear" value={currentYear} onChange={(e) => setCurrentYear(e.target.value)} onBlur={() => markTouched(requiredFieldLabels.currentYear)} className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 shadow-sm focus:border-[var(--primary-blue)] focus:outline-none focus:ring-2 focus:ring-[rgba(44,96,164,0.15)]" required>
+        <select name="currentYear" value={currentYear} onChange={(e) => setCurrentYear(e.target.value)} onBlur={() => markTouched(requiredFieldLabels.currentYear)} className="mt-1 w-full" required>
           <option value="">Select a year</option>
           <option value="Graduate School">Graduate School</option>
           <option value="High School">High School</option>
@@ -336,7 +336,7 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
           value={interestReason}
           onChange={(e) => setInterestReason(e.target.value)}
           onBlur={() => markTouched(requiredFieldLabels.interestReason)}
-          className="mt-1 w-full h-24 rounded-md border border-slate-300 bg-white px-3 py-2 shadow-sm focus:border-[var(--primary-blue)] focus:outline-none focus:ring-2 focus:ring-[rgba(44,96,164,0.15)]"
+          className="mt-1 w-full h-24"
           required
         />
         <RequiredText show={fieldHasError(requiredFieldLabels.interestReason)} />
@@ -350,7 +350,7 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
           value={communitySupport}
           onChange={(e) => setCommunitySupport(e.target.value)}
           onBlur={() => markTouched(requiredFieldLabels.communitySupport)}
-          className="mt-1 w-full h-24 rounded-md border border-slate-300 bg-white px-3 py-2 shadow-sm focus:border-[var(--primary-blue)] focus:outline-none focus:ring-2 focus:ring-[rgba(44,96,164,0.15)]"
+          className="mt-1 w-full h-24"
           required
         />
         <RequiredText show={fieldHasError(requiredFieldLabels.communitySupport)} />
