@@ -57,6 +57,13 @@ export default async function Home() {
       <main className="container mx-auto px-6 py-10">
         <h1 className="text-2xl font-semibold mb-6">Mental Health Training Sign Up</h1>
 
+        <div className="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
+          <p className="mb-3 text-slate-900">This FREE 8-hour course teaches individuals how to recognize signs of mental health or substance use challenges, how to offer and provide initial help, and how to guide a person toward appropriate care. Please complete this form if you are interested in the mental health first-aid training session.</p>
+          <p className="mb-3 text-slate-900">Be mindful that this training will require 2 hours of pre-work and 6 hours of a virtual instructor-led training.</p>
+          <p className="mb-3 text-slate-900">Attendance of the full session is mandatory for certification. Certification lasts for 3 years.</p>
+          <p className="text-slate-900 font-medium">Complete the training and receive a $100 gift card (as funding allows)!</p>
+        </div>
+
         {loading && <p>Loading events…</p>}
         {error && <p className="text-yellow-700">Error loading events; showing fallback list</p>}
 

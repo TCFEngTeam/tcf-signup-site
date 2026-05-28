@@ -16,9 +16,6 @@ export default function EventDetails({ event }: EventDetailsProps) {
       <h1 className="text-3xl font-bold mt-4 mb-2">{event?.title ?? 'Event Title'}</h1>
       <p className="text-sm helper-text">{schedule}</p>
       <p className="text-sm helper-text">{event?.location ?? 'Location'}</p>
-      <div className="description mt-6 text-[15px] leading-7 text-slate-800">
-        {event?.description ?? 'Event description goes here.'}
-      </div>
       <div className="extras">{/* host info, map, image, etc. */}</div>
     </section>
   )

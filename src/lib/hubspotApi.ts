@@ -18,7 +18,6 @@ export interface ContactData {
   phone: string
   hometownCity: string
   hometownState: string
-  universityWebsite: string
   currentYear: string
   isVirginiaResident: string
   trainingDates: string
