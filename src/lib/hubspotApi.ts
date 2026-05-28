@@ -34,6 +34,13 @@ export interface HubSpotContact {
   }
 }
 
+export interface HubSpotCompany {
+  id: string
+  properties: {
+    [key: string]: string
+  }
+}
+
 export interface HubSpotTraining {
   id: string
   properties: {
@@ -110,8 +117,7 @@ function mapContactProperties(data: ContactData): { [key: string]: string } {
     [process.env.HUBSPOT_PHONE_PROPERTY || 'phone']: data.phone,
     [process.env.HUBSPOT_HOMETOWN_CITY_PROPERTY || 'hometown_city']: data.hometownCity,
     [process.env.HUBSPOT_HOMETOWN_STATE_PROPERTY || 'hometown_state']: data.hometownState,
-    // TODO: University website should be stored on the company object instead of the contact.
-    // [process.env.HUBSPOT_UNIVERSITY_WEBSITE_PROPERTY || 'university_website']: data.universityWebsite,
+    // University website is now stored as a company object (see getOrCreateCompanyByWebsite)
     [process.env.HUBSPOT_CURRENT_YEAR_PROPERTY || 'current_year_in_school']: data.currentYear,
     [process.env.HUBSPOT_VIRGINIA_RESIDENT_PROPERTY || 'virginia_resident']: data.isVirginiaResident,
     [process.env.HUBSPOT_INTEREST_REASON_PROPERTY || 'interest_reason']: data.interestReason,
@@ -190,6 +196,119 @@ export async function createOrUpdateContact(data: ContactData): Promise<HubSpotC
 
   const parsed = await safeParseResponse(response)
   return parsed
+}
+
+/**
+ * Get or create a company by website domain.
+ * If a company with the given website already exists, return it.
+ * Otherwise, create a new company and return it.
+ * @param website The website URL (e.g., 'virginia.edu')
+ * @returns HubSpot company with ID
+ */
+export async function getOrCreateCompanyByWebsite(website: string): Promise<HubSpotCompany> {
+  if (!API_KEY) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  // Search for an existing company by website domain
+  const searchUrl = `${HUBSPOT_API_BASE}/crm/v3/objects/companies/search`
+  const searchResponse = await fetch(searchUrl, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      filterGroups: [
+        {
+          filters: [
+            {
+              propertyName: 'domain',
+              operator: 'EQ',
+              value: website,
+            },
+          ],
+        },
+      ],
+      properties: ['name'],
+      limit: 1,
+    }),
+  })
+
+  if (searchResponse.ok) {
+    const searchData = await safeParseResponse(searchResponse)
+    if (searchData?.results?.[0]) {
+      console.debug('Found existing company by domain:', { website, id: searchData.results[0].id })
+      return searchData.results[0]
+    }
+  }
+
+  // No existing company found; create a new one
+  const createUrl = `${HUBSPOT_API_BASE}/crm/v3/objects/companies`
+  const createResponse = await fetch(createUrl, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      properties: {
+        name: website,
+        domain: website,
+      },
+    }),
+  })
+
+  if (!createResponse.ok) {
+    const error = await safeParseResponse(createResponse)
+    const msg = (error && (error.message || error.error || error.text)) || createResponse.statusText
+    throw new Error(`Failed to create company: ${msg}`)
+  }
+
+  const created = await safeParseResponse(createResponse)
+  console.debug('Created new company:', { website, id: created?.id })
+  return created
+}
+
+/**
+ * Associate a contact with a company
+ * @param contactId HubSpot contact ID
+ * @param companyId HubSpot company ID
+ */
+export async function associateContactToCompany(contactId: string, companyId: string): Promise<void> {
+  if (!API_KEY) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  const url = `${HUBSPOT_API_BASE}/crm/v3/associations/contacts/companies/batch/create`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      inputs: [
+        {
+          from: { id: contactId },
+          to: { id: companyId },
+          "type": "contact_to_company"
+        },
+      ],
+    }),
+  })
+
+  const parsed = await safeParseResponse(response)
+  if (!response.ok) {
+    console.error('Association error response:', parsed)
+    let msg = (parsed && (parsed.message || parsed.error || parsed.text)) || response.statusText
+    if (typeof msg === 'string' && msg.trim().startsWith('<')) {
+      msg = `Non-JSON response (status ${response.status})`
+    }
+    throw new Error(`Failed to associate contact to company: ${msg}`)
+  }
+
+  console.debug('Associated contact to company:', { contactId, companyId, parsed })
 }
 
 /**

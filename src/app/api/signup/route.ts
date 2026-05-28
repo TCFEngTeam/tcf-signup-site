@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createOrUpdateContact, associateContactToTraining, ContactData, getTrainingObjects, mapTrainingToEvent } from '@/lib/hubspotApi'
+import { createOrUpdateContact, associateContactToTraining, associateContactToCompany, getOrCreateCompanyByWebsite, ContactData, getTrainingObjects, mapTrainingToEvent } from '@/lib/hubspotApi'
 
 export async function POST(req: Request) {
   try {
@@ -54,7 +54,6 @@ export async function POST(req: Request) {
       phone: data.phone,
       hometownCity: data.hometownCity,
       hometownState: data.hometownState,
-      universityWebsite: data.universityWebsite,
       currentYear: data.currentYear,
       isVirginiaResident: data.isVirginiaResident,
       trainingDates: data.trainingDates,
@@ -69,6 +68,15 @@ export async function POST(req: Request) {
     try {
       const contact = await createOrUpdateContact(contactData)
       hubspotContactId = contact.id
+
+      // Create or find the company by website and associate the contact to it
+      try {
+        const company = await getOrCreateCompanyByWebsite(data.universityWebsite)
+        await associateContactToCompany(hubspotContactId, company.id)
+      } catch (companyError: any) {
+        console.error('Company creation/association error:', companyError?.message)
+        // Don't fail the entire signup if company association fails
+      }
 
       // Associate contact with training event
       await associateContactToTraining(hubspotContactId, eventId)
