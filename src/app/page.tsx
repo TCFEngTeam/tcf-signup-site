@@ -1,6 +1,7 @@
 import EventCard from "./components/EventCard"
 import Header from "./components/Header"
 import Footer from "./components/Footer"
+import { headers } from "next/headers"
 
 export default async function Home() {
   // Server-side fetch of events from the mocked API route. In production this keeps secrets
@@ -10,7 +11,12 @@ export default async function Home() {
   let error: any = null
 
   try {
-    const res = await fetch('/api/events', { next: { revalidate: 60 } })
+    // Get the host from the request headers, then construct the full URL.
+    const headersList = await headers()
+    const host = headersList.get('host') || 'localhost:3000'
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http'
+    const url = `${protocol}://${host}/api/events`
+    const res = await fetch(url, { next: { revalidate: 60 } })
     if (res.ok) {
       events = await res.json()
     } else {
