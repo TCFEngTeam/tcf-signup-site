@@ -97,8 +97,7 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
   const [interestReason, setInterestReason] = useState(prefillData?.interestReason ?? '')
   const [communitySupport, setCommunitySupport] = useState(prefillData?.communitySupport ?? '')
   const [interestedInTeaching, setInterestedInTeaching] = useState(prefillData?.interestedInTeaching ?? '')
-  const [smsMarketing, setSmsMarketing] = useState(prefillData?.smsMarketing ?? false)
-  const [smsConsent, setSmsConsent] = useState(prefillData?.smsConsent ?? false)
+  const [smsConsent, setSmsConsent] = useState(prefillData?.smsConsent ?? '')
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({})
@@ -198,7 +197,6 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
               interestReason,
               communitySupport,
               interestedInTeaching,
-              smsMarketing,
               smsConsent,
             },
           }),
@@ -378,18 +376,46 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
         <RequiredText show={fieldHasError(requiredFieldLabels.interestedInTeaching)} />
       </fieldset>
 
-      {/* Consent Checkboxes */}
-      <div className="mb-4 p-3 bg-blue-50 rounded text-sm space-y-2">
-        <label className="flex items-start gap-2">
-          <input type="checkbox" name="smsMarketing" checked={smsMarketing} onChange={(e) => setSmsMarketing(e.target.checked)} className="mt-1 flex-shrink-0" />
-          <span>I consent to receive SMS marketing text messages from Trusted Care Foundation. Message frequency varies. Message and data rates may apply. Reply STOP to opt out.</span>
-        </label>
-        <label className="flex items-start gap-2">
-          <input type="checkbox" name="smsConsent" checked={smsConsent} onChange={(e) => setSmsConsent(e.target.checked)} className="mt-1 flex-shrink-0" />
-          <span>I do not consent to receiving marketing messages.</span>
-        </label>
-        <div className="text-xs text-gray-600 mt-2">
-          See our <a href="#" className="underline">SMS Terms</a> and acknowledge the <a href="#" className="underline">SMS Privacy Policy</a>.
+      {/* SMS Consent Radio */}
+      <div className="mb-4 bg-blue-50 rounded-lg text-sm p-4 border border-blue-100">
+        <div className="field-label text-sm font-medium mb-3">
+          SMS Communication Consent
+        </div>
+
+        <div className="space-y-3">
+          <label className="flex items-start gap-2">
+            <input
+              type="radio"
+              name="smsConsent"
+              value="yes"
+              checked={smsConsent === 'yes'}
+              onChange={(e) => setSmsConsent(e.target.value)}
+              className="flex-shrink-0 mt-1"
+            />
+            <span>
+              I consent to receive SMS marketing text messages from Trusted Care Foundation.
+              Message frequency varies. Message and data rates may apply. Reply STOP to opt out.
+            </span>
+          </label>
+
+          <label className="flex items-start gap-2">
+            <input
+              type="radio"
+              name="smsConsent"
+              value="no"
+              checked={smsConsent === 'no'}
+              onChange={(e) => setSmsConsent(e.target.value)}
+              className="flex-shrink-0 mt-1"
+            />
+            <span>
+              I do not consent to receiving marketing messages.
+            </span>
+          </label>
+        </div>
+
+        <div className="text-xs text-gray-600 mt-3">
+          See our <a href="#" className="underline">SMS Terms</a> and acknowledge the{" "}
+          <a href="#" className="underline">SMS Privacy Policy</a>.
         </div>
       </div>
 

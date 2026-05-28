@@ -198,11 +198,19 @@ h1, h2, h3 {
   outline: none;
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
+.event-signup-form input[type="radio"] {
+  width: auto;
+  padding: 0;
+  border: none;
+}
 .event-signup-form input:focus {
   border-color: var(--medium-blue);
   box-shadow: 0 0 0 4px rgba(66, 156, 209, 0.12);
 }
-.event-signup-form label { display:block }
+.event-signup-form input[type="radio"]:focus {
+  box-shadow: none;
+}
+
 .event-signup-form button { cursor: pointer }
 
 .field-label {
