@@ -309,11 +309,8 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
         } else {
           saveProfile(formatted)
           setMessage('Successfully signed up!')
-          if (shouldRedirectOnSuccess) {
-            const params = new URLSearchParams()
-            if (programId) params.set('program', programId)
-            params.set('event', eventId)
-            router.push(`/events/success?${params.toString()}`)
+          if (shouldRedirectOnSuccess && programId) {
+            router.push(`/${programId}/events/${eventId}/success`)
           }
         }
       } catch (err: any) {

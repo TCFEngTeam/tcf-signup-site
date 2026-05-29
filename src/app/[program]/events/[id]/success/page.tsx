@@ -1,47 +1,40 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Header from '../../components/Header'
-import Footer from '../../components/Footer'
+import { notFound } from 'next/navigation'
+import Footer from '@/app/components/Footer'
+import Header from '@/app/components/Header'
 import { formatTrainingSchedule } from '@/lib/formatTrainingSchedule'
 import { loadProgramEventById } from '@/lib/programEvents'
-import { getTrainingProgram, isTrainingProgramId } from '@/lib/trainingPrograms'
+import { getTrainingProgram } from '@/lib/trainingPrograms'
 
 export const metadata: Metadata = {
   title: 'Signup Confirmed',
   description: 'Your training signup has been submitted successfully.',
 }
 
-type SignupSuccessPageProps = {
-  searchParams: Promise<{ program?: string; event?: string }>
+type ProgramEventSuccessPageProps = {
+  params: Promise<{ program: string; id: string }>
 }
 
-export default async function SignupSuccessPage({ searchParams }: SignupSuccessPageProps) {
-  const { program: programParam, event: eventId } = await searchParams
-  const program =
-    programParam && isTrainingProgramId(programParam)
-      ? getTrainingProgram(programParam)
-      : null
+export default async function ProgramEventSuccessPage({
+  params,
+}: ProgramEventSuccessPageProps) {
+  const { program: programSlug, id: eventId } = await params
+  const program = getTrainingProgram(programSlug)
 
-  let eventTitle: string | null = null
-  let eventSchedule: string | null = null
-
-  if (program && eventId) {
-    const { event } = await loadProgramEventById(program.id, eventId)
-    if (event) {
-      eventTitle = event.title
-      eventSchedule = formatTrainingSchedule(event.startDate, event.endDate)
-    }
+  if (!program) {
+    notFound()
   }
 
-  const nextSteps =
-    program?.successNextSteps ?? [
-      'Check your email for confirmation and session details.',
-    ]
+  const { event } = await loadProgramEventById(program.id, eventId)
 
-  const backHref = program ? `/${program.slug}` : '/'
-  const backLabel = program
-    ? `Back to ${program.shortLabel} events`
-    : 'Back to programs'
+  if (!event) {
+    notFound()
+  }
+
+  const eventSchedule = formatTrainingSchedule(event.startDate, event.endDate)
+  const backHref = `/${program.slug}`
+  const eventHref = `/${program.slug}/events/${eventId}`
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 text-slate-900">
@@ -70,16 +63,12 @@ export default async function SignupSuccessPage({ searchParams }: SignupSuccessP
             <div className="page-hero items-center">
               <div className="eyebrow">Signup complete</div>
               <h1 className="text-3xl font-bold page-title">You&apos;re signed up!</h1>
-              {eventTitle ? (
-                <>
-                  <p className="helper-text max-w-md mx-auto font-medium" style={{ color: 'var(--dark-green)' }}>
-                    {eventTitle}
-                  </p>
-                  {eventSchedule && (
-                    <p className="helper-text max-w-md mx-auto">{eventSchedule}</p>
-                  )}
-                </>
-              ) : null}
+              <p className="helper-text max-w-md mx-auto font-medium" style={{ color: 'var(--dark-green)' }}>
+                {event.title}
+              </p>
+              {eventSchedule && (
+                <p className="helper-text max-w-md mx-auto">{eventSchedule}</p>
+              )}
               <p className="helper-text max-w-md mx-auto">
                 Thank you for registering. Your submission has been received and we&apos;ll be in touch with next steps for your training session.
               </p>
@@ -96,7 +85,7 @@ export default async function SignupSuccessPage({ searchParams }: SignupSuccessP
                 What happens next
               </p>
               <ul className="space-y-2 helper-text list-disc list-inside">
-                {nextSteps.map((step) => (
+                {program.successNextSteps.map((step) => (
                   <li key={step}>{step}</li>
                 ))}
               </ul>
@@ -104,7 +93,10 @@ export default async function SignupSuccessPage({ searchParams }: SignupSuccessP
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href={backHref} className="btn-primary inline-flex justify-center">
-                {backLabel}
+                Back to {program.shortLabel} events
+              </Link>
+              <Link href={eventHref} className="text-sm font-semibold text-blue-800 underline">
+                View event details
               </Link>
             </div>
           </div>

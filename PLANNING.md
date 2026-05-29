@@ -16,7 +16,7 @@ The site is a **Next.js 16** public signup app. Events and registrations flow th
 - Signup POST to `/api/signup` → HubSpot contact create/update + training association
 - Pipeline stage/type filtering for visible events
 - Form field validation, phone formatting (+1 US-style), country code picker
-- Success page redirect after signup (`/events/success`)
+- Success page redirect after signup (`/{program}/events/[id]/success`)
 - Env vars configured locally and on Vercel
 
 **Not working / incomplete:** see [Known issues & gaps](#known-issues--gaps) below.
@@ -129,8 +129,8 @@ Team action needed — replace placeholders with real assets/links.
 | Location | Current | Needed |
 |---|---|---|
 | `page.tsx` — hero | Hard-coded MHFA 8-hour course copy | MHFA-specific page copy; separate QPR copy on future route |
-| `events/[id]/page.tsx` — notice block | Same MHFA boilerplate on every event | Program-specific or HubSpot-driven description |
-| `events/success/page.tsx` | Generic “what happens next” | Event-specific details when implemented |
+| `[program]/events/[id]/page.tsx` — notice block | Program-specific copy from config | HubSpot-driven description (optional) |
+| `[program]/events/[id]/success/page.tsx` | Event-specific confirmation | — |
 
 ### Signup form
 | Location | Current | Needed |
