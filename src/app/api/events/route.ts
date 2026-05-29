@@ -6,6 +6,7 @@ import {
   type TrainingProgramId,
 } from '@/lib/trainingPrograms'
 import { listMockEvents } from '../_mockData'
+import { isDevMockEnabled } from '@/lib/devOnly'
 import { sortEventsForListing } from '@/lib/sortEvents'
 
 export async function GET(req: Request) {
@@ -33,7 +34,10 @@ export async function GET(req: Request) {
         count: trainings.length,
       })
     } catch (hsErr) {
-      console.error('HubSpot fetch failed, falling back to mock events:', hsErr)
+      console.error('HubSpot fetch failed:', hsErr)
+      if (!isDevMockEnabled()) {
+        throw hsErr
+      }
       const mock = listMockEvents()
       const filteredMock = mock
         .filter((ev) => ev.active)

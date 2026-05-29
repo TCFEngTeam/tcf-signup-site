@@ -497,18 +497,32 @@ export async function getTrainingObjects(pipelineStage?: string, pipelineType?: 
   /**
    * Convert HubSpot training object to app TrainingEvent format
    */
+function readTrainingProperty(
+  props: HubSpotTraining['properties'],
+  ...keys: string[]
+) {
+  for (const key of keys) {
+    const value = props[key]
+    if (value !== undefined && value !== '') return value
+  }
+  return undefined
+}
+
 export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
   const props = training.properties
-  const capacity = parseInt(props.hs_enrollment_capacity || '0', 10)
+  const capacity = parseInt(
+    readTrainingProperty(props, 'hs_enrollment_capacity', 'capacity') || '0',
+    10
+  )
   const availableCapacity = parseInt(props.available_capacity || '0', 10)
-  const startDateRaw = props.training_start_date
-  const endDateRaw = props.training_end_date
+  const startDateRaw = readTrainingProperty(props, 'training_start_date', 'start_date')
+  const endDateRaw = readTrainingProperty(props, 'training_end_date', 'end_date')
   const parsedStartDate = parseDateProperty(startDateRaw)
   const parsedEndDate = parseDateProperty(endDateRaw)
 
   return {
     id: training.id,
-    title: props.hs_course_name || 'Untitled Training',
+    title: readTrainingProperty(props, 'hs_course_name', 'name') || 'Untitled Training',
     startDate: parsedStartDate?.toISOString() || startDateRaw,
     endDate: parsedEndDate?.toISOString() || endDateRaw,
     location: 'Virtual',

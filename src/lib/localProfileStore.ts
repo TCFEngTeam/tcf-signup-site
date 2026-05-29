@@ -1,20 +1,20 @@
-// Simple wrapper around localStorage for storing a small user profile.
+import type { SignupFormData } from '@/lib/formatSignupFields'
 
 const KEY = 'tcf_user_profile_v1'
 
-export function saveProfile(profile: any) {
+export function saveProfile(profile: SignupFormData) {
   try {
     localStorage.setItem(KEY, JSON.stringify(profile))
-  } catch (e) {
-    // ignore
+  } catch {
+    // ignore quota / private browsing errors
   }
 }
 
-export function loadProfile() {
+export function loadProfile(): Partial<SignupFormData> | null {
   try {
     const raw = localStorage.getItem(KEY)
-    return raw ? JSON.parse(raw) : null
-  } catch (e) {
+    return raw ? (JSON.parse(raw) as Partial<SignupFormData>) : null
+  } catch {
     return null
   }
 }

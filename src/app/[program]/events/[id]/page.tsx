@@ -84,14 +84,24 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
             </div>
           </div>
 
-          <section className="section-panel">
-            <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--primary-blue)' }}>
-              Sign up
-            </h2>
-            <div className="w-full">
-              <EventSignupForm eventId={event.id} programId={program.id} />
-            </div>
-          </section>
+          {!isFull && event.active ? (
+            <section className="section-panel">
+              <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--primary-blue)' }}>
+                Sign up
+              </h2>
+              <div className="w-full">
+                <EventSignupForm eventId={event.id} programId={program.id} />
+              </div>
+            </section>
+          ) : (
+            <p className="text-sm text-zinc-600">
+              Registration is closed for this session.{' '}
+              <Link className="underline" href={`/${program.slug}`}>
+                Browse other {program.shortLabel} events
+              </Link>
+              .
+            </p>
+          )}
         </div>
       </main>
 

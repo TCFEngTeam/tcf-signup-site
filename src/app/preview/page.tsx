@@ -1,11 +1,17 @@
+import { notFound } from 'next/navigation'
 import Header from "../components/Header"
 import Footer from "../components/Footer"
 import EventCard from "../components/EventCard"
 import EventDetails from "../components/EventDetails"
 import EventSignupForm from "../components/EventSignupForm"
+import { isDevMockEnabled } from '@/lib/devOnly'
 import { findMockEvent, listMockEvents, MOCK_EVENTS } from "../api/_mockData"
 
 export default function PreviewPage() {
+  if (!isDevMockEnabled()) {
+    notFound()
+  }
+
   // Ensure preview-only example events exist in the in-memory mock store
   if (!MOCK_EVENTS.some((e) => e.id === 'preview-large')) {
     const base = listMockEvents()[0]

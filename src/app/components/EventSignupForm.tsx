@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   composePhoneNumber,
@@ -14,6 +14,7 @@ import {
   parseStoredPhone,
   type SignupFormData,
 } from '@/lib/formatSignupFields'
+import { loadProfile, saveProfile } from '@/lib/localProfileStore'
 import PhoneNumberField from './PhoneNumberField'
 import type { TrainingProgramId } from '@/lib/trainingPrograms'
 
@@ -119,6 +120,31 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
   const [message, setMessage] = useState<string | null>(null)
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({})
   const [submitAttempted, setSubmitAttempted] = useState(false)
+
+  useEffect(() => {
+    if (prefillData) return
+
+    const saved = loadProfile()
+    if (!saved) return
+
+    if (saved.firstName) setFirstName(saved.firstName)
+    if (saved.lastName) setLastName(saved.lastName)
+    if (saved.email) setEmail(saved.email)
+    if (saved.phone) {
+      const parsedPhone = parseStoredPhone(saved.phone)
+      setPhoneCountryIso(parsedPhone.countryIso)
+      setPhoneNationalDigits(parsedPhone.nationalDigits)
+    }
+    if (saved.hometownCity) setHometownCity(saved.hometownCity)
+    if (saved.hometownState) setHometownState(saved.hometownState)
+    if (saved.universityWebsite) setUniversityWebsite(saved.universityWebsite)
+    if (saved.currentYear) setCurrentYear(saved.currentYear)
+    if (saved.isVirginiaResident) setIsVirginiaResident(saved.isVirginiaResident)
+    if (saved.interestReason) setInterestReason(saved.interestReason)
+    if (saved.communitySupport) setCommunitySupport(saved.communitySupport)
+    if (saved.interestedInTeaching) setInterestedInTeaching(saved.interestedInTeaching)
+    if (saved.smsConsent) setSmsConsent(saved.smsConsent)
+  }, [prefillData])
 
   const shouldRedirectOnSuccess = !submitUrl || submitUrl === '/api/signup'
   const shouldUseProgramEvents = shouldRedirectOnSuccess && Boolean(programId)
@@ -281,6 +307,7 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
           const errMsg = payload?.error ?? payload?.text ?? 'Failed to signup'
           setMessage(errMsg)
         } else {
+          saveProfile(formatted)
           setMessage('Successfully signed up!')
           if (shouldRedirectOnSuccess) {
             router.push('/events/success')

@@ -72,8 +72,7 @@ export async function POST(req: Request) {
       interestedInTeaching: formatted.interestedInTeaching,
     }
 
-    let hubspotContactId: string | null = null
-    let hubspotError: string | null = null
+    let hubspotContactId: string
 
     try {
       const contact = await createOrUpdateContact(contactData)
@@ -91,18 +90,18 @@ export async function POST(req: Request) {
       // Associate contact with training event
       await associateContactToTraining(hubspotContactId, eventId)
     } catch (hsError: any) {
-      // Log the error but allow signup to proceed locally
-      // This ensures the site works even if HubSpot integration is incomplete
-      hubspotError = hsError?.message
+      const hubspotError = hsError?.message ?? 'HubSpot sync failed'
       console.error('HubSpot integration error:', hubspotError)
+      return NextResponse.json(
+        { error: 'Unable to complete signup. Please try again or contact support.' },
+        { status: 502 }
+      )
     }
 
-    // Return success with both local and HubSpot status
     return NextResponse.json({
       success: true,
       event: { id: ev.id, availableCapacity: ev.availableCapacity },
       hubspotContactId,
-      ...(hubspotError && { warning: `Contact created locally but HubSpot sync failed: ${hubspotError}` }),
     })
   } catch (err: any) {
     return NextResponse.json({ error: err?.message ?? 'Unknown error' }, { status: 500 })
