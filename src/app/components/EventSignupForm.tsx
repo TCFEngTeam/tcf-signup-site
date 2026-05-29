@@ -233,7 +233,7 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
         } else {
           setMessage('Successfully signed up!')
           if (shouldRedirectOnSuccess) {
-            router.push('/')
+            router.push('/events/success')
           }
         }
       } catch (err: any) {
