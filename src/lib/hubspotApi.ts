@@ -6,6 +6,17 @@
 
 const HUBSPOT_API_BASE = 'https://api.hubapi.com'
 
+export class AlreadyRegisteredError extends Error {
+  constructor(message = 'You are already registered for this event.') {
+    super(message)
+    this.name = 'AlreadyRegisteredError'
+  }
+}
+
+function getTrainingObjectType() {
+  return process.env.HUBSPOT_TRAINING_OBJECT_ID || '0-410'
+}
+
 function getApiKey() {
   return process.env.HUBSPOT_API_KEY
 }
@@ -108,6 +119,53 @@ function mapContactProperties(data: ContactData): { [key: string]: string } {
   }
 
   return properties
+}
+
+function isDuplicateAssociationResponse(parsed: unknown, status: number) {
+  if (status === 409) return true
+  const text = JSON.stringify(parsed ?? '').toLowerCase()
+  return (
+    text.includes('already') &&
+    (text.includes('associat') || text.includes('exist') || text.includes('duplicate'))
+  )
+}
+
+/**
+ * Returns true if the contact is already linked to this training in HubSpot.
+ */
+export async function isContactRegisteredForTraining(
+  contactId: string,
+  trainingId: string
+): Promise<boolean> {
+  if (!getApiKey()) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  const trainingObjectType = getTrainingObjectType()
+  const url = `${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${contactId}/associations/${trainingObjectType}`
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${getApiKey()}`,
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (response.status === 404) {
+    return false
+  }
+
+  const parsed = await safeParseResponse(response)
+  if (!response.ok) {
+    const msg =
+      (parsed && (parsed.message || parsed.error || parsed.text)) || response.statusText
+    throw new Error(`Failed to check training registration: ${msg}`)
+  }
+
+  const results = parsed?.results ?? []
+  return results.some(
+    (row: { id?: string }) => String(row.id) === String(trainingId)
+  )
 }
 
 async function safeParseResponse(res: Response): Promise<any> {
@@ -304,10 +362,12 @@ export async function associateContactToTraining(contactId: string, trainingId: 
   if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
-  // Use the CRM associations API and the configured training object type.
-  // The training object is a custom object; its type id (for example '0-410')
-  // should be configured in `HUBSPOT_TRAINING_OBJECT_ID`.
-  const trainingObjectType = process.env.HUBSPOT_TRAINING_OBJECT_ID || '0-410'
+
+  if (await isContactRegisteredForTraining(contactId, trainingId)) {
+    throw new AlreadyRegisteredError()
+  }
+
+  const trainingObjectType = getTrainingObjectType()
 
   // Use the batch associations endpoint which is the supported pattern
   // for creating associations between two object types.
@@ -333,6 +393,9 @@ export async function associateContactToTraining(contactId: string, trainingId: 
   const parsed = await safeParseResponse(response)
   if (!response.ok) {
     console.error('Association error response:', parsed)
+    if (isDuplicateAssociationResponse(parsed, response.status)) {
+      throw new AlreadyRegisteredError()
+    }
     let msg = (parsed && (parsed.message || parsed.error || parsed.text)) || response.statusText
     // Hide large HTML error bodies and give a concise message instead
     if (typeof msg === 'string' && msg.trim().startsWith('<')) {

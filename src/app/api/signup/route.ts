@@ -1,5 +1,14 @@
 import { NextResponse } from 'next/server'
-import { createOrUpdateContact, associateContactToTraining, associateContactToCompany, getOrCreateCompanyByWebsite, ContactData } from '@/lib/hubspotApi'
+import {
+  AlreadyRegisteredError,
+  associateContactToCompany,
+  associateContactToTraining,
+  createOrUpdateContact,
+  getContactByEmail,
+  getOrCreateCompanyByWebsite,
+  isContactRegisteredForTraining,
+  type ContactData,
+} from '@/lib/hubspotApi'
 import { formatSignupFormData, isSignupFormatError } from '@/lib/formatSignupFields'
 import { loadProgramEventById } from '@/lib/programEvents'
 import { isTrainingProgramId } from '@/lib/trainingPrograms'
@@ -50,7 +59,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Training event not found' }, { status: 404 })
     }
 
-    if (ev.isFull) {      return NextResponse.json({ error: 'Training is full' }, { status: 409 })
+    if (ev.isFull) {
+      return NextResponse.json({ error: 'Training is full' }, { status: 409 })
+    }
+
+    const existingContact = await getContactByEmail(formatted.email)
+    if (
+      existingContact?.id &&
+      (await isContactRegisteredForTraining(existingContact.id, eventId))
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'You are already registered for this event. Check your email for confirmation details.',
+        },
+        { status: 409 }
+      )
     }
 
     // Contact data with all form fields
@@ -87,8 +111,12 @@ export async function POST(req: Request) {
 
       // Associate contact with training event
       await associateContactToTraining(hubspotContactId, eventId)
-    } catch (hsError: any) {
-      const hubspotError = hsError?.message ?? 'HubSpot sync failed'
+    } catch (hsError: unknown) {
+      if (hsError instanceof AlreadyRegisteredError) {
+        return NextResponse.json({ error: hsError.message }, { status: 409 })
+      }
+      const hubspotError =
+        hsError instanceof Error ? hsError.message : 'HubSpot sync failed'
       console.error('HubSpot integration error:', hubspotError)
       return NextResponse.json(
         { error: 'Unable to complete signup. Please try again or contact support.' },
