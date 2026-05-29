@@ -68,6 +68,21 @@ function parseDateProperty(value?: string) {
 
 export { formatTrainingSchedule } from './formatTrainingSchedule'
 
+function mapSmsConsentToHubSpot(value: string) {
+  const normalized = value.trim().toLowerCase()
+  if (normalized === 'yes') {
+    return (
+      process.env.HUBSPOT_SMS_CONSENT_YES_VALUE ?? 'nABLB1wXwnWES39Rff7ZO'
+    )
+  }
+  if (normalized === 'no') {
+    return (
+      process.env.HUBSPOT_SMS_CONSENT_NO_VALUE ?? 'MTlPSCzKCtIey_DQUT4aW'
+    )
+  }
+  return value.trim()
+}
+
 /**
  * Maps form data to HubSpot contact properties using environment variables
  */
@@ -88,7 +103,8 @@ function mapContactProperties(data: ContactData): { [key: string]: string } {
   }
 
   if (data.smsConsent) {
-    properties[process.env.HUBSPOT_SMS_CONSENT_PROPERTY || 'sms_consent'] = data.smsConsent
+    properties[process.env.HUBSPOT_SMS_CONSENT_PROPERTY || 'sms_consent'] =
+      mapSmsConsentToHubSpot(data.smsConsent)
   }
 
   return properties

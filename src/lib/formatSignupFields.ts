@@ -193,6 +193,14 @@ export function formatYesNo(value: string) {
   return value.trim()
 }
 
+/** HubSpot enumeration properties that expect lowercase yes/no. */
+export function formatHubSpotYesNo(value: string) {
+  const normalized = value.trim().toLowerCase()
+  if (normalized === 'yes') return 'yes'
+  if (normalized === 'no') return 'no'
+  return value.trim()
+}
+
 export function formatTeachingInterest(value: string) {
   const normalized = value.trim().toLowerCase()
   if (normalized === 'yes') return 'Yes'
@@ -220,10 +228,10 @@ export function formatSignupFormData(data: SignupFormData): SignupFormData | Sig
     hometownState: data.hometownState.trim(),
     universityWebsite: formatUniversityWebsite(data.universityWebsite),
     currentYear: data.currentYear.trim(),
-    isVirginiaResident: formatYesNo(data.isVirginiaResident),
+    isVirginiaResident: formatHubSpotYesNo(data.isVirginiaResident),
     interestReason: formatLongText(data.interestReason),
     communitySupport: formatLongText(data.communitySupport),
     interestedInTeaching: formatTeachingInterest(data.interestedInTeaching),
-    smsConsent: data.smsConsent ? formatYesNo(data.smsConsent) : '',
+    smsConsent: data.smsConsent ? formatHubSpotYesNo(data.smsConsent) : '',
   }
 }
