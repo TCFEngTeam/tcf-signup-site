@@ -3,7 +3,7 @@ import {
   findPhoneCountryByDialCode,
   getDialCodeFromIso,
   getUniqueDialCodesLongestFirst,
-} from '@/lib/phoneCountryCodes'
+} from '@/lib/phone/country-codes'
 
 export type SignupFormData = {
   firstName: string

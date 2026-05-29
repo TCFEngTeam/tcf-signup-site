@@ -1,4 +1,4 @@
-import type { SignupFormData } from '@/lib/formatSignupFields'
+import type { SignupFormData } from '@/lib/signup/format-fields'
 
 const KEY = 'tcf_user_profile_v1'
 

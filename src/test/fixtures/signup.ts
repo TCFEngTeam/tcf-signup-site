@@ -1,4 +1,4 @@
-import type { SignupFormData } from '@/lib/formatSignupFields'
+import type { SignupFormData } from '@/lib/signup/format-fields'
 
 export const validSignupFormData: SignupFormData = {
   firstName: 'Jane',

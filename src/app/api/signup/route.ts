@@ -8,10 +8,10 @@ import {
   getOrCreateCompanyByWebsite,
   isContactRegisteredForTraining,
   type ContactData,
-} from '@/lib/hubspotApi'
-import { formatSignupFormData, isSignupFormatError } from '@/lib/formatSignupFields'
-import { loadProgramEventById } from '@/lib/programEvents'
-import { isTrainingProgramId } from '@/lib/trainingPrograms'
+} from '@/lib/hubspot/api'
+import { formatSignupFormData, isSignupFormatError } from '@/lib/signup/format-fields'
+import { loadProgramEventById } from '@/lib/programs/events'
+import { isTrainingProgramId } from '@/lib/programs/config'
 export async function POST(req: Request) {
   try {
     const body = await req.json()

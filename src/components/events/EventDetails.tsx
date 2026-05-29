@@ -1,6 +1,6 @@
 import React from 'react'
-import { formatTrainingSchedule } from '@/lib/formatTrainingSchedule'
-import type { ProgramEvent } from '@/lib/programEvents'
+import { formatTrainingSchedule } from '@/lib/dates/format-schedule'
+import type { ProgramEvent } from '@/lib/programs/events'
 import CapacityIndicator from './CapacityIndicator'
 
 type EventDetailsProps = {

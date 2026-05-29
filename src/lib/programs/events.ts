@@ -1,10 +1,10 @@
-import { getTrainingObjects, mapTrainingToEvent } from '@/lib/hubspotApi'
-import { sortEventsForListing } from '@/lib/sortEvents'
+import { getTrainingObjects, mapTrainingToEvent } from '@/lib/hubspot/api'
+import { sortEventsForListing } from '@/lib/programs/sort'
 import {
   getProgramPipelineConfig,
   getTrainingProgram,
   type TrainingProgramId,
-} from '@/lib/trainingPrograms'
+} from '@/lib/programs/config'
 
 export type ProgramEvent = {
   id: string

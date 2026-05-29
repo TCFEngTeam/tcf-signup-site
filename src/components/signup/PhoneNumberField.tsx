@@ -4,8 +4,8 @@ import React, { useRef } from 'react'
 import {
   formatNationalPhoneDisplay,
   getCursorAfterDigitIndex,
-} from '@/lib/formatSignupFields'
-import { getDialCodeFromIso } from '@/lib/phoneCountryCodes'
+} from '@/lib/signup/format-fields'
+import { getDialCodeFromIso } from '@/lib/phone/country-codes'
 import PhoneCountrySelect from './PhoneCountrySelect'
 
 type PhoneNumberFieldProps = {

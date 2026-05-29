@@ -1,9 +1,9 @@
-import { loadProgramEvents, type ProgramEvent } from '@/lib/programEvents'
+import { loadProgramEvents, type ProgramEvent } from '@/lib/programs/events'
 import {
   getTrainingProgram,
   isTrainingProgramId,
   type TrainingProgramId,
-} from '@/lib/trainingPrograms'
+} from '@/lib/programs/config'
 
 export type ListedEvent = ProgramEvent
 
@@ -19,4 +19,4 @@ export function parseProgramParam(value: string) {
   return isTrainingProgramId(value) ? value : null
 }
 
-export { loadProgramEventById, loadProgramEvents } from '@/lib/programEvents'
+export { loadProgramEventById, loadProgramEvents } from '@/lib/programs/events'

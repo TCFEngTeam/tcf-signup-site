@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { loadProgramEvents } from '@/lib/programEvents'
-import { isTrainingProgramId, type TrainingProgramId } from '@/lib/trainingPrograms'
+import { loadProgramEvents } from '@/lib/programs/events'
+import { isTrainingProgramId, type TrainingProgramId } from '@/lib/programs/config'
 
 export async function GET(req: Request) {
   try {

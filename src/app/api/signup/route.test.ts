@@ -19,12 +19,12 @@ const {
   associateContactToTraining: vi.fn(),
 }))
 
-vi.mock('@/lib/programEvents', () => ({
+vi.mock('@/lib/programs/events', () => ({
   loadProgramEventById,
 }))
 
-vi.mock('@/lib/hubspotApi', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/hubspotApi')>('@/lib/hubspotApi')
+vi.mock('@/lib/hubspot/api', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/hubspot/api')>('@/lib/hubspot/api')
   return {
     ...actual,
     getContactByEmail,

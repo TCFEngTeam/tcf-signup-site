@@ -6,7 +6,7 @@ import {
   PHONE_COUNTRIES,
   getDialCodeFromIso,
   getPhoneCountryByIso,
-} from '@/lib/phoneCountryCodes'
+} from '@/lib/phone/country-codes'
 
 type PhoneCountrySelectProps = {
   countryIso: string

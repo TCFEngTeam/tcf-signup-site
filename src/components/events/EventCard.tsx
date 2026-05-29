@@ -2,8 +2,8 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { formatTrainingSchedule } from '@/lib/formatTrainingSchedule'
-import type { TrainingProgramId } from '@/lib/trainingPrograms'
+import { formatTrainingSchedule } from '@/lib/dates/format-schedule'
+import type { TrainingProgramId } from '@/lib/programs/config'
 import CapacityIndicator from './CapacityIndicator'
 
 type EventCardProps = {

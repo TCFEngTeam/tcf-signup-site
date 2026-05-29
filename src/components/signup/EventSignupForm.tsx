@@ -13,10 +13,10 @@ import {
   isSignupFormatError,
   parseStoredPhone,
   type SignupFormData,
-} from '@/lib/formatSignupFields'
-import { loadProfile, saveProfile } from '@/lib/localProfileStore'
+} from '@/lib/signup/format-fields'
+import { loadProfile, saveProfile } from '@/lib/signup/profile-store'
 import PhoneNumberField from './PhoneNumberField'
-import type { TrainingProgramId } from '@/lib/trainingPrograms'
+import type { TrainingProgramId } from '@/lib/programs/config'
 
 type SignupFormProps = {
   eventId: string
