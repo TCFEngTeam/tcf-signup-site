@@ -3,12 +3,23 @@
 import React from 'react'
 import Link from 'next/link'
 import { formatTrainingSchedule } from '@/lib/hubspotApi'
+import type { TrainingProgramId } from '@/lib/trainingPrograms'
 
 type EventCardProps = {
-  event?: any
+  event?: {
+    id?: string
+    title?: string
+    startDate?: string
+    endDate?: string
+    location?: string
+    capacity?: number
+    registered?: number
+    isFull?: boolean
+  }
+  program: TrainingProgramId
 }
 
-export default function EventCard({ event }: EventCardProps) {
+export default function EventCard({ event, program }: EventCardProps) {
   const schedule = formatTrainingSchedule(event?.startDate, event?.endDate)
 
   return (
@@ -28,7 +39,7 @@ export default function EventCard({ event }: EventCardProps) {
         {event?.isFull ? (
           <span className="btn-primary inline-flex justify-center mt-3 cursor-not-allowed opacity-60">Full</span>
         ) : (
-          <Link href={`/events/${event?.id}`} className="btn-primary inline-flex justify-center mt-3">
+          <Link href={`/${program}/events/${event?.id}`} className="btn-primary inline-flex justify-center mt-3">
             Sign up
           </Link>
         )}

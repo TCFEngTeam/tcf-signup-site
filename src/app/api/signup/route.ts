@@ -1,14 +1,19 @@
 import { NextResponse } from 'next/server'
 import { createOrUpdateContact, associateContactToTraining, associateContactToCompany, getOrCreateCompanyByWebsite, ContactData, getTrainingObjects, mapTrainingToEvent } from '@/lib/hubspotApi'
 import { formatSignupFormData, isSignupFormatError } from '@/lib/formatSignupFields'
+import { getProgramPipelineConfig, isTrainingProgramId } from '@/lib/trainingPrograms'
 
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { eventId, data } = body || {}
+    const { eventId, program, data } = body || {}
 
     if (!eventId) {
       return NextResponse.json({ error: 'Missing eventId' }, { status: 400 })
+    }
+
+    if (!program || !isTrainingProgramId(program)) {
+      return NextResponse.json({ error: 'Missing or invalid program (mhfa or qpa)' }, { status: 400 })
     }
 
     // Basic validation — check required fields
@@ -37,8 +42,7 @@ export async function POST(req: Request) {
 
     // Ensure the event exists and check capacity
     // Fetch training from HubSpot
-    const pipelineStage = process.env.HUBSPOT_TRAINING_PIPELINE_STAGE
-    const pipelineType = process.env.HUBSPOT_TRAINING_PIPELINE_TYPE
+    const { pipelineStage, pipelineType } = getProgramPipelineConfig(program)
     const trainings = await getTrainingObjects(pipelineStage, pipelineType)
     const training = trainings.find((t) => t.id === eventId)
 

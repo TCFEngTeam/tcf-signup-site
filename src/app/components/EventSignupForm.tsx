@@ -15,9 +15,11 @@ import {
   type SignupFormData,
 } from '@/lib/formatSignupFields'
 import PhoneNumberField from './PhoneNumberField'
+import type { TrainingProgramId } from '@/lib/trainingPrograms'
 
 type SignupFormProps = {
   eventId: string
+  programId?: TrainingProgramId
   prefillData?: Partial<SignupFormData>
   submitUrl?: string
 }
@@ -96,7 +98,7 @@ const US_STATES = [
   'District of Columbia',
 ]
 
-export default function EventSignupForm({ eventId, prefillData, submitUrl }: SignupFormProps) {
+export default function EventSignupForm({ eventId, programId, prefillData, submitUrl }: SignupFormProps) {
   const router = useRouter()
   const initialPhone = parseStoredPhone(prefillData?.phone ?? '')
   const [firstName, setFirstName] = useState<string>(prefillData?.firstName ?? '')
@@ -119,6 +121,7 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
   const [submitAttempted, setSubmitAttempted] = useState(false)
 
   const shouldRedirectOnSuccess = !submitUrl || submitUrl === '/api/signup'
+  const shouldUseProgramEvents = shouldRedirectOnSuccess && Boolean(programId)
   const composedPhone = composePhoneNumber(phoneCountryIso, phoneNationalDigits) ?? ''
 
   const missingFieldLabels = (() => {
@@ -237,14 +240,16 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
     ;(async () => {
       try {
         // Check if event is still available (not over capacity)
-        const eventRes = await fetch(`/api/events`)
-        if (eventRes.ok) {
-          const allEvents: any[] = await eventRes.json()
-          const currentEvent = allEvents.find((e: any) => e.id === eventId)
-          if (currentEvent && currentEvent.isFull) {
-            setMessage('Sorry, this event is now full. Please try another event.')
-            setSubmitting(false)
-            return
+        if (shouldUseProgramEvents) {
+          const eventRes = await fetch(`/api/events?program=${programId}`)
+          if (eventRes.ok) {
+            const allEvents: { id: string; isFull?: boolean }[] = await eventRes.json()
+            const currentEvent = allEvents.find((entry) => entry.id === eventId)
+            if (currentEvent?.isFull) {
+              setMessage('Sorry, this event is now full. Please try another event.')
+              setSubmitting(false)
+              return
+            }
           }
         }
 
@@ -254,6 +259,7 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             eventId,
+            ...(programId ? { program: programId } : {}),
             data: formatted,
           }),
         })

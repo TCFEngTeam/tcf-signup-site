@@ -57,7 +57,7 @@ export default function PreviewPage() {
             <section key={evt!.id} className="grid grid-cols-1 md:grid-cols-2 gap-8 section-panel">
               <div>
                 <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--primary-blue)' }}>{evt!.title}</h2>
-                <EventCard event={{ ...evt, isFull: evt!.registered >= evt!.capacity }} />
+                <EventCard event={{ ...evt, isFull: evt!.registered >= evt!.capacity }} program="mhfa" />
                 <div className="mt-4">
                   <EventDetails event={{ ...evt, isFull: evt!.registered >= evt!.capacity }} />
                 </div>
