@@ -79,7 +79,7 @@ export default async function EventPage({ params }: Params) {
           <section className="section-panel">
             <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--primary-blue)' }}>Sign up</h2>
             <div className="w-full">
-              <EventSignupForm eventId={event.id} prefillData={null} />
+              <EventSignupForm eventId={event.id} />
             </div>
           </section>
         </div>

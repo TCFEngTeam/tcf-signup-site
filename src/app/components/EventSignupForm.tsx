@@ -2,10 +2,23 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import {
+  composePhoneNumber,
+  formatCityName,
+  formatEmail,
+  formatPersonName,
+  formatSignupFormData,
+  formatUniversityWebsite,
+  isCompletePhoneNumber,
+  isSignupFormatError,
+  parseStoredPhone,
+  type SignupFormData,
+} from '@/lib/formatSignupFields'
+import PhoneNumberField from './PhoneNumberField'
 
 type SignupFormProps = {
   eventId: string
-  prefillData?: any
+  prefillData?: Partial<SignupFormData>
   submitUrl?: string
 }
 
@@ -85,32 +98,37 @@ const US_STATES = [
 
 export default function EventSignupForm({ eventId, prefillData, submitUrl }: SignupFormProps) {
   const router = useRouter()
-  const [firstName, setFirstName] = useState(prefillData?.firstName ?? '')
-  const [lastName, setLastName] = useState(prefillData?.lastName ?? '')
-  const [email, setEmail] = useState(prefillData?.email ?? '')
-  const [phone, setPhone] = useState(prefillData?.phone ?? '')
-  const [hometownCity, setHometownCity] = useState(prefillData?.hometownCity ?? '')
-  const [hometownState, setHometownState] = useState(prefillData?.hometownState ?? '')
-  const [universityWebsite, setUniversityWebsite] = useState(prefillData?.universityWebsite ?? '')
-  const [currentYear, setCurrentYear] = useState(prefillData?.currentYear ?? '')
-  const [isVirginiaResident, setIsVirginiaResident] = useState(prefillData?.isVirginiaResident ?? '')
-  const [interestReason, setInterestReason] = useState(prefillData?.interestReason ?? '')
-  const [communitySupport, setCommunitySupport] = useState(prefillData?.communitySupport ?? '')
-  const [interestedInTeaching, setInterestedInTeaching] = useState(prefillData?.interestedInTeaching ?? '')
-  const [smsConsent, setSmsConsent] = useState(prefillData?.smsConsent ?? '')
+  const initialPhone = parseStoredPhone(prefillData?.phone ?? '')
+  const [firstName, setFirstName] = useState<string>(prefillData?.firstName ?? '')
+  const [lastName, setLastName] = useState<string>(prefillData?.lastName ?? '')
+  const [email, setEmail] = useState<string>(prefillData?.email ?? '')
+  const [phoneCountryIso, setPhoneCountryIso] = useState<string>(initialPhone.countryIso)
+  const [phoneNationalDigits, setPhoneNationalDigits] = useState<string>(initialPhone.nationalDigits)
+  const [hometownCity, setHometownCity] = useState<string>(prefillData?.hometownCity ?? '')
+  const [hometownState, setHometownState] = useState<string>(prefillData?.hometownState ?? '')
+  const [universityWebsite, setUniversityWebsite] = useState<string>(prefillData?.universityWebsite ?? '')
+  const [currentYear, setCurrentYear] = useState<string>(prefillData?.currentYear ?? '')
+  const [isVirginiaResident, setIsVirginiaResident] = useState<string>(prefillData?.isVirginiaResident ?? '')
+  const [interestReason, setInterestReason] = useState<string>(prefillData?.interestReason ?? '')
+  const [communitySupport, setCommunitySupport] = useState<string>(prefillData?.communitySupport ?? '')
+  const [interestedInTeaching, setInterestedInTeaching] = useState<string>(prefillData?.interestedInTeaching ?? '')
+  const [smsConsent, setSmsConsent] = useState<string>(prefillData?.smsConsent ?? '')
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({})
   const [submitAttempted, setSubmitAttempted] = useState(false)
 
   const shouldRedirectOnSuccess = !submitUrl || submitUrl === '/api/signup'
+  const composedPhone = composePhoneNumber(phoneCountryIso, phoneNationalDigits) ?? ''
 
   const missingFieldLabels = (() => {
     const missing: string[] = []
     if (!firstName.trim()) missing.push(requiredFieldLabels.firstName)
     if (!lastName.trim()) missing.push(requiredFieldLabels.lastName)
     if (!email.trim()) missing.push(requiredFieldLabels.email)
-    if (!phone.trim()) missing.push(requiredFieldLabels.phone)
+    if (!isCompletePhoneNumber(phoneNationalDigits, phoneCountryIso)) {
+      missing.push(requiredFieldLabels.phone)
+    }
     if (!hometownCity.trim()) missing.push(requiredFieldLabels.hometownCity)
     if (!hometownState.trim()) missing.push(requiredFieldLabels.hometownState)
     if (!universityWebsite.trim()) missing.push(requiredFieldLabels.universityWebsite)
@@ -141,7 +159,9 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
     if (!String(formData.get('firstName') ?? '').trim()) missing.push(requiredFieldLabels.firstName)
     if (!String(formData.get('lastName') ?? '').trim()) missing.push(requiredFieldLabels.lastName)
     if (!String(formData.get('email') ?? '').trim()) missing.push(requiredFieldLabels.email)
-    if (!String(formData.get('phone') ?? '').trim()) missing.push(requiredFieldLabels.phone)
+    if (!isCompletePhoneNumber(phoneNationalDigits, phoneCountryIso)) {
+      missing.push(requiredFieldLabels.phone)
+    }
     if (!String(formData.get('hometownCity') ?? '').trim()) missing.push(requiredFieldLabels.hometownCity)
     if (!String(formData.get('hometownState') ?? '').trim()) missing.push(requiredFieldLabels.hometownState)
     if (!String(formData.get('universityWebsite') ?? '').trim()) missing.push(requiredFieldLabels.universityWebsite)
@@ -174,6 +194,44 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
       return
     }
 
+    const formatted = formatSignupFormData({
+      firstName,
+      lastName,
+      email,
+      phone: composedPhone,
+      hometownCity,
+      hometownState,
+      universityWebsite,
+      currentYear,
+      isVirginiaResident,
+      interestReason,
+      communitySupport,
+      interestedInTeaching,
+      smsConsent,
+    })
+
+    if (isSignupFormatError(formatted)) {
+      setTouchedFields((current) => ({ ...current, [requiredFieldLabels.phone]: true }))
+      setMessage(formatted.error)
+      return
+    }
+
+    setFirstName(formatted.firstName)
+    setLastName(formatted.lastName)
+    setEmail(formatted.email)
+    const parsedPhone = parseStoredPhone(formatted.phone)
+    setPhoneCountryIso(parsedPhone.countryIso)
+    setPhoneNationalDigits(parsedPhone.nationalDigits)
+    setHometownCity(formatted.hometownCity)
+    setHometownState(formatted.hometownState)
+    setUniversityWebsite(formatted.universityWebsite)
+    setCurrentYear(formatted.currentYear)
+    setIsVirginiaResident(formatted.isVirginiaResident.toLowerCase())
+    setInterestReason(formatted.interestReason)
+    setCommunitySupport(formatted.communitySupport)
+    setInterestedInTeaching(formatted.interestedInTeaching)
+    setSmsConsent(formatted.smsConsent.toLowerCase())
+
     setSubmitting(true)
 
     ;(async () => {
@@ -196,21 +254,7 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             eventId,
-            data: {
-              firstName,
-              lastName,
-              email,
-              phone,
-              hometownCity,
-              hometownState,
-              universityWebsite,
-              currentYear,
-              isVirginiaResident,
-              interestReason,
-              communitySupport,
-              interestedInTeaching,
-              smsConsent,
-            },
+            data: formatted,
           }),
         })
 
@@ -244,6 +288,15 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
     })()
   }
 
+  function applyBlurFormat(
+    label: string,
+    setter: React.Dispatch<React.SetStateAction<string>>,
+    formatter: (value: string) => string
+  ) {
+    markTouched(label)
+    setter((value: string) => formatter(value))
+  }
+
   function fieldHasError(label: string) {
     return shouldShowError(label)
   }
@@ -254,34 +307,46 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
       <div className="grid grid-cols-2 gap-4 mb-4">
         <label className="block">
           <div className={`field-label text-sm font-medium ${fieldHasError(requiredFieldLabels.firstName) ? 'text-red-600' : ''}`}>First Name *</div>
-          <input name="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} onBlur={() => markTouched(requiredFieldLabels.firstName)} className="mt-1 w-full" required />
+          <input name="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} onBlur={() => applyBlurFormat(requiredFieldLabels.firstName, setFirstName, formatPersonName)} className="mt-1 w-full" required />
           <RequiredText show={fieldHasError(requiredFieldLabels.firstName)} />
         </label>
         <label className="block">
           <div className={`field-label text-sm font-medium ${fieldHasError(requiredFieldLabels.lastName) ? 'text-red-600' : ''}`}>Last Name *</div>
-          <input name="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} onBlur={() => markTouched(requiredFieldLabels.lastName)} className="mt-1 w-full" required />
+          <input name="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} onBlur={() => applyBlurFormat(requiredFieldLabels.lastName, setLastName, formatPersonName)} className="mt-1 w-full" required />
           <RequiredText show={fieldHasError(requiredFieldLabels.lastName)} />
         </label>
       </div>
 
       {/* Contact Fields */}
-      <label className="block mb-4">
-        <div className={`field-label text-sm font-medium ${fieldHasError(requiredFieldLabels.email) ? 'text-red-600' : ''}`}>Email *</div>
-        <input name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={() => markTouched(requiredFieldLabels.email)} className="mt-1 w-full" required />
-        <RequiredText show={fieldHasError(requiredFieldLabels.email)} />
-      </label>
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <label className="block">
+          <div className={`field-label text-sm font-medium ${fieldHasError(requiredFieldLabels.email) ? 'text-red-600' : ''}`}>Email *</div>
+          <input name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={() => applyBlurFormat(requiredFieldLabels.email, setEmail, formatEmail)} className="mt-1 w-full" required />
+          <RequiredText show={fieldHasError(requiredFieldLabels.email)} />
+        </label>
 
-      <label className="block mb-4">
-        <div className={`field-label text-sm font-medium ${fieldHasError(requiredFieldLabels.phone) ? 'text-red-600' : ''}`}>Phone Number *</div>
-        <input name="phone" value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={() => markTouched(requiredFieldLabels.phone)} className="mt-1 w-full" required />
-        <RequiredText show={fieldHasError(requiredFieldLabels.phone)} />
-      </label>
+        <label className="block">
+          <div className={`field-label text-sm font-medium ${fieldHasError(requiredFieldLabels.phone) ? 'text-red-600' : ''}`}>Phone Number *</div>
+          <input type="hidden" name="phone" value={composedPhone} />
+          <div className="mt-1">
+            <PhoneNumberField
+              countryIso={phoneCountryIso}
+              nationalDigits={phoneNationalDigits}
+              onCountryIsoChange={setPhoneCountryIso}
+              onNationalDigitsChange={setPhoneNationalDigits}
+              onBlur={() => markTouched(requiredFieldLabels.phone)}
+              hasError={fieldHasError(requiredFieldLabels.phone)}
+            />
+          </div>
+          <RequiredText show={fieldHasError(requiredFieldLabels.phone)} />
+        </label>
+      </div>
 
       {/* Hometown Fields */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <label className="block">
           <div className={`field-label text-sm font-medium ${fieldHasError(requiredFieldLabels.hometownCity) ? 'text-red-600' : ''}`}>Hometown City *</div>
-          <input name="hometownCity" value={hometownCity} onChange={(e) => setHometownCity(e.target.value)} onBlur={() => markTouched(requiredFieldLabels.hometownCity)} className="mt-1 w-full" required />
+          <input name="hometownCity" value={hometownCity} onChange={(e) => setHometownCity(e.target.value)} onBlur={() => applyBlurFormat(requiredFieldLabels.hometownCity, setHometownCity, formatCityName)} className="mt-1 w-full" required />
           <RequiredText show={fieldHasError(requiredFieldLabels.hometownCity)} />
         </label>
         <label className="block">
@@ -299,10 +364,9 @@ export default function EventSignupForm({ eventId, prefillData, submitUrl }: Sig
       </div>
 
       {/* University Website */}
-      {/* TODO: University website should eventually map to the company object in HubSpot. */}
       <label className="block mb-4">
         <div className={`field-label text-sm font-medium ${fieldHasError(requiredFieldLabels.universityWebsite) ? 'text-red-600' : ''}`}>University Website *</div>
-        <input name="universityWebsite" value={universityWebsite} onChange={(e) => setUniversityWebsite(e.target.value)} onBlur={() => markTouched(requiredFieldLabels.universityWebsite)} className="mt-1 w-full" placeholder="virginia.edu" required />
+        <input name="universityWebsite" value={universityWebsite} onChange={(e) => setUniversityWebsite(e.target.value)} onBlur={() => applyBlurFormat(requiredFieldLabels.universityWebsite, setUniversityWebsite, formatUniversityWebsite)} className="mt-1 w-full" placeholder="virginia.edu" required />
         <RequiredText show={fieldHasError(requiredFieldLabels.universityWebsite)} />
       </label>
 

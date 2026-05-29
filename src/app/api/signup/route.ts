@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createOrUpdateContact, associateContactToTraining, associateContactToCompany, getOrCreateCompanyByWebsite, ContactData, getTrainingObjects, mapTrainingToEvent } from '@/lib/hubspotApi'
+import { formatSignupFormData, isSignupFormatError } from '@/lib/formatSignupFields'
 
 export async function POST(req: Request) {
   try {
@@ -29,6 +30,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    const formatted = formatSignupFormData(data)
+    if (isSignupFormatError(formatted)) {
+      return NextResponse.json({ error: formatted.error }, { status: 400 })
+    }
+
     // Ensure the event exists and check capacity
     // Fetch training from HubSpot
     const pipelineStage = process.env.HUBSPOT_TRAINING_PIPELINE_STAGE
@@ -48,18 +54,18 @@ export async function POST(req: Request) {
 
     // Contact data with all form fields
     const contactData: ContactData = {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      email: data.email,
-      phone: data.phone,
-      hometownCity: data.hometownCity,
-      hometownState: data.hometownState,
-      currentYear: data.currentYear,
-      isVirginiaResident: data.isVirginiaResident,
+      firstName: formatted.firstName,
+      lastName: formatted.lastName,
+      email: formatted.email,
+      phone: formatted.phone,
+      hometownCity: formatted.hometownCity,
+      hometownState: formatted.hometownState,
+      currentYear: formatted.currentYear,
+      isVirginiaResident: formatted.isVirginiaResident,
       trainingDates: data.trainingDates,
-      interestReason: data.interestReason,
-      communitySupport: data.communitySupport,
-      interestedInTeaching: data.interestedInTeaching,
+      interestReason: formatted.interestReason,
+      communitySupport: formatted.communitySupport,
+      interestedInTeaching: formatted.interestedInTeaching,
     }
 
     let hubspotContactId: string | null = null
@@ -71,7 +77,7 @@ export async function POST(req: Request) {
 
       // Create or find the company by website and associate the contact to it
       try {
-        const company = await getOrCreateCompanyByWebsite(data.universityWebsite)
+        const company = await getOrCreateCompanyByWebsite(formatted.universityWebsite)
         await associateContactToCompany(hubspotContactId, company.id)
       } catch (companyError: any) {
         console.error('Company creation/association error:', companyError?.message)

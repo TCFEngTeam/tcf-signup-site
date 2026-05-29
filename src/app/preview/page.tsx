@@ -72,18 +72,16 @@ export default function PreviewPage() {
                     firstName: 'Jane',
                     lastName: 'Doe',
                     email: 'jane+preview@example.com',
-                    phone: '555-1212',
+                    phone: '5714820864',
                     hometownCity: 'Richmond',
-                    hometownState: 'VA',
+                    hometownState: 'Virginia',
                     universityWebsite: 'example.edu',
-                    currentYear: 'junior',
+                    currentYear: 'Junior',
                     isVirginiaResident: 'yes',
-                    trainingDates: 'available',
                     interestReason: 'I want to learn',
                     communitySupport: 'Share with peers',
-                    interestedInTeaching: 'maybe',
-                    smsMarketing: false,
-                    smsConsent: false,
+                    interestedInTeaching: 'Maybe',
+                    smsConsent: 'no',
                   }}
                 />
               </div>
