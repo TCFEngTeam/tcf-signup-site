@@ -1,5 +1,3 @@
-import { listMockEvents, type MockEvent } from '@/app/api/_mockData'
-import { isDevMockEnabled } from '@/lib/devOnly'
 import { getTrainingObjects, mapTrainingToEvent } from '@/lib/hubspotApi'
 import { sortEventsForListing } from '@/lib/sortEvents'
 import {
@@ -32,7 +30,7 @@ export type ProgramEventResult = {
   error: Error | null
 }
 
-function toProgramEvent(
+export function toProgramEvent(
   event: ReturnType<typeof mapTrainingToEvent>
 ): ProgramEvent {
   return {
@@ -48,31 +46,6 @@ function toProgramEvent(
     isFull: event.availableCapacity <= 0,
     description: event.description,
   }
-}
-
-function mockToProgramEvent(event: MockEvent): ProgramEvent {
-  const availableCapacity = Math.max(0, event.capacity - event.registered)
-  return {
-    id: event.id,
-    title: event.title,
-    startDate: event.startDate,
-    endDate: event.endDate,
-    location: event.location,
-    capacity: event.capacity,
-    registered: event.registered,
-    availableCapacity,
-    active: event.active,
-    isFull: availableCapacity <= 0,
-    description: event.description,
-  }
-}
-
-function mockEventsForProgram(): ProgramEvent[] {
-  return sortEventsForListing(
-    listMockEvents()
-      .filter((event) => event.active)
-      .map(mockToProgramEvent)
-  )
 }
 
 export async function loadProgramEvents(
@@ -92,13 +65,10 @@ export async function loadProgramEvents(
     return { events, error: null }
   } catch (hsErr) {
     console.error('[programEvents] HubSpot fetch failed:', hsErr)
-    if (!isDevMockEnabled()) {
-      return {
-        events: [],
-        error: hsErr instanceof Error ? hsErr : new Error('Failed to fetch events'),
-      }
+    return {
+      events: [],
+      error: hsErr instanceof Error ? hsErr : new Error('Failed to fetch events'),
     }
-    return { events: mockEventsForProgram(), error: null }
   }
 }
 

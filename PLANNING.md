@@ -43,7 +43,7 @@ The site is a **Next.js 16** public signup app. Events and registrations flow th
 | Admin | **HubSpot only** — no admin UI on this site |
 | Confirmation emails | TBD — investigate HubSpot workflows |
 | Multi-program split | **Upcoming:** separate front pages for **MHFA** vs **QPR** trainings, each with its own HubSpot pipeline designation |
-| Preview / mock routes | **Disable in production**; remove current preview/mock implementation and replace with better dev-only testing approach |
+| Preview / mock routes | **Removed** — use `npm test` and manual HubSpot checks (`TESTING.md`) |
 | Branding | Placeholders compiled below — team to supply real assets/links |
 
 ---
@@ -97,7 +97,7 @@ HubSpot API key usage is **server-side only** (`hubspotApi.ts`, API routes) — 
 - **HubSpot failure returns success today** — users may believe they registered when HubSpot did not persist data. **Must change to fail-closed** per product decision (return 5xx/4xx with clear message).
 - **Company association errors are swallowed** — signup succeeds even if university → company link fails; acceptable if non-critical, but worth monitoring.
 - **Capacity race condition** — two simultaneous signups near capacity could both pass the pre-check; HubSpot association count is eventually consistent. Acceptable if HubSpot is source of truth, but edge cases possible.
-- **`/preview` and `/api/mock-signup`** — if deployed to production, expose fake signup surface and in-memory mutation. **Remove or gate behind dev-only** before launch.
+- ~~**`/preview` and `/api/mock-signup`**~~ — removed; use Vitest + manual HubSpot testing instead.
 
 ### SSRF / internal fetch
 - Homepage server-renders by fetching `{host}/api/events`. In typical Vercel deployment this is same-origin and fine. Avoid passing user-controlled host values into upstream fetches elsewhere.
@@ -185,7 +185,7 @@ Configured locally + Vercel. Do not commit values to git.
 2. ~~**Sort order**~~ — furthest-future-first via `sortEventsForListing`.
 3. ~~**Full event page**~~ — form hidden when event is full or inactive.
 4. ~~**Wire `localProfileStore`**~~ — load on mount, save after successful submit.
-5. ~~**Remove mock/preview from production**~~ — dev-only via `isDevMockEnabled()`.
+5. ~~**Remove mock/preview from production**~~ — removed; see `TESTING.md`.
 
 ### Should-fix soon (can interleave with Phase 1–2)
 6. ~~**Unify data fetching**~~ — shared `loadProgramEvents` in `src/lib/programEvents.ts`.
@@ -199,7 +199,7 @@ Configured locally + Vercel. Do not commit values to git.
 13. ~~Mobile stacking layout~~ — form fields stack on small screens. Event-specific success page. ~~SMS consent mapping~~. Branding assets still pending.
 14. Search/filters — only if event volume grows.
 15. Confirmation emails — HubSpot workflow research.
-16. Better dev testing — replace preview page with Storybook, dedicated test fixtures, or env-gated routes.
+16. ~~Better dev testing~~ — Vitest suite + `TESTING.md` (manual HubSpot checklist).
 
 ### Code quality
 17. Reduce `any` types on homepage event list.
@@ -217,7 +217,7 @@ Configured locally + Vercel. Do not commit values to git.
 - Sort listings furthest-future-first
 - Disable form on full events
 - Wire localStorage autofill
-- Strip/gate mock & preview for production
+- Strip/gate mock & preview for production → **Vitest** (`npm test`) + `TESTING.md`
 
 ### Phase 2 — Multi-program (MHFA / QPR) ✅
 - Program config (pipeline env vars per program)
@@ -250,7 +250,7 @@ When new fields are needed:
 3. Add server validation in `src/app/api/signup/route.ts`
 4. Map property in `mapContactProperties()` in `src/lib/hubspotApi.ts` + env var for HubSpot property name
 5. Include in `localProfileStore` save/load if it should autofill
-6. Update preview/test fixtures if any remain
+6. Update test fixtures in `src/test/fixtures/` when form fields change
 
 Keep field labels, validation rules, and HubSpot mapping colocated or documented to avoid drift.
 
@@ -278,5 +278,6 @@ Keep field labels, validation rules, and HubSpot mapping colocated or documented
 | `src/lib/phoneCountryCodes.ts` | Country dial codes (from [gist](https://gist.github.com/gugazimmermann/635dac160396fc9b5e5d75d1b03c1194)) |
 | `src/app/api/signup/route.ts` | Signup endpoint |
 | `src/app/api/events/route.ts` | Public event list |
-| `src/app/api/_mockData.ts` | **Remove** for production |
-| `src/app/preview/page.tsx` | **Remove/replace** for production |
+| `TESTING.md` | How to run automated tests and manual HubSpot checks |
+| `src/test/fixtures/signup.ts` | Shared signup payloads for API tests |
+| `vitest.config.ts` | Test runner configuration |

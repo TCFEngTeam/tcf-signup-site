@@ -78,21 +78,11 @@ function parseDateProperty(value?: string) {
 }
 
 export { formatTrainingSchedule } from './formatTrainingSchedule'
-
-function mapSmsConsentToHubSpot(value: string) {
-  const normalized = value.trim().toLowerCase()
-  if (normalized === 'yes') {
-    return (
-      process.env.HUBSPOT_SMS_CONSENT_YES_VALUE ?? 'nABLB1wXwnWES39Rff7ZO'
-    )
-  }
-  if (normalized === 'no') {
-    return (
-      process.env.HUBSPOT_SMS_CONSENT_NO_VALUE ?? 'MTlPSCzKCtIey_DQUT4aW'
-    )
-  }
-  return value.trim()
-}
+import {
+  contactHasTrainingAssociation,
+  isDuplicateAssociationResponse,
+  mapSmsConsentToHubSpot,
+} from './hubspotFieldMappers'
 
 /**
  * Maps form data to HubSpot contact properties using environment variables
@@ -119,15 +109,6 @@ function mapContactProperties(data: ContactData): { [key: string]: string } {
   }
 
   return properties
-}
-
-function isDuplicateAssociationResponse(parsed: unknown, status: number) {
-  if (status === 409) return true
-  const text = JSON.stringify(parsed ?? '').toLowerCase()
-  return (
-    text.includes('already') &&
-    (text.includes('associat') || text.includes('exist') || text.includes('duplicate'))
-  )
 }
 
 /**
@@ -162,10 +143,7 @@ export async function isContactRegisteredForTraining(
     throw new Error(`Failed to check training registration: ${msg}`)
   }
 
-  const results = parsed?.results ?? []
-  return results.some(
-    (row: { id?: string }) => String(row.id) === String(trainingId)
-  )
+  return contactHasTrainingAssociation(parsed?.results, trainingId)
 }
 
 async function safeParseResponse(res: Response): Promise<any> {
