@@ -181,22 +181,22 @@ Configured locally + Vercel. Do not commit values to git.
 ## Known issues & gaps
 
 ### Must-fix for production alignment
-1. **Signup should error when HubSpot fails** — `/api/signup` currently returns `success: true` with optional `warning`.
-2. ~~**Sort order** — homepage should be soonest-first (currently reversed).~~ **Done:** furthest-future-first via `sortEventsForListing`.
-3. **Full event page** — disable/hide form when event is full.
-4. **Wire `localProfileStore`** — load on mount, save after successful submit.
-5. **Remove mock/preview from production** — delete or rewrite `_mockData.ts`, `/preview`, `/api/mock-signup`, homepage sample fallback behavior.
+1. ~~**Signup should error when HubSpot fails**~~ — returns `502` on HubSpot sync failure.
+2. ~~**Sort order**~~ — furthest-future-first via `sortEventsForListing`.
+3. ~~**Full event page**~~ — form hidden when event is full or inactive.
+4. ~~**Wire `localProfileStore`**~~ — load on mount, save after successful submit.
+5. ~~**Remove mock/preview from production**~~ — dev-only via `isDevMockEnabled()`.
 
 ### Should-fix soon (can interleave with Phase 1–2)
-6. **Unify data fetching** — event page calls HubSpot directly; listing uses `/api/events`.
-7. **Use `CapacityIndicator`** on listing and/or detail pages (component exists, unused).
+6. ~~**Unify data fetching**~~ — shared `loadProgramEvents` in `src/lib/programEvents.ts`.
+7. ~~**Use `CapacityIndicator`**~~ — on listing cards and event detail pages.
 
 ### Multi-program (MHFA / QPA) — next priority
-11. **Split homepage** — `/mhfa` and `/qpa` (or similar) with separate pipeline env vars or route-level config.
-12. Shared event listing component; program-specific copy and metadata per route.
+11. ~~**Split homepage**~~ — `/mhfa` and `/qpa` with separate pipeline env vars.
+12. ~~Shared event listing component~~ — `ProgramListing` with program-specific copy.
 
 ### After multi-program / UX polish
-13. Mobile stacking layout, event-specific success, SMS consent mapping, branding assets.
+13. ~~Mobile stacking layout~~ — form fields stack on small screens. Event-specific success page. ~~SMS consent mapping~~. Branding assets still pending.
 14. Search/filters — only if event volume grows.
 15. Confirmation emails — HubSpot workflow research.
 16. Better dev testing — replace preview page with Storybook, dedicated test fixtures, or env-gated routes.
@@ -212,25 +212,25 @@ Configured locally + Vercel. Do not commit values to git.
 
 > **Workflow:** One commit at a time; Ethan approves each commit before the next tranche of work begins.
 
-### Phase 1 — Production correctness (quick fixes, can interleave)
+### Phase 1 — Production correctness ✅
 - Fail signup on HubSpot error
-- ~~Fix sort order (soonest first)~~ Sort listings furthest-future-first
+- Sort listings furthest-future-first
 - Disable form on full events
 - Wire localStorage autofill
 - Strip/gate mock & preview for production
 
-### Phase 2 — Multi-program (MHFA / QPA) ← **before UX polish**
+### Phase 2 — Multi-program (MHFA / QPA) ✅
 - Program config (pipeline env vars per program)
 - `/mhfa` and `/qpa` listing routes
 - Program-specific page copy and metadata
 - Event detail/signup scoped to program (pipeline filter on fetch)
-- Root `/` behavior (redirect or program chooser — TBD)
+- Root `/` program chooser
 - Shared components; signup form reused across programs
 
-### Phase 3 — UX polish
-- Mobile stacking layout
-- Event-specific success confirmation
-- SMS consent → HubSpot property
+### Phase 3 — UX polish (in progress)
+- ~~Mobile stacking layout~~
+- ~~Event-specific success confirmation~~
+- ~~SMS consent → HubSpot property~~ (`HUBSPOT_SMS_CONSENT_PROPERTY`, default `sms_consent`)
 - Branding placeholders → real links/assets
 
 ### Phase 4 — Hardening & optional features

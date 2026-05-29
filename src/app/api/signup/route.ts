@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
-import { createOrUpdateContact, associateContactToTraining, associateContactToCompany, getOrCreateCompanyByWebsite, ContactData, getTrainingObjects, mapTrainingToEvent } from '@/lib/hubspotApi'
+import { createOrUpdateContact, associateContactToTraining, associateContactToCompany, getOrCreateCompanyByWebsite, ContactData } from '@/lib/hubspotApi'
 import { formatSignupFormData, isSignupFormatError } from '@/lib/formatSignupFields'
-import { getProgramPipelineConfig, isTrainingProgramId } from '@/lib/trainingPrograms'
-
+import { loadProgramEventById } from '@/lib/programEvents'
+import { isTrainingProgramId } from '@/lib/trainingPrograms'
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -40,20 +40,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: formatted.error }, { status: 400 })
     }
 
-    // Ensure the event exists and check capacity
-    // Fetch training from HubSpot
-    const { pipelineStage, pipelineType } = getProgramPipelineConfig(program)
-    const trainings = await getTrainingObjects(pipelineStage, pipelineType)
-    const training = trainings.find((t) => t.id === eventId)
+    const { event: ev, error: eventError } = await loadProgramEventById(program, eventId)
 
-    if (!training) {
+    if (eventError) {
+      return NextResponse.json({ error: eventError.message }, { status: 500 })
+    }
+
+    if (!ev) {
       return NextResponse.json({ error: 'Training event not found' }, { status: 404 })
     }
 
-    // Convert to event format to check capacity
-    const ev = mapTrainingToEvent(training)
-    if (ev.availableCapacity <= 0) {
-      return NextResponse.json({ error: 'Training is full' }, { status: 409 })
+    if (ev.isFull) {      return NextResponse.json({ error: 'Training is full' }, { status: 409 })
     }
 
     // Contact data with all form fields
@@ -70,6 +67,7 @@ export async function POST(req: Request) {
       interestReason: formatted.interestReason,
       communitySupport: formatted.communitySupport,
       interestedInTeaching: formatted.interestedInTeaching,
+      smsConsent: formatted.smsConsent,
     }
 
     let hubspotContactId: string

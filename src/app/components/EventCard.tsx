@@ -4,6 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { formatTrainingSchedule } from '@/lib/formatTrainingSchedule'
 import type { TrainingProgramId } from '@/lib/trainingPrograms'
+import CapacityIndicator from './CapacityIndicator'
 
 type EventCardProps = {
   event?: {
@@ -34,7 +35,10 @@ export default function EventCard({ event, program }: EventCardProps) {
         <h3 className="event-title text-lg font-semibold">{event?.title ?? 'Event Title'}</h3>
         <p className="event-meta text-sm">{schedule}</p>
         <p className="event-location text-sm">{event?.location ?? 'Location'}</p>
-        <p className="event-capacity text-sm mt-2">Seats: {event?.registered ?? 0} / {event?.capacity ?? '—'}</p>
+        <CapacityIndicator
+          capacity={event?.capacity}
+          registered={event?.registered}
+        />
 
         {event?.isFull ? (
           <span className="btn-primary inline-flex justify-center mt-3 cursor-not-allowed opacity-60">Full</span>

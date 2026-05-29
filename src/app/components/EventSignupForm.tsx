@@ -310,7 +310,10 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
           saveProfile(formatted)
           setMessage('Successfully signed up!')
           if (shouldRedirectOnSuccess) {
-            router.push('/events/success')
+            const params = new URLSearchParams()
+            if (programId) params.set('program', programId)
+            params.set('event', eventId)
+            router.push(`/events/success?${params.toString()}`)
           }
         }
       } catch (err: any) {
@@ -337,7 +340,7 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
   return (
     <form className="event-signup-form signup-card" onSubmit={handleSubmit} noValidate>
       {/* Name Fields */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <label className="block">
           <div className={`field-label text-sm font-medium ${fieldHasError(requiredFieldLabels.firstName) ? 'text-red-600' : ''}`}>First Name *</div>
           <input name="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} onBlur={() => applyBlurFormat(requiredFieldLabels.firstName, setFirstName, formatPersonName)} className="mt-1 w-full" required />
@@ -351,7 +354,7 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
       </div>
 
       {/* Contact Fields */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <label className="block">
           <div className={`field-label text-sm font-medium ${fieldHasError(requiredFieldLabels.email) ? 'text-red-600' : ''}`}>Email *</div>
           <input name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={() => applyBlurFormat(requiredFieldLabels.email, setEmail, formatEmail)} className="mt-1 w-full" required />
@@ -376,7 +379,7 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
       </div>
 
       {/* Hometown Fields */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <label className="block">
           <div className={`field-label text-sm font-medium ${fieldHasError(requiredFieldLabels.hometownCity) ? 'text-red-600' : ''}`}>Hometown City *</div>
           <input name="hometownCity" value={hometownCity} onChange={(e) => setHometownCity(e.target.value)} onBlur={() => applyBlurFormat(requiredFieldLabels.hometownCity, setHometownCity, formatCityName)} className="mt-1 w-full" required />

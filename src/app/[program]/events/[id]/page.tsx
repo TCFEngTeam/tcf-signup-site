@@ -4,8 +4,8 @@ import EventDetails from '@/app/components/EventDetails'
 import EventSignupForm from '@/app/components/EventSignupForm'
 import Footer from '@/app/components/Footer'
 import Header from '@/app/components/Header'
-import { getTrainingObjects, mapTrainingToEvent, type TrainingEvent } from '@/lib/hubspotApi'
-import { getProgramPipelineConfig, getTrainingProgram } from '@/lib/trainingPrograms'
+import { loadProgramEventById } from '@/lib/programEvents'
+import { getTrainingProgram } from '@/lib/trainingPrograms'
 
 type ProgramEventPageProps = {
   params: Promise<{ program: string; id: string }>
@@ -19,16 +19,9 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
     notFound()
   }
 
-  const { pipelineStage, pipelineType } = getProgramPipelineConfig(program.id)
+  const { event, error } = await loadProgramEventById(program.id, id)
 
-  let event: TrainingEvent | null = null
-  try {
-    const trainings = await getTrainingObjects(pipelineStage, pipelineType)
-    const training = trainings.find((entry) => entry.id === id)
-    if (training) {
-      event = mapTrainingToEvent(training)
-    }
-  } catch (error) {
+  if (error) {
     console.error('Error fetching training event:', error)
   }
 
@@ -55,8 +48,6 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
     )
   }
 
-  const isFull = event.registered >= event.capacity
-
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 text-slate-900">
       <Header />
@@ -69,11 +60,11 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
         </div>
 
         <div className="max-w-4xl mx-auto space-y-8">
-          <EventDetails event={{ ...event, isFull }} />
+          <EventDetails event={event} />
 
           <div className="notice-card text-sm text-zinc-700">
             {!event.active && <p>This event is currently unavailable.</p>}
-            {isFull && <p>This event is full.</p>}
+            {event.isFull && <p>This event is full.</p>}
 
             <div className="mb-6 p-6 bg-blue-50 rounded-lg border border-blue-200 space-y-3">
               {program.signupNotice.map((paragraph) => (
@@ -84,7 +75,7 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
             </div>
           </div>
 
-          {!isFull && event.active ? (
+          {!event.isFull && event.active ? (
             <section className="section-panel">
               <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--primary-blue)' }}>
                 Sign up

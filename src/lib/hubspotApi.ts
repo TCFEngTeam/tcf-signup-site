@@ -23,6 +23,7 @@ export interface ContactData {
   interestReason: string
   communitySupport: string
   interestedInTeaching: string
+  smsConsent?: string
 }
 
 export interface HubSpotContact {
@@ -71,7 +72,7 @@ export { formatTrainingSchedule } from './formatTrainingSchedule'
  * Maps form data to HubSpot contact properties using environment variables
  */
 function mapContactProperties(data: ContactData): { [key: string]: string } {
-  return {
+  const properties: { [key: string]: string } = {
     [process.env.HUBSPOT_FIRST_NAME_PROPERTY || 'firstname']: data.firstName,
     [process.env.HUBSPOT_LAST_NAME_PROPERTY || 'lastname']: data.lastName,
     [process.env.HUBSPOT_EMAIL_PROPERTY || 'email']: data.email,
@@ -85,6 +86,12 @@ function mapContactProperties(data: ContactData): { [key: string]: string } {
     [process.env.HUBSPOT_COMMUNITY_SUPPORT_PROPERTY || 'community_support_plan']: data.communitySupport,
     [process.env.HUBSPOT_TEACHING_INTEREST_PROPERTY || 'interested_in_teaching']: data.interestedInTeaching,
   }
+
+  if (data.smsConsent) {
+    properties[process.env.HUBSPOT_SMS_CONSENT_PROPERTY || 'sms_consent'] = data.smsConsent
+  }
+
+  return properties
 }
 
 async function safeParseResponse(res: Response): Promise<any> {

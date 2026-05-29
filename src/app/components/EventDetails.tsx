@@ -1,8 +1,15 @@
 import React from 'react'
 import { formatTrainingSchedule } from '@/lib/formatTrainingSchedule'
+import type { ProgramEvent } from '@/lib/programEvents'
+import CapacityIndicator from './CapacityIndicator'
 
 type EventDetailsProps = {
-  event?: any
+  event?: Partial<
+    Pick<
+      ProgramEvent,
+      'title' | 'startDate' | 'endDate' | 'location' | 'capacity' | 'registered' | 'isFull'
+    >
+  >
 }
 
 export default function EventDetails({ event }: EventDetailsProps) {
@@ -16,6 +23,7 @@ export default function EventDetails({ event }: EventDetailsProps) {
       <h1 className="text-3xl font-bold mt-4 mb-2">{event?.title ?? 'Event Title'}</h1>
       <p className="text-sm helper-text">{schedule}</p>
       <p className="text-sm helper-text">{event?.location ?? 'Location'}</p>
+      <CapacityIndicator capacity={event?.capacity} registered={event?.registered} />
       <div className="extras">{/* host info, map, image, etc. */}</div>
     </section>
   )

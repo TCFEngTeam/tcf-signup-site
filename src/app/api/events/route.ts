@@ -1,13 +1,6 @@
 import { NextResponse } from 'next/server'
-import { getTrainingObjects, mapTrainingToEvent } from '@/lib/hubspotApi'
-import {
-  getProgramPipelineConfig,
-  isTrainingProgramId,
-  type TrainingProgramId,
-} from '@/lib/trainingPrograms'
-import { listMockEvents } from '../_mockData'
-import { isDevMockEnabled } from '@/lib/devOnly'
-import { sortEventsForListing } from '@/lib/sortEvents'
+import { loadProgramEvents } from '@/lib/programEvents'
+import { isTrainingProgramId, type TrainingProgramId } from '@/lib/trainingPrograms'
 
 export async function GET(req: Request) {
   try {
@@ -22,47 +15,15 @@ export async function GET(req: Request) {
     }
 
     const programId = programParam as TrainingProgramId
-    const { pipelineStage, pipelineType } = getProgramPipelineConfig(programId)
+    const { events, error } = await loadProgramEvents(programId)
 
-    let trainings = []
-    try {
-      trainings = await getTrainingObjects(pipelineStage, pipelineType)
-      console.debug('[api/events] HubSpot trainings fetched', {
-        programId,
-        pipelineStage,
-        pipelineType,
-        count: trainings.length,
-      })
-    } catch (hsErr) {
-      console.error('HubSpot fetch failed:', hsErr)
-      if (!isDevMockEnabled()) {
-        throw hsErr
-      }
-      const mock = listMockEvents()
-      const filteredMock = mock
-        .filter((ev) => ev.active)
-        .map((ev) => ({ ...ev, isFull: ev.registered >= ev.capacity }))
-      console.debug('[api/events] Falling back to mock events', {
-        programId,
-        mockCount: mock.length,
-        returnedCount: filteredMock.length,
-      })
-      return NextResponse.json(sortEventsForListing(filteredMock))
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    const mappedEvents = trainings.map(mapTrainingToEvent)
-    const events = sortEventsForListing(
-      mappedEvents.map((ev) => ({
-        ...ev,
-        isFull: ev.availableCapacity <= 0,
-      }))
-    )
-
-    console.debug('[api/events] Post-filter counts', {
+    console.debug('[api/events] returned events', {
       programId,
-      hubspotCount: trainings.length,
-      mappedCount: mappedEvents.length,
-      returnedCount: events.length,
+      count: events.length,
     })
 
     return NextResponse.json(events)
