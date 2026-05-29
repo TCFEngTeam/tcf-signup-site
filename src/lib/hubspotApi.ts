@@ -5,10 +5,9 @@
  */
 
 const HUBSPOT_API_BASE = 'https://api.hubapi.com'
-const API_KEY = process.env.HUBSPOT_API_KEY
 
-if (!API_KEY) {
-  console.warn('HUBSPOT_API_KEY is not set in environment variables')
+function getApiKey() {
+  return process.env.HUBSPOT_API_KEY
 }
 
 export interface ContactData {
@@ -66,44 +65,7 @@ function parseDateProperty(value?: string) {
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
-function formatDateLabel(value?: string) {
-  if (!value) return ''
-
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return value
-
-  return new Intl.DateTimeFormat(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  }).format(parsed)
-}
-
-export function formatTrainingSchedule(startDate?: string, endDate?: string) {
-  if (!startDate && !endDate) return 'Date to be announced'
-
-  if (startDate && endDate) {
-    const formattedStart = formatDateLabel(startDate)
-    const formattedEnd = formatDateLabel(endDate)
-
-    if (formattedStart && formattedStart === formattedEnd) {
-      return formattedStart
-    }
-
-    if (formattedStart && formattedEnd) {
-      return `${formattedStart} – ${formattedEnd}`
-    }
-
-    if (startDate === endDate) {
-      return formatDateLabel(startDate)
-    }
-
-    return `${formatDateLabel(startDate) || startDate} – ${formatDateLabel(endDate) || endDate}`
-  }
-
-  return formatDateLabel(startDate || endDate) || startDate || endDate || 'Date to be announced'
-}
+export { formatTrainingSchedule } from './formatTrainingSchedule'
 
 /**
  * Maps form data to HubSpot contact properties using environment variables
@@ -147,7 +109,7 @@ async function safeParseResponse(res: Response): Promise<any> {
  * @returns HubSpot contact with ID
  */
 export async function createOrUpdateContact(data: ContactData): Promise<HubSpotContact> {
-  if (!API_KEY) {
+  if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
 
@@ -158,7 +120,7 @@ export async function createOrUpdateContact(data: ContactData): Promise<HubSpotC
     const response = await fetch(`${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${existing.id}`, {
       method: 'PATCH',
       headers: {
-        Authorization: `Bearer ${API_KEY}`,
+        Authorization: `Bearer ${getApiKey()}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -179,7 +141,7 @@ export async function createOrUpdateContact(data: ContactData): Promise<HubSpotC
   const response = await fetch(`${HUBSPOT_API_BASE}/crm/v3/objects/contacts`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${API_KEY}`,
+      Authorization: `Bearer ${getApiKey()}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -205,7 +167,7 @@ export async function createOrUpdateContact(data: ContactData): Promise<HubSpotC
  * @returns HubSpot company with ID
  */
 export async function getOrCreateCompanyByWebsite(website: string): Promise<HubSpotCompany> {
-  if (!API_KEY) {
+  if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
 
@@ -214,7 +176,7 @@ export async function getOrCreateCompanyByWebsite(website: string): Promise<HubS
   const searchResponse = await fetch(searchUrl, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${API_KEY}`,
+      Authorization: `Bearer ${getApiKey()}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -247,7 +209,7 @@ export async function getOrCreateCompanyByWebsite(website: string): Promise<HubS
   const createResponse = await fetch(createUrl, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${API_KEY}`,
+      Authorization: `Bearer ${getApiKey()}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -275,7 +237,7 @@ export async function getOrCreateCompanyByWebsite(website: string): Promise<HubS
  * @param companyId HubSpot company ID
  */
 export async function associateContactToCompany(contactId: string, companyId: string): Promise<void> {
-  if (!API_KEY) {
+  if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
 
@@ -283,7 +245,7 @@ export async function associateContactToCompany(contactId: string, companyId: st
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${API_KEY}`,
+      Authorization: `Bearer ${getApiKey()}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -316,7 +278,7 @@ export async function associateContactToCompany(contactId: string, companyId: st
  * @param trainingId Training event ID (e.g., from eventId in form data)
  */
 export async function associateContactToTraining(contactId: string, trainingId: string): Promise<void> {
-  if (!API_KEY) {
+  if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
   // Use the CRM associations API and the configured training object type.
@@ -331,7 +293,7 @@ export async function associateContactToTraining(contactId: string, trainingId: 
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${API_KEY}`,
+      Authorization: `Bearer ${getApiKey()}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -365,14 +327,14 @@ export async function associateContactToTraining(contactId: string, trainingId: 
  * @returns HubSpot contact or null if not found
  */
 export async function getContactByEmail(email: string): Promise<HubSpotContact | null> {
-  if (!API_KEY) {
+  if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
 
   const response = await fetch(`${HUBSPOT_API_BASE}/crm/v3/objects/contacts/search`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${API_KEY}`,
+      Authorization: `Bearer ${getApiKey()}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -411,7 +373,7 @@ export async function getContactByEmail(email: string): Promise<HubSpotContact |
  * @returns Array of training objects from HubSpot
  */
 export async function getTrainingObjects(pipelineStage?: string, pipelineType?: string): Promise<HubSpotTraining[]> {
-  if (!API_KEY) {
+  if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
 
@@ -438,7 +400,7 @@ export async function getTrainingObjects(pipelineStage?: string, pipelineType?: 
       const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${API_KEY}`,
+          Authorization: `Bearer ${getApiKey()}`,
           'Content-Type': 'application/json',
         },
       })

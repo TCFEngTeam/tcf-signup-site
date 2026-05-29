@@ -1,5 +1,5 @@
 import React from 'react'
-import { formatTrainingSchedule } from '@/lib/hubspotApi'
+import { formatTrainingSchedule } from '@/lib/formatTrainingSchedule'
 
 type EventDetailsProps = {
   event?: any

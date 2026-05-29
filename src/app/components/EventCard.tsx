@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { formatTrainingSchedule } from '@/lib/hubspotApi'
+import { formatTrainingSchedule } from '@/lib/formatTrainingSchedule'
 import type { TrainingProgramId } from '@/lib/trainingPrograms'
 
 type EventCardProps = {
