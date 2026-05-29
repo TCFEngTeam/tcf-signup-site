@@ -3,7 +3,7 @@ import {
   contactHasTrainingAssociation,
   isDuplicateAssociationResponse,
   mapSmsConsentToHubSpot,
-} from './hubspotFieldMappers'
+} from '@/lib/hubspot/field-mappers'
 
 describe('mapSmsConsentToHubSpot', () => {
   afterEach(() => {

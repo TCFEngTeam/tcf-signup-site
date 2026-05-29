@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { mapTrainingToEvent } from './hubspotApi'
-import { toProgramEvent } from './programEvents'
+import { mapTrainingToEvent } from '@/lib/hubspot/api'
+import { toProgramEvent } from '@/lib/programs/events'
 
 describe('toProgramEvent', () => {
   it('maps HubSpot training fields and full status', () => {

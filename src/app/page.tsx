@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import Footer from './components/Footer'
-import Header from './components/Header'
-import { TRAINING_PROGRAM_LIST } from '@/lib/trainingPrograms'
+import Footer from '@/components/layout/Footer'
+import Header from '@/components/layout/Header'
+import { TRAINING_PROGRAM_LIST } from '@/lib/programs/config'
 
 export default function Home() {
   return (

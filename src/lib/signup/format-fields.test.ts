@@ -5,7 +5,7 @@ import {
   formatUniversityWebsite,
   isSignupFormatError,
   parseStoredPhone,
-} from './formatSignupFields'
+} from '@/lib/signup/format-fields'
 
 describe('formatSignupFormData', () => {
   it('normalizes contact fields and HubSpot yes/no values', () => {

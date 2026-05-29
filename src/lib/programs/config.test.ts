@@ -3,7 +3,7 @@ import {
   getProgramPipelineConfig,
   getTrainingProgram,
   isTrainingProgramId,
-} from './trainingPrograms'
+} from '@/lib/programs/config'
 
 describe('trainingPrograms', () => {
   afterEach(() => {

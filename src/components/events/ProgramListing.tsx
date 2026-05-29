@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import EventCard from './EventCard'
-import Footer from './Footer'
-import Header from './Header'
-import type { ListedEvent } from '@/lib/fetchProgramEvents'
-import type { TrainingProgram } from '@/lib/trainingPrograms'
+import Footer from '@/components/layout/Footer'
+import Header from '@/components/layout/Header'
+import type { ListedEvent } from '@/lib/programs/fetch'
+import type { TrainingProgram } from '@/lib/programs/config'
 
 type ProgramListingProps = {
   program: TrainingProgram

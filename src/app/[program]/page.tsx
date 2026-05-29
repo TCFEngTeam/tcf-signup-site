@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
-import ProgramListing from '@/app/components/ProgramListing'
-import { fetchEventsForProgram } from '@/lib/fetchProgramEvents'
-import { getTrainingProgram } from '@/lib/trainingPrograms'
+import ProgramListing from '@/components/events/ProgramListing'
+import { fetchEventsForProgram } from '@/lib/programs/fetch'
+import { getTrainingProgram } from '@/lib/programs/config'
 
 type ProgramPageProps = {
   params: Promise<{ program: string }>

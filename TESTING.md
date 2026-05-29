@@ -18,11 +18,11 @@ npm run test:watch
 
 | Area | Test file |
 |---|---|
-| Form normalization (names, email, phone, HubSpot yes/no) | `src/lib/formatSignupFields.test.ts` |
-| Event list sorting | `src/lib/sortEvents.test.ts` |
-| HubSpot field mappers (SMS consent IDs, duplicate association detection) | `src/lib/hubspotFieldMappers.test.ts` |
-| Training object → app event mapping | `src/lib/programEvents.test.ts` |
-| Program config (MHFA/QPR, pipeline env) | `src/lib/trainingPrograms.test.ts` |
+| Form normalization (names, email, phone, HubSpot yes/no) | `src/lib/signup/format-fields.test.ts` |
+| Event list sorting | `src/lib/programs/sort.test.ts` |
+| HubSpot field mappers (SMS consent IDs, duplicate association detection) | `src/lib/hubspot/field-mappers.test.ts` |
+| Training object → app event mapping | `src/lib/programs/events.test.ts` |
+| Program config (MHFA/QPR, pipeline env) | `src/lib/programs/config.test.ts` |
 | Signup API validation and error paths (mocked HubSpot) | `src/app/api/signup/route.test.ts` |
 
 Shared signup payloads live in `src/test/fixtures/signup.ts`.
@@ -30,7 +30,7 @@ Shared signup payloads live in `src/test/fixtures/signup.ts`.
 ### Adding tests
 
 - Prefer testing **pure functions** in `src/lib/` without network calls.
-- For API routes, **mock** `@/lib/hubspotApi` and `@/lib/programEvents` (see `route.test.ts`).
+- For API routes, **mock** `@/lib/hubspot/api` and `@/lib/programs/events` (see `route.test.ts`).
 - Do not call the real HubSpot API in CI or local `npm test`.
 
 ## Manual / integration testing (HubSpot)

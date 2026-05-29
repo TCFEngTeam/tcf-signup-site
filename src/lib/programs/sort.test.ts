@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { sortEventsForListing, sortEventsSoonestFirst } from './sortEvents'
+import { sortEventsForListing, sortEventsSoonestFirst } from '@/lib/programs/sort'
 
 const sampleEvents = [
   { id: 'a', startDate: '2026-01-01T00:00:00.000Z' },

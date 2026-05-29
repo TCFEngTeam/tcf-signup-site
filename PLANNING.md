@@ -85,7 +85,7 @@ Listings sort **furthest future first** (descending by `startDate`) so the lates
 
 ## Security notes
 
-HubSpot API key usage is **server-side only** (`hubspotApi.ts`, API routes) — not exposed to the browser. This is correct.
+HubSpot API key usage is **server-side only** (`src/lib/hubspot/api.ts`, API routes) — not exposed to the browser. This is correct.
 
 ### Low / acceptable risk
 - **`GET /api/events`** is public — intentional for a public listing; only returns pipeline-filtered event fields.
@@ -171,7 +171,7 @@ Configured locally + Vercel. Do not commit values to git.
 **Legacy (MHFA fallback only):** `HUBSPOT_TRAINING_PIPELINE_STAGE` / `HUBSPOT_TRAINING_PIPELINE_TYPE` are used if the MHFA-specific vars are unset.
 
 **Not yet mapped to HubSpot (collected in form):**
-- `smsConsent` — form field exists; no `hubspotApi` mapping yet
+- ~~`smsConsent`~~ — mapped via `src/lib/hubspot/field-mappers.ts` (see `HUBSPOT_SMS_CONSENT_*` env vars)
 
 **Removed from form but still in API types:**
 - `trainingDates` — in `ContactData`; not on form
@@ -188,7 +188,7 @@ Configured locally + Vercel. Do not commit values to git.
 5. ~~**Remove mock/preview from production**~~ — removed; see `TESTING.md`.
 
 ### Should-fix soon (can interleave with Phase 1–2)
-6. ~~**Unify data fetching**~~ — shared `loadProgramEvents` in `src/lib/programEvents.ts`.
+6. ~~**Unify data fetching**~~ — shared `loadProgramEvents` in `src/lib/programs/events.ts`.
 7. ~~**Use `CapacityIndicator`**~~ — on listing cards and event detail pages.
 
 ### Multi-program (MHFA / QPR) — next priority
@@ -203,7 +203,7 @@ Configured locally + Vercel. Do not commit values to git.
 
 ### Code quality
 17. Reduce `any` types on homepage event list.
-18. Add tests for `formatSignupFields`, signup API validation, phone parsing.
+18. ~~Add tests for `formatSignupFields`, signup API validation, phone parsing.~~ — see `TESTING.md`.
 19. Document extensibility pattern for new form fields (single source of truth for field list + HubSpot mapping).
 
 ---
@@ -245,11 +245,11 @@ Configured locally + Vercel. Do not commit values to git.
 
 When new fields are needed:
 
-1. Add to `SignupFormData` in `src/lib/formatSignupFields.ts`
-2. Add UI + validation in `EventSignupForm.tsx`
+1. Add to `SignupFormData` in `src/lib/signup/format-fields.ts`
+2. Add UI + validation in `src/components/signup/EventSignupForm.tsx`
 3. Add server validation in `src/app/api/signup/route.ts`
-4. Map property in `mapContactProperties()` in `src/lib/hubspotApi.ts` + env var for HubSpot property name
-5. Include in `localProfileStore` save/load if it should autofill
+4. Map property in `mapContactProperties()` in `src/lib/hubspot/api.ts` + env var for HubSpot property name
+5. Include in `src/lib/signup/profile-store.ts` save/load if it should autofill
 6. Update test fixtures in `src/test/fixtures/` when form fields change
 
 Keep field labels, validation rules, and HubSpot mapping colocated or documented to avoid drift.
@@ -272,10 +272,15 @@ Keep field labels, validation rules, and HubSpot mapping colocated or documented
 | File | Role |
 |---|---|
 | `REQUIREMENTS.md` | Original spec, wireframes, open questions |
-| `src/lib/hubspotApi.ts` | HubSpot CRM integration |
-| `src/lib/formatSignupFields.ts` | Form normalization + phone formatting |
-| `src/lib/localProfileStore.ts` | Browser autofill (not wired yet) |
-| `src/lib/phoneCountryCodes.ts` | Country dial codes (from [gist](https://gist.github.com/gugazimmermann/635dac160396fc9b5e5d75d1b03c1194)) |
+| `src/lib/hubspot/api.ts` | HubSpot CRM integration |
+| `src/lib/hubspot/field-mappers.ts` | HubSpot option IDs, association helpers |
+| `src/lib/signup/format-fields.ts` | Form normalization + phone formatting |
+| `src/lib/signup/profile-store.ts` | Browser autofill (localStorage) |
+| `src/lib/programs/config.ts` | MHFA/QPR program config and pipeline env |
+| `src/lib/programs/events.ts` | Fetch and map trainings to app events |
+| `src/lib/phone/country-codes.ts` | Country dial codes |
+| `src/components/signup/EventSignupForm.tsx` | Signup form UI |
+| `src/components/events/ProgramListing.tsx` | Program event listing |
 | `src/app/api/signup/route.ts` | Signup endpoint |
 | `src/app/api/events/route.ts` | Public event list |
 | `TESTING.md` | How to run automated tests and manual HubSpot checks |

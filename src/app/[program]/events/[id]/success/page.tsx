@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import Footer from '@/app/components/Footer'
-import Header from '@/app/components/Header'
-import { formatTrainingSchedule } from '@/lib/formatTrainingSchedule'
-import { loadProgramEventById } from '@/lib/programEvents'
-import { getTrainingProgram } from '@/lib/trainingPrograms'
+import Footer from '@/components/layout/Footer'
+import Header from '@/components/layout/Header'
+import { formatTrainingSchedule } from '@/lib/dates/format-schedule'
+import { loadProgramEventById } from '@/lib/programs/events'
+import { getTrainingProgram } from '@/lib/programs/config'
 
 export const metadata: Metadata = {
   title: 'Signup Confirmed',

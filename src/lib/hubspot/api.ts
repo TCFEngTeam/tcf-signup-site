@@ -77,12 +77,12 @@ function parseDateProperty(value?: string) {
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
-export { formatTrainingSchedule } from './formatTrainingSchedule'
+export { formatTrainingSchedule } from '@/lib/dates/format-schedule'
 import {
   contactHasTrainingAssociation,
   isDuplicateAssociationResponse,
   mapSmsConsentToHubSpot,
-} from './hubspotFieldMappers'
+} from '@/lib/hubspot/field-mappers'
 
 /**
  * Maps form data to HubSpot contact properties using environment variables

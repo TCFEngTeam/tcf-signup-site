@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import EventDetails from '@/app/components/EventDetails'
-import EventSignupForm from '@/app/components/EventSignupForm'
-import Footer from '@/app/components/Footer'
-import Header from '@/app/components/Header'
-import { loadProgramEventById } from '@/lib/programEvents'
-import { getTrainingProgram } from '@/lib/trainingPrograms'
+import EventDetails from '@/components/events/EventDetails'
+import EventSignupForm from '@/components/signup/EventSignupForm'
+import Footer from '@/components/layout/Footer'
+import Header from '@/components/layout/Header'
+import { loadProgramEventById } from '@/lib/programs/events'
+import { getTrainingProgram } from '@/lib/programs/config'
 
 type ProgramEventPageProps = {
   params: Promise<{ program: string; id: string }>
