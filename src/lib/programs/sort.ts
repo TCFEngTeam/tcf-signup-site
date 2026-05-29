@@ -11,23 +11,13 @@ export function sortEventsSoonestFirst<T extends EventWithStartDate>(events: T[]
   })
 }
 
-/** Furthest future date first (top-left in the listing grid). */
+/** Soonest start date first (top-left in the listing grid). */
 export function sortEventsForListing<T extends EventWithStartDate>(events: T[]): T[] {
-  return [...events].sort((a, b) => {
-    const aTime = parseEventTimeDesc(a.startDate)
-    const bTime = parseEventTimeDesc(b.startDate)
-    return bTime - aTime
-  })
+  return sortEventsSoonestFirst(events)
 }
 
 function parseEventTimeAsc(startDate?: string) {
   if (!startDate) return Number.POSITIVE_INFINITY
   const time = new Date(startDate).getTime()
   return Number.isNaN(time) ? Number.POSITIVE_INFINITY : time
-}
-
-function parseEventTimeDesc(startDate?: string) {
-  if (!startDate) return Number.NEGATIVE_INFINITY
-  const time = new Date(startDate).getTime()
-  return Number.isNaN(time) ? Number.NEGATIVE_INFINITY : time
 }

@@ -9,9 +9,9 @@ const sampleEvents = [
 ]
 
 describe('sortEventsForListing', () => {
-  it('sorts furthest future first and puts missing dates last', () => {
+  it('sorts soonest first and puts missing dates last', () => {
     const sorted = sortEventsForListing(sampleEvents)
-    expect(sorted.map((event) => event.id)).toEqual(['b', 'c', 'a', 'd'])
+    expect(sorted.map((event) => event.id)).toEqual(['a', 'c', 'b', 'd'])
   })
 })
 
