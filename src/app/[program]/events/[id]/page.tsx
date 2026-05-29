@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import EventDetails from '@/components/events/EventDetails'
+
+export const dynamic = 'force-dynamic'
 import EventSignupForm from '@/components/signup/EventSignupForm'
 import Footer from '@/components/layout/Footer'
 import Header from '@/components/layout/Header'

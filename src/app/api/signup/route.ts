@@ -12,6 +12,9 @@ import {
 import { formatSignupFormData, isSignupFormatError } from '@/lib/signup/format-fields'
 import { loadProgramEventById } from '@/lib/programs/events'
 import { isTrainingProgramId } from '@/lib/programs/config'
+
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()

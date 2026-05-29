@@ -6,6 +6,11 @@
 
 const HUBSPOT_API_BASE = 'https://api.hubapi.com'
 
+/** HubSpot must always be live; Next.js caches `fetch` in production by default. */
+function hubspotFetch(url: string | URL, init?: RequestInit) {
+  return fetch(url, { ...init, cache: 'no-store' })
+}
+
 export class AlreadyRegisteredError extends Error {
   constructor(message = 'You are already registered for this event.') {
     super(message)
@@ -124,7 +129,7 @@ export async function isContactRegisteredForTraining(
 
   const trainingObjectType = getTrainingObjectType()
   const url = `${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${contactId}/associations/${trainingObjectType}`
-  const response = await fetch(url, {
+  const response = await hubspotFetch(url, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${getApiKey()}`,
@@ -176,7 +181,7 @@ export async function createOrUpdateContact(data: ContactData): Promise<HubSpotC
   const existing = await getContactByEmail(data.email)
 
   if (existing?.id) {
-    const response = await fetch(`${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${existing.id}`, {
+    const response = await hubspotFetch(`${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${existing.id}`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${getApiKey()}`,
@@ -197,7 +202,7 @@ export async function createOrUpdateContact(data: ContactData): Promise<HubSpotC
     return parsed ?? { id: existing.id }
   }
 
-  const response = await fetch(`${HUBSPOT_API_BASE}/crm/v3/objects/contacts`, {
+  const response = await hubspotFetch(`${HUBSPOT_API_BASE}/crm/v3/objects/contacts`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${getApiKey()}`,
@@ -232,7 +237,7 @@ export async function getOrCreateCompanyByWebsite(website: string): Promise<HubS
 
   // Search for an existing company by website domain
   const searchUrl = `${HUBSPOT_API_BASE}/crm/v3/objects/companies/search`
-  const searchResponse = await fetch(searchUrl, {
+  const searchResponse = await hubspotFetch(searchUrl, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${getApiKey()}`,
@@ -265,7 +270,7 @@ export async function getOrCreateCompanyByWebsite(website: string): Promise<HubS
 
   // No existing company found; create a new one
   const createUrl = `${HUBSPOT_API_BASE}/crm/v3/objects/companies`
-  const createResponse = await fetch(createUrl, {
+  const createResponse = await hubspotFetch(createUrl, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${getApiKey()}`,
@@ -301,7 +306,7 @@ export async function associateContactToCompany(contactId: string, companyId: st
   }
 
   const url = `${HUBSPOT_API_BASE}/crm/v3/associations/contacts/companies/batch/create`
-  const response = await fetch(url, {
+  const response = await hubspotFetch(url, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${getApiKey()}`,
@@ -351,7 +356,7 @@ export async function associateContactToTraining(contactId: string, trainingId: 
   // for creating associations between two object types.
   const url = `${HUBSPOT_API_BASE}/crm/v3/associations/contacts/${trainingObjectType}/batch/create`
   const associationLabel = process.env.HUBSPOT_TRAINING_ASSOCIATION_LABEL || 'registrant'
-  const response = await fetch(url, {
+  const response = await hubspotFetch(url, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${getApiKey()}`,
@@ -395,7 +400,7 @@ export async function getContactByEmail(email: string): Promise<HubSpotContact |
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
 
-  const response = await fetch(`${HUBSPOT_API_BASE}/crm/v3/objects/contacts/search`, {
+  const response = await hubspotFetch(`${HUBSPOT_API_BASE}/crm/v3/objects/contacts/search`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${getApiKey()}`,
@@ -461,7 +466,7 @@ export async function getTrainingObjects(pipelineStage?: string, pipelineType?: 
       url.searchParams.set('properties', requestedProperties.join(','))
       if (after) url.searchParams.set('after', after)
 
-      const response = await fetch(url.toString(), {
+      const response = await hubspotFetch(url.toString(), {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${getApiKey()}`,

@@ -3,6 +3,8 @@ import ProgramListing from '@/components/events/ProgramListing'
 import { fetchEventsForProgram } from '@/lib/programs/fetch'
 import { getTrainingProgram } from '@/lib/programs/config'
 
+export const dynamic = 'force-dynamic'
+
 type ProgramPageProps = {
   params: Promise<{ program: string }>
 }

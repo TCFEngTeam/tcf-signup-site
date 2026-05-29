@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { loadProgramEvents } from '@/lib/programs/events'
 import { isTrainingProgramId, type TrainingProgramId } from '@/lib/programs/config'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
