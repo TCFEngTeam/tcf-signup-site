@@ -33,6 +33,11 @@ export default async function SignupSuccessPage({ searchParams }: SignupSuccessP
     }
   }
 
+  const nextSteps =
+    program?.successNextSteps ?? [
+      'Check your email for confirmation and session details.',
+    ]
+
   const backHref = program ? `/${program.slug}` : '/'
   const backLabel = program
     ? `Back to ${program.shortLabel} events`
@@ -91,9 +96,9 @@ export default async function SignupSuccessPage({ searchParams }: SignupSuccessP
                 What happens next
               </p>
               <ul className="space-y-2 helper-text list-disc list-inside">
-                <li>Check your email for confirmation and session details.</li>
-                <li>Complete the required 2 hours of pre-work before the training date.</li>
-                <li>Attend the full 6-hour virtual instructor-led session for certification.</li>
+                {nextSteps.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
               </ul>
             </div>
 
