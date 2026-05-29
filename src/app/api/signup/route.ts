@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     }
 
     if (!program || !isTrainingProgramId(program)) {
-      return NextResponse.json({ error: 'Missing or invalid program (mhfa or qpa)' }, { status: 400 })
+      return NextResponse.json({ error: 'Missing or invalid program (mhfa or qpr)' }, { status: 400 })
     }
 
     // Basic validation — check required fields

@@ -8,7 +8,7 @@ type ProgramPageProps = {
 }
 
 export function generateStaticParams() {
-  return [{ program: 'mhfa' }, { program: 'qpa' }]
+  return [{ program: 'mhfa' }, { program: 'qpr' }]
 }
 
 export default async function ProgramPage({ params }: ProgramPageProps) {

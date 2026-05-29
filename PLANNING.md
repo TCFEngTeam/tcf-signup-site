@@ -42,7 +42,7 @@ The site is a **Next.js 16** public signup app. Events and registrations flow th
 | Phone / international | Mostly US audience; +1-only display on closed country picker is fine |
 | Admin | **HubSpot only** — no admin UI on this site |
 | Confirmation emails | TBD — investigate HubSpot workflows |
-| Multi-program split | **Upcoming:** separate front pages for **MHFA** vs **QPA** trainings, each with its own HubSpot pipeline designation |
+| Multi-program split | **Upcoming:** separate front pages for **MHFA** vs **QPR** trainings, each with its own HubSpot pipeline designation |
 | Preview / mock routes | **Disable in production**; remove current preview/mock implementation and replace with better dev-only testing approach |
 | Branding | Placeholders compiled below — team to supply real assets/links |
 
@@ -71,7 +71,7 @@ Original wireframes in `REQUIREMENTS.md` described optional listing controls:
 
 **None of this is built.** The homepage renders all pipeline-visible events in a grid.
 
-**Recommendation:** Defer until event volume justifies it. If MHFA and QPA split onto separate pages (each with its own pipeline filter), search may be unnecessary initially.
+**Recommendation:** Defer until event volume justifies it. If MHFA and QPR split onto separate pages (each with its own pipeline filter), search may be unnecessary initially.
 
 ---
 
@@ -115,20 +115,20 @@ Team action needed — replace placeholders with real assets/links.
 | Location | Current | Needed |
 |---|---|---|
 | `Header.tsx` — logo | Text `"TCF"` | Official logo image + alt text |
-| `Header.tsx` — nav | Empty `{/* nav links */}` | Nav items (e.g. MHFA home, QPA home, main site, contact) |
+| `Header.tsx` — nav | Empty `{/* nav links */}` | Nav items (e.g. MHFA home, QPR home, main site, contact) |
 | `Footer.tsx` | `© TCF — Event Signup` | Full footer copy, links, address, social? |
 
 ### Metadata & assets (`layout.tsx`, `public/`)
 | Item | Current | Needed |
 |---|---|---|
-| Page title / description | Generic “TCF Event Signup” / MHFA-focused description | Per-program titles when MHFA/QPA split; OG tags |
+| Page title / description | Generic “TCF Event Signup” / MHFA-focused description | Per-program titles when MHFA/QPR split; OG tags |
 | Favicon | Default Next.js / none custom | TCF favicon (`public/favicon.ico` or app icon) |
 | `public/` assets | Vercel/default SVGs only | Logo, any program imagery |
 
 ### Homepage / event copy
 | Location | Current | Needed |
 |---|---|---|
-| `page.tsx` — hero | Hard-coded MHFA 8-hour course copy | MHFA-specific page copy; separate QPA copy on future route |
+| `page.tsx` — hero | Hard-coded MHFA 8-hour course copy | MHFA-specific page copy; separate QPR copy on future route |
 | `events/[id]/page.tsx` — notice block | Same MHFA boilerplate on every event | Program-specific or HubSpot-driven description |
 | `events/success/page.tsx` | Generic “what happens next” | Event-specific details when implemented |
 
@@ -161,8 +161,8 @@ Configured locally + Vercel. Do not commit values to git.
 | `HUBSPOT_API_KEY` | Private app token for CRM API |
 | `HUBSPOT_MHFA_PIPELINE_STAGE` | MHFA training visibility filter |
 | `HUBSPOT_MHFA_PIPELINE_TYPE` | MHFA pipeline (`hs_pipeline`) filter |
-| `HUBSPOT_QPA_PIPELINE_STAGE` | QPA training visibility filter |
-| `HUBSPOT_QPA_PIPELINE_TYPE` | QPA pipeline (`hs_pipeline`) filter |
+| `HUBSPOT_QPR_PIPELINE_STAGE` | QPR training visibility filter |
+| `HUBSPOT_QPR_PIPELINE_TYPE` | QPR pipeline (`hs_pipeline`) filter |
 | `HUBSPOT_TRAINING_OBJECT_ID` | Custom training object type (default `0-410`) |
 | `HUBSPOT_TRAINING_PROPERTIES` | Comma-separated properties to fetch |
 | `HUBSPOT_TRAINING_ASSOCIATION_LABEL` | Contact → training association type (default `registrant`) |
@@ -191,8 +191,8 @@ Configured locally + Vercel. Do not commit values to git.
 6. ~~**Unify data fetching**~~ — shared `loadProgramEvents` in `src/lib/programEvents.ts`.
 7. ~~**Use `CapacityIndicator`**~~ — on listing cards and event detail pages.
 
-### Multi-program (MHFA / QPA) — next priority
-11. ~~**Split homepage**~~ — `/mhfa` and `/qpa` with separate pipeline env vars.
+### Multi-program (MHFA / QPR) — next priority
+11. ~~**Split homepage**~~ — `/mhfa` and `/qpr` with separate pipeline env vars.
 12. ~~Shared event listing component~~ — `ProgramListing` with program-specific copy.
 
 ### After multi-program / UX polish
@@ -219,9 +219,9 @@ Configured locally + Vercel. Do not commit values to git.
 - Wire localStorage autofill
 - Strip/gate mock & preview for production
 
-### Phase 2 — Multi-program (MHFA / QPA) ✅
+### Phase 2 — Multi-program (MHFA / QPR) ✅
 - Program config (pipeline env vars per program)
-- `/mhfa` and `/qpa` listing routes
+- `/mhfa` and `/qpr` listing routes
 - Program-specific page copy and metadata
 - Event detail/signup scoped to program (pipeline filter on fetch)
 - Root `/` program chooser
@@ -260,7 +260,7 @@ Keep field labels, validation rules, and HubSpot mapping colocated or documented
 
 - [ ] Confirm duplicate signups (same email, multiple events) policy
 - [ ] HubSpot workflow for confirmation emails
-- [x] QPA route naming and pipeline env var strategy — `/mhfa`, `/qpa`, separate env vars per program
+- [x] QPR route naming and pipeline env var strategy — `/mhfa`, `/qpr`, separate env vars per program
 - [ ] Provide SMS Terms + Privacy Policy URLs
 - [ ] Provide logo, favicon, nav structure, footer content
 - [ ] Decide bot/spam protection for public signup endpoint

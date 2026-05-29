@@ -1,4 +1,4 @@
-export type TrainingProgramId = 'mhfa' | 'qpa'
+export type TrainingProgramId = 'mhfa' | 'qpr'
 
 export type TrainingProgram = {
   id: TrainingProgramId
@@ -32,18 +32,18 @@ export const TRAINING_PROGRAMS: Record<TrainingProgramId, TrainingProgram> = {
     listingIntro: MHFA_INTRO,
     signupNotice: MHFA_INTRO,
   },
-  qpa: {
-    id: 'qpa',
-    slug: 'qpa',
-    name: 'Question Persuade Refer',
-    shortLabel: 'QPA',
-    listingTitle: 'QPA Training Sign Up',
+  qpr: {
+    id: 'qpr',
+    slug: 'qpr',
+    name: 'Question, Persuade, Refer',
+    shortLabel: 'QPR',
+    listingTitle: 'QPR Training Sign Up',
     listingIntro: [
-      'Sign up for an upcoming Question Persuade Refer (QPA) training session.',
+      'Sign up for an upcoming Question, Persuade, Refer (QPR) training session.',
       'Session details, format, and requirements will be confirmed after registration.',
     ],
     signupNotice: [
-      'Sign up for an upcoming Question Persuade Refer (QPA) training session.',
+      'Sign up for an upcoming Question, Persuade, Refer (QPR) training session.',
       'Session details, format, and requirements will be confirmed after registration.',
     ],
   },
@@ -52,7 +52,7 @@ export const TRAINING_PROGRAMS: Record<TrainingProgramId, TrainingProgram> = {
 export const TRAINING_PROGRAM_LIST = Object.values(TRAINING_PROGRAMS)
 
 export function isTrainingProgramId(value: string): value is TrainingProgramId {
-  return value === 'mhfa' || value === 'qpa'
+  return value === 'mhfa' || value === 'qpr'
 }
 
 export function getTrainingProgram(programId: string): TrainingProgram | null {
@@ -73,7 +73,7 @@ export function getProgramPipelineConfig(programId: TrainingProgramId): ProgramP
   }
 
   return {
-    pipelineStage: process.env.HUBSPOT_QPA_PIPELINE_STAGE,
-    pipelineType: process.env.HUBSPOT_QPA_PIPELINE_TYPE,
+    pipelineStage: process.env.HUBSPOT_QPR_PIPELINE_STAGE,
+    pipelineType: process.env.HUBSPOT_QPR_PIPELINE_TYPE,
   }
 }

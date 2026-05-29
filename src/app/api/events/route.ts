@@ -9,7 +9,7 @@ export async function GET(req: Request) {
 
     if (!programParam || !isTrainingProgramId(programParam)) {
       return NextResponse.json(
-        { error: 'Missing or invalid program query param (mhfa or qpa)' },
+        { error: 'Missing or invalid program query param (mhfa or qpr)' },
         { status: 400 }
       )
     }
