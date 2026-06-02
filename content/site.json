@@ -3,7 +3,7 @@
   "siteName": "TCF Event Signup",
   "logo": {
     "text": "TCF",
-    "imageSrc": "",
+    "imageSrc": "/logo.png",
     "imageAlt": "Trusted Care Foundation"
   },
   "footerText": "© TCF — Event Signup",
