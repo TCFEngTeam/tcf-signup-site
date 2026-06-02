@@ -1,0 +1,36 @@
+{
+  "listing": {
+    "backToMainSite": "← Back to main site"
+  },
+  "eventCard": {
+    "badgeFull": "Full",
+    "badgeOpen": "Open",
+    "signUp": "Sign up",
+    "fallbackTitle": "Event Title",
+    "fallbackLocation": "Location"
+  },
+  "eventDetail": {
+    "backToEvents": "← Back to {program} events",
+    "inactive": "This event is currently unavailable.",
+    "full": "This event is full.",
+    "signupHeading": "Sign up",
+    "registrationClosed": "Registration is closed for this session.",
+    "browseOtherEvents": "Browse other {program} events",
+    "eventNotFoundEyebrow": "Event lookup",
+    "eventNotFoundTitle": "Event not found",
+    "eventNotFoundBody": "We couldn't find that event.",
+    "eventNotFoundTry": "Try",
+    "eventNotFoundLink": "returning to the {program} event list",
+    "eventNotFoundAfterLink": "and opening a known event."
+  },
+  "success": {
+    "metadataTitle": "Signup Confirmed",
+    "metadataDescription": "Your training signup has been submitted successfully.",
+    "eyebrow": "Signup complete",
+    "heading": "You're signed up!",
+    "thankYou": "Thank you for registering. Your submission has been received and we'll be in touch with next steps for your training session.",
+    "nextStepsHeading": "What happens next",
+    "backToEvents": "Back to {program} events",
+    "viewEventDetails": "View event details"
+  }
+}

@@ -6,8 +6,11 @@ export const dynamic = 'force-dynamic'
 import EventSignupForm from '@/components/signup/EventSignupForm'
 import Footer from '@/components/layout/Footer'
 import Header from '@/components/layout/Header'
+import { formatContent, pagesContent } from '@/lib/content'
 import { loadProgramEventById } from '@/lib/programs/events'
 import { getTrainingProgram } from '@/lib/programs/config'
+
+const detail = pagesContent.eventDetail
 
 type ProgramEventPageProps = {
   params: Promise<{ program: string; id: string }>
@@ -21,6 +24,7 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
     notFound()
   }
 
+  const programLabel = program.shortLabel
   const { event, error } = await loadProgramEventById(program.id, id)
 
   if (error) {
@@ -33,16 +37,16 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
         <Header />
         <main className="container mx-auto px-6 py-10">
           <div className="page-hero">
-            <div className="eyebrow">Event lookup</div>
-            <h1 className="text-3xl font-bold page-title">Event not found</h1>
+            <div className="eyebrow">{detail.eventNotFoundEyebrow}</div>
+            <h1 className="text-3xl font-bold page-title">{detail.eventNotFoundTitle}</h1>
           </div>
-          <p>We couldn&apos;t find that event.</p>
+          <p>{detail.eventNotFoundBody}</p>
           <p className="mt-4 text-sm text-zinc-600">
-            Try{' '}
+            {detail.eventNotFoundTry}{' '}
             <Link className="underline" href={`/${program.slug}`}>
-              returning to the {program.shortLabel} event list
+              {formatContent(detail.eventNotFoundLink, { program: programLabel })}
             </Link>{' '}
-            and opening a known event.
+            {detail.eventNotFoundAfterLink}
           </p>
         </main>
         <Footer />
@@ -57,7 +61,7 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
       <main className="container mx-auto px-6 py-10">
         <div className="mb-6">
           <Link href={`/${program.slug}`} className="back-link">
-            ← Back to {program.shortLabel} events
+            {formatContent(detail.backToEvents, { program: programLabel })}
           </Link>
         </div>
 
@@ -65,8 +69,8 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
           <EventDetails event={event} />
 
           <div className="notice-card text-sm text-zinc-700">
-            {!event.active && <p>This event is currently unavailable.</p>}
-            {event.isFull && <p>This event is full.</p>}
+            {!event.active && <p>{detail.inactive}</p>}
+            {event.isFull && <p>{detail.full}</p>}
 
             <div className="mb-6 p-6 bg-blue-50 rounded-lg border border-blue-200 space-y-3">
               {program.signupNotice.map((paragraph) => (
@@ -80,7 +84,7 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
           {!event.isFull && event.active ? (
             <section className="section-panel">
               <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--primary-blue)' }}>
-                Sign up
+                {detail.signupHeading}
               </h2>
               <div className="w-full">
                 <EventSignupForm eventId={event.id} programId={program.id} />
@@ -88,9 +92,9 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
             </section>
           ) : (
             <p className="text-sm text-zinc-600">
-              Registration is closed for this session.{' '}
+              {detail.registrationClosed}{' '}
               <Link className="underline" href={`/${program.slug}`}>
-                Browse other {program.shortLabel} events
+                {formatContent(detail.browseOtherEvents, { program: programLabel })}
               </Link>
               .
             </p>

@@ -1,14 +1,27 @@
 import React from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { siteContent } from '@/lib/content'
 
 export default function Header() {
-  const { logoText, nav } = siteContent
+  const { logo, nav } = siteContent
+  const showLogoImage = Boolean(logo.imageSrc?.trim())
 
   return (
     <header className="site-header">
-      <div className="container">
-        <div className="logo">{logoText}</div>
+      <div className="container flex items-center justify-between gap-4">
+        {showLogoImage ? (
+          <Image
+            src={logo.imageSrc}
+            alt={logo.imageAlt}
+            width={160}
+            height={48}
+            className="h-10 w-auto"
+            priority
+          />
+        ) : (
+          <div className="logo">{logo.text}</div>
+        )}
         {nav.length > 0 ? (
           <nav className="flex gap-4">
             {nav.map((item) => (

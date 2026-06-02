@@ -113,11 +113,11 @@ Listings sort **soonest upcoming first** (ascending by `startDate` via `sortEven
 - ✅ Plain-language runbook: [`MAINTENANCE.md`](MAINTENANCE.md).
 - ✅ Site chrome, SMS links, metadata, and program intros loaded from JSON via `src/lib/content/`.
 - HubSpot still owns event titles, dates, capacity, and registrations.
-- **Still developer-heavy:** form field labels, branding images/favicon, new form fields, new programs, HubSpot env mapping.
+- **Still developer-heavy:** new form fields, new programs, HubSpot env mapping, favicon file.
 
 **Remaining:**
-- Move form field labels into `content/` (optional).
-- Logo/favicon in `public/` + Header image support.
+- Team-provided logo file + `logo.imageSrc` in `site.json`.
+- Favicon in `public/`.
 - Expand `MAINTENANCE.md` as processes evolve.
 
 Tracked in [Known issues & gaps](#known-issues--gaps).
@@ -222,7 +222,7 @@ Configured locally + Vercel. Do not commit values to git.
 ## Known issues & gaps
 
 ### Important (product / operations)
-1. **Non-developer maintainability** — **started:** copy in `content/`; runbook in `MAINTENANCE.md`. Remaining: branding assets, form labels in JSON, optional nav entries in `site.json` → `nav`.
+1. **Non-developer maintainability** — **mostly done:** `content/` (site, signup-form, pages, programs), `MAINTENANCE.md`. Remaining: logo asset file, favicon, optional `nav` entries.
 
 ### Must-fix for production alignment — done
 2. ~~Signup errors when HubSpot fails~~ — `502` on sync failure.
@@ -317,7 +317,7 @@ Keep field labels, validation rules, and HubSpot mapping colocated or documented
 
 | File | Role |
 |---|---|
-| `content/` | Editable site + program copy (JSON) |
+| `content/` | Editable copy: `site.json`, `signup-form.json`, `pages.json`, `programs/*.json` |
 | `content/README.md` | How to edit copy without code |
 | `MAINTENANCE.md` | Plain-language ops runbook |
 | `REQUIREMENTS.md` | Original spec, wireframes, open questions |

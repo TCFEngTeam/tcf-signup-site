@@ -2,7 +2,7 @@ import Link from 'next/link'
 import EventCard from './EventCard'
 import Footer from '@/components/layout/Footer'
 import Header from '@/components/layout/Header'
-import { siteContent } from '@/lib/content'
+import { pagesContent, siteContent } from '@/lib/content'
 import type { ListedEvent } from '@/lib/programs/fetch'
 import type { TrainingProgram } from '@/lib/programs/config'
 
@@ -23,7 +23,7 @@ export default function ProgramListing({ program, events, error }: ProgramListin
         {mainSiteUrl ? (
           <div className="mb-6">
             <a href={mainSiteUrl} className="back-link">
-              ← Back to main site
+              {pagesContent.listing.backToMainSite}
             </a>
           </div>
         ) : null}

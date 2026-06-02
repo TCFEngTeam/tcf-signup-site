@@ -1,12 +1,21 @@
 import siteJson from '../../../content/site.json'
+import pagesJson from '../../../content/pages.json'
+import signupFormJson from '../../../content/signup-form.json'
 import mhfaJson from '../../../content/programs/mhfa.json'
 import qprJson from '../../../content/programs/qpr.json'
-import type { ProgramContent, SiteContent } from './types'
+import type { PagesContent, ProgramContent, SignupFormContent, SiteContent } from './types'
 
-export type { ProgramContent, SiteContent }
+export type { PagesContent, ProgramContent, SignupFormContent, SiteContent, SignupFormFieldKey } from './types'
+export { formatContent } from './format'
 
 /** Site-wide copy and links — edit `content/site.json`. */
 export const siteContent = siteJson as SiteContent
+
+/** Signup form labels and messages — edit `content/signup-form.json`. */
+export const signupFormContent = signupFormJson as SignupFormContent
+
+/** Page chrome (cards, event detail, success) — edit `content/pages.json`. */
+export const pagesContent = pagesJson as PagesContent
 
 const programById = {
   mhfa: mhfaJson as ProgramContent,

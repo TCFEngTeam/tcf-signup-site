@@ -4,12 +4,15 @@ import { notFound } from 'next/navigation'
 import Footer from '@/components/layout/Footer'
 import Header from '@/components/layout/Header'
 import { formatTrainingSchedule } from '@/lib/dates/format-schedule'
+import { formatContent, pagesContent } from '@/lib/content'
 import { loadProgramEventById } from '@/lib/programs/events'
 import { getTrainingProgram } from '@/lib/programs/config'
 
+const success = pagesContent.success
+
 export const metadata: Metadata = {
-  title: 'Signup Confirmed',
-  description: 'Your training signup has been submitted successfully.',
+  title: success.metadataTitle,
+  description: success.metadataDescription,
 }
 
 type ProgramEventSuccessPageProps = {
@@ -32,6 +35,7 @@ export default async function ProgramEventSuccessPage({
     notFound()
   }
 
+  const programLabel = program.shortLabel
   const eventSchedule = formatTrainingSchedule(event.startDate, event.endDate)
   const backHref = `/${program.slug}`
   const eventHref = `/${program.slug}/events/${eventId}`
@@ -61,17 +65,15 @@ export default async function ProgramEventSuccessPage({
             </div>
 
             <div className="page-hero items-center">
-              <div className="eyebrow">Signup complete</div>
-              <h1 className="text-3xl font-bold page-title">You&apos;re signed up!</h1>
+              <div className="eyebrow">{success.eyebrow}</div>
+              <h1 className="text-3xl font-bold page-title">{success.heading}</h1>
               <p className="helper-text max-w-md mx-auto font-medium" style={{ color: 'var(--dark-green)' }}>
                 {event.title}
               </p>
               {eventSchedule && (
                 <p className="helper-text max-w-md mx-auto">{eventSchedule}</p>
               )}
-              <p className="helper-text max-w-md mx-auto">
-                Thank you for registering. Your submission has been received and we&apos;ll be in touch with next steps for your training session.
-              </p>
+              <p className="helper-text max-w-md mx-auto">{success.thankYou}</p>
             </div>
 
             <div
@@ -82,7 +84,7 @@ export default async function ProgramEventSuccessPage({
               }}
             >
               <p className="font-semibold mb-2" style={{ color: 'var(--dark-green)' }}>
-                What happens next
+                {success.nextStepsHeading}
               </p>
               <ul className="space-y-2 helper-text list-disc list-inside">
                 {program.successNextSteps.map((step) => (
@@ -93,10 +95,10 @@ export default async function ProgramEventSuccessPage({
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href={backHref} className="btn-primary inline-flex justify-center">
-                Back to {program.shortLabel} events
+                {formatContent(success.backToEvents, { program: programLabel })}
               </Link>
               <Link href={eventHref} className="text-sm font-semibold text-blue-800 underline">
-                View event details
+                {success.viewEventDetails}
               </Link>
             </div>
           </div>

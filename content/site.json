@@ -1,7 +1,11 @@
 {
   "organizationName": "Trusted Care Foundation",
   "siteName": "TCF Event Signup",
-  "logoText": "TCF",
+  "logo": {
+    "text": "TCF",
+    "imageSrc": "",
+    "imageAlt": "Trusted Care Foundation"
+  },
   "footerText": "© TCF — Event Signup",
   "mainSiteUrl": "https://www.trustedcarefoundation.org/youth-mental-health-program",
   "homeRedirectUrl": "https://www.trustedcarefoundation.org/youth-mental-health-program",

@@ -30,7 +30,9 @@ Link directly to `/mhfa` or `/qpr` from HubSpot or marketing pages.
 
 | Change | File |
 |--------|------|
-| Footer, logo text, main site link, page title, SMS policy links | `content/site.json` |
+| Footer, logo, main site link, page title, SMS policy links | `content/site.json` |
+| Signup form labels, messages, dropdown options | `content/signup-form.json` |
+| Event cards, event page, success page wording | `content/pages.json` |
 | MHFA intro / signup notice / success steps | `content/programs/mhfa.json` |
 | QPR intro / signup notice / success steps | `content/programs/qpr.json` |
 
@@ -145,7 +147,7 @@ Example: a third program beyond MHFA/QPR.
 
 ## Branding (logo, favicon, nav)
 
-- **Logo image:** still requires a developer to add `public/` assets and update `Header.tsx`.
+- **Logo image:** add file to `public/` (developer), then set `content/site.json` → `logo.imageSrc` (e.g. `"/logo.png"`). Text fallback: `logo.text`.
 - **Nav links:** edit `content/site.json` → `nav` array, e.g. `{ "label": "Main site", "href": "https://..." }`.
 - **Favicon:** add `public/favicon.ico` (developer).
 

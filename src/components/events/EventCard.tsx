@@ -3,8 +3,11 @@
 import React from 'react'
 import Link from 'next/link'
 import { formatTrainingSchedule } from '@/lib/dates/format-schedule'
+import { pagesContent } from '@/lib/content'
 import type { TrainingProgramId } from '@/lib/programs/config'
 import CapacityIndicator from './CapacityIndicator'
+
+const card = pagesContent.eventCard
 
 type EventCardProps = {
   event?: {
@@ -30,21 +33,21 @@ export default function EventCard({ event, program }: EventCardProps) {
       }
       <div className="event-body">
         <div className={`event-badge ${event?.isFull ? 'badge-full' : 'badge-open'}`}>
-          {event?.isFull ? 'Full' : 'Open'}
+          {event?.isFull ? card.badgeFull : card.badgeOpen}
         </div>
-        <h3 className="event-title text-lg font-semibold">{event?.title ?? 'Event Title'}</h3>
+        <h3 className="event-title text-lg font-semibold">{event?.title ?? card.fallbackTitle}</h3>
         <p className="event-meta text-sm">{schedule}</p>
-        <p className="event-location text-sm">{event?.location ?? 'Location'}</p>
+        <p className="event-location text-sm">{event?.location ?? card.fallbackLocation}</p>
         <CapacityIndicator
           capacity={event?.capacity}
           registered={event?.registered}
         />
 
         {event?.isFull ? (
-          <span className="btn-primary inline-flex justify-center mt-3 cursor-not-allowed opacity-60">Full</span>
+          <span className="btn-primary inline-flex justify-center mt-3 cursor-not-allowed opacity-60">{card.badgeFull}</span>
         ) : (
           <Link href={`/${program}/events/${event?.id}`} className="btn-primary inline-flex justify-center mt-3">
-            Sign up
+            {card.signUp}
           </Link>
         )}
       </div>
