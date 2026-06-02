@@ -2,6 +2,7 @@ import Link from 'next/link'
 import EventCard from './EventCard'
 import Footer from '@/components/layout/Footer'
 import Header from '@/components/layout/Header'
+import { siteContent } from '@/lib/content'
 import type { ListedEvent } from '@/lib/programs/fetch'
 import type { TrainingProgram } from '@/lib/programs/config'
 
@@ -12,7 +13,7 @@ type ProgramListingProps = {
 }
 
 export default function ProgramListing({ program, events, error }: ProgramListingProps) {
-  const mainSiteUrl = 'https://www.trustedcarefoundation.org/youth-mental-health-program'
+  const mainSiteUrl = siteContent.mainSiteUrl
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 text-slate-900">

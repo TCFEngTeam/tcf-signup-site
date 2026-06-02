@@ -14,9 +14,13 @@ import {
   parseStoredPhone,
   type SignupFormData,
 } from '@/lib/signup/format-fields'
+import { siteContent } from '@/lib/content'
 import { loadProfile, saveProfile } from '@/lib/signup/profile-store'
 import PhoneNumberField from './PhoneNumberField'
 import type { TrainingProgramId } from '@/lib/programs/config'
+
+const { form: formContent, links: siteLinks } = siteContent
+const sms = formContent.smsConsent
 
 type SignupFormProps = {
   eventId: string
@@ -399,7 +403,7 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
       {/* University Website */}
       <label className="block mb-4">
         <div className={`field-label text-sm font-medium ${fieldHasError(requiredFieldLabels.universityWebsite) ? 'text-red-600' : ''}`}>University Website *</div>
-        <input name="universityWebsite" value={universityWebsite} onChange={(e) => setUniversityWebsite(e.target.value)} onBlur={() => applyBlurFormat(requiredFieldLabels.universityWebsite, setUniversityWebsite, formatUniversityWebsite)} className="mt-1 w-full" placeholder="virginia.edu" required />
+        <input name="universityWebsite" value={universityWebsite} onChange={(e) => setUniversityWebsite(e.target.value)} onBlur={() => applyBlurFormat(requiredFieldLabels.universityWebsite, setUniversityWebsite, formatUniversityWebsite)} className="mt-1 w-full" placeholder={formContent.universityWebsitePlaceholder} required />
         <RequiredText show={fieldHasError(requiredFieldLabels.universityWebsite)} />
       </label>
 
@@ -487,9 +491,7 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
 
       {/* SMS Consent Radio */}
       <div className="mb-4 bg-blue-50 rounded-lg text-sm p-4 border border-blue-100">
-        <div className="field-label text-sm font-medium mb-3">
-          SMS Communication Consent
-        </div>
+        <div className="field-label text-sm font-medium mb-3">{sms.heading}</div>
 
         <div className="space-y-3">
           <label className="flex items-start gap-2">
@@ -501,10 +503,7 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
               onChange={(e) => setSmsConsent(e.target.value)}
               className="flex-shrink-0 mt-1"
             />
-            <span>
-              I consent to receive SMS marketing text messages from Trusted Care Foundation.
-              Message frequency varies. Message and data rates may apply. Reply STOP to opt out.
-            </span>
+            <span>{sms.yesLabel}</span>
           </label>
 
           <label className="flex items-start gap-2">
@@ -516,22 +515,27 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
               onChange={(e) => setSmsConsent(e.target.value)}
               className="flex-shrink-0 mt-1"
             />
-            <span>
-              I do not consent to receiving marketing messages.
-            </span>
+            <span>{sms.noLabel}</span>
           </label>
         </div>
 
         <div className="text-xs text-gray-600 mt-3">
-          See our <a href="#" className="underline">SMS Terms</a> and acknowledge the{" "}
-          <a href="#" className="underline">SMS Privacy Policy</a>.
+          {sms.legalIntro}{' '}
+          <a href={siteLinks.smsTerms} className="underline">
+            {sms.termsLinkText}
+          </a>{' '}
+          and acknowledge the{' '}
+          <a href={siteLinks.smsPrivacy} className="underline">
+            {sms.privacyLinkText}
+          </a>
+          .
         </div>
       </div>
 
       {/* Submit Button */}
       <div className="flex items-center gap-4">
         <button type="submit" disabled={submitting} className="btn-primary">
-          {submitting ? 'Submitting…' : 'Submit'}
+          {submitting ? formContent.submittingLabel : formContent.submitLabel}
         </button>
         {message && (
           <div className={`text-sm ${message.toLowerCase().includes('success') ? 'success-chip' : 'error-chip'}`}>

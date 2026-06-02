@@ -38,7 +38,7 @@ Shared signup payloads live in `src/test/fixtures/signup.ts`.
 Requires `.env.local` with a valid `HUBSPOT_API_KEY` and pipeline variables.
 
 1. `npm run dev`
-2. Open `/` → choose **MHFA** or **QPR**
+2. Open `/mhfa` or `/qpr` (root `/` redirects to the marketing site)
 3. Confirm events load from HubSpot (not empty unless pipeline stage is wrong)
 4. Open an event → submit the form with a **new** email
 5. Confirm redirect to `/{program}/events/{id}/success`

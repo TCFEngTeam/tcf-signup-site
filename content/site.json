@@ -1,0 +1,31 @@
+{
+  "organizationName": "Trusted Care Foundation",
+  "siteName": "TCF Event Signup",
+  "logoText": "TCF",
+  "footerText": "© TCF — Event Signup",
+  "mainSiteUrl": "https://www.trustedcarefoundation.org/youth-mental-health-program",
+  "homeRedirectUrl": "https://www.trustedcarefoundation.org/youth-mental-health-program",
+  "metadata": {
+    "defaultTitle": "TCF Event Signup",
+    "titleTemplate": "%s | TCF Event Signup",
+    "description": "Sign up for Trusted Care Foundation mental health training sessions."
+  },
+  "links": {
+    "smsTerms": "#",
+    "smsPrivacy": "#"
+  },
+  "form": {
+    "universityWebsitePlaceholder": "virginia.edu",
+    "submitLabel": "Submit",
+    "submittingLabel": "Submitting…",
+    "smsConsent": {
+      "heading": "SMS Communication Consent",
+      "yesLabel": "I consent to receive SMS marketing text messages from Trusted Care Foundation. Message frequency varies. Message and data rates may apply. Reply STOP to opt out.",
+      "noLabel": "I do not consent to receiving marketing messages.",
+      "termsLinkText": "SMS Terms",
+      "privacyLinkText": "SMS Privacy Policy",
+      "legalIntro": "See our"
+    }
+  },
+  "nav": []
+}

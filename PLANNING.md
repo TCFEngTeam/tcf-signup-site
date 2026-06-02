@@ -1,8 +1,28 @@
 # TCF Event Signup Site — Planning & Context
 
-Last updated: planning session after initial MHFA signup implementation.
+Last updated: **2026-06-02** — verified against codebase; maintainability priority added.
 
 This document captures product decisions, known gaps, security notes, and a prioritized roadmap. Use it alongside `REQUIREMENTS.md` (original spec) when picking up future work.
+
+---
+
+## Verified against codebase (2026-06-02)
+
+| Area | Status |
+|---|---|
+| Next.js 16, HubSpot-only admin, no login | Confirmed |
+| `/mhfa`, `/qpr` program listings + `/[program]/events/[id]` signup | Confirmed |
+| Root `/` | Redirects to TCF marketing site (program chooser in `deprecated/program-chooser-home/`) |
+| Signup → HubSpot; `502` on sync failure; `409` when full / duplicate | Confirmed |
+| Full events: card disabled; detail page hides form when full/inactive | Confirmed |
+| `profile-store` autofill (load on mount, save after success) | Confirmed |
+| `CapacityIndicator` on cards + detail | Confirmed |
+| Event-specific success page | Confirmed |
+| SMS consent → HubSpot (`HUBSPOT_SMS_CONSENT_*`) | Confirmed |
+| Vitest + `TESTING.md`; no `/preview` or mock signup routes | Confirmed |
+| Listing sort | **Soonest upcoming first** (see [Sort order](#sort-order)) |
+| Branding, SMS policy URLs, rate limiting, search/filters | Still open |
+| **Non-developer maintainability** | **In progress** — `content/` + `MAINTENANCE.md` (see below) |
 
 ---
 
@@ -11,13 +31,17 @@ This document captures product decisions, known gaps, security notes, and a prio
 The site is a **Next.js 16** public signup app. Events and registrations flow through **HubSpot** (custom training objects, contacts, company associations). There is no user login.
 
 **Working today:**
-- Homepage event listing (via `/api/events`)
-- Event detail + signup form (`/events/[id]`)
+- Program event listings at `/mhfa` and `/qpr` (HubSpot via `loadProgramEvents`, not a client fetch to `/api/events`)
+- Event detail + signup at `/[program]/events/[id]`; form hidden when full or inactive
 - Signup POST to `/api/signup` → HubSpot contact create/update + training association
-- Pipeline stage/type filtering for visible events
-- Form field validation, phone formatting (+1 US-style), country code picker
-- Success page redirect after signup (`/{program}/events/[id]/success`)
+- Public `GET /api/events` (still available for integrations or tooling)
+- Pipeline stage/type filtering per program (`src/lib/programs/config.ts`)
+- Form validation, phone formatting (+1 US-style), country code picker
+- Success page after signup (`/[program]/events/[id]/success`) with event title/schedule
+- Browser autofill via `src/lib/signup/profile-store.ts`
 - Env vars configured locally and on Vercel
+
+**Root `/`:** redirects to the TCF youth mental health program page on the main marketing site. HubSpot/marketing pages should link directly to `/mhfa` or `/qpr`.
 
 **Not working / incomplete:** see [Known issues & gaps](#known-issues--gaps) below.
 
@@ -32,17 +56,18 @@ The site is a **Next.js 16** public signup app. Events and registrations flow th
 | Capacity | HubSpot calculates availability via contact ↔ training associations (specific label); site reads `available_capacity` |
 | HubSpot sync failure | **User must see an error** (not silent success) |
 | Form fields | **Final for now**; architecture should make adding fields straightforward |
-| Local autofill | **Yes** — wire `localProfileStore` to prefill/save on submit |
-| Multiple event signups | Allowed for now (pending team confirmation) |
-| Success UX | Generic success page today; **event-specific confirmation** is desired |
-| Full events | Partial today — see [clarification below](#full-event-behavior-clarification) |
-| Event sort order | **Furthest future first** (latest date top-left) |
+| Local autofill | **Yes** — `profile-store.ts` prefills on mount and saves after successful submit |
+| Multiple event signups | Allowed for now (pending team confirmation); server returns `409` if already registered for same event |
+| Success UX | **Event-specific** confirmation page (`title`, schedule, links back to program) |
+| Full events | Listing + detail: no signup when full/inactive — see [clarification](#full-event-behavior-clarification) |
+| Event sort order | **Soonest upcoming first** (next session top-left); events without dates last |
+| Non-developer maintainability | **Important** — routine updates (copy, nav, ops) should not require deep Next.js knowledge; see [maintainability](#non-developer-maintainability-important) |
 | Search / filters | Not required for immediate launch — see [clarification below](#search--filters-clarification) |
 | Mobile layout | Form fields should **stack on mobile** (email/phone, name, etc.) |
 | Phone / international | Mostly US audience; +1-only display on closed country picker is fine |
 | Admin | **HubSpot only** — no admin UI on this site |
 | Confirmation emails | TBD — investigate HubSpot workflows |
-| Multi-program split | **Upcoming:** separate front pages for **MHFA** vs **QPR** trainings, each with its own HubSpot pipeline designation |
+| Multi-program split | **Done:** `/mhfa` and `/qpr`, separate pipeline env vars per program |
 | Preview / mock routes | **Removed** — use `npm test` and manual HubSpot checks (`TESTING.md`) |
 | Branding | Placeholders compiled below — team to supply real assets/links |
 
@@ -52,13 +77,9 @@ The site is a **Next.js 16** public signup app. Events and registrations flow th
 
 ### Full event behavior (clarification)
 
-**Listing page (`/` + `EventCard`):** When an event is full, the card shows a “Full” badge and the signup button is replaced with a disabled “Full” control. Users cannot navigate to signup from the card CTA.
+**Listing (`/[program]` + `EventCard`):** Full events show a “Full” badge; CTA is a disabled “Full” control (no link to signup).
 
-**Event page (`/events/[id]`):** Shows a “This event is full.” message in the notice area, **but the signup form is still rendered**. The form only blocks submission when:
-- the client re-checks `/api/events` before POST, or
-- the server returns `409` from `/api/signup`.
-
-**Gap to close:** Hide or disable the form on the event page when full (matching listing behavior), not only on submit.
+**Event page (`/[program]/events/[id]`):** Notice shows “This event is full.” when applicable. The signup form is **not rendered** when `isFull` or inactive; users see “Registration is closed…” with a link back to the program list. Server still returns `409` on `/api/signup` if capacity is exceeded between page load and submit.
 
 ---
 
@@ -69,17 +90,37 @@ Original wireframes in `REQUIREMENTS.md` described optional listing controls:
 - **Filters** by date range, category, or location
 - **Pagination** or “load more” for long lists
 
-**None of this is built.** The homepage renders all pipeline-visible events in a grid.
+**None of this is built.** Each program page renders all pipeline-visible events in a grid.
 
-**Recommendation:** Defer until event volume justifies it. If MHFA and QPR split onto separate pages (each with its own pipeline filter), search may be unnecessary initially.
+**Recommendation:** Defer until event volume justifies it. Separate MHFA/QPR pages reduce the need for search initially.
 
 ---
 
 ### Sort order
 
-Listings sort **furthest future first** (descending by `startDate`) so the latest upcoming session appears top-left. Events without a valid date appear last.
+Listings sort **soonest upcoming first** (ascending by `startDate` via `sortEventsForListing` in `src/lib/programs/sort.ts`). Events without a valid date appear last. Covered by unit tests in `src/lib/programs/sort.test.ts`.
 
-~~Homepage currently sorts **latest date first** (descending):~~ *(superseded by program listing pages)*
+*(Earlier doc wording “furthest future first” did not match implementation; decision updated to match shipped behavior.)*
+
+---
+
+### Non-developer maintainability (important)
+
+**Goal:** A non-developer on the team can operate and lightly maintain the site without reading React/Next.js internals for routine work.
+
+**In progress (2026-06-02):**
+- ✅ User-facing copy in **`content/`** (`site.json`, `programs/mhfa.json`, `programs/qpr.json`) — see [`content/README.md`](content/README.md).
+- ✅ Plain-language runbook: [`MAINTENANCE.md`](MAINTENANCE.md).
+- ✅ Site chrome, SMS links, metadata, and program intros loaded from JSON via `src/lib/content/`.
+- HubSpot still owns event titles, dates, capacity, and registrations.
+- **Still developer-heavy:** form field labels, branding images/favicon, new form fields, new programs, HubSpot env mapping.
+
+**Remaining:**
+- Move form field labels into `content/` (optional).
+- Logo/favicon in `public/` + Header image support.
+- Expand `MAINTENANCE.md` as processes evolve.
+
+Tracked in [Known issues & gaps](#known-issues--gaps).
 
 ---
 
@@ -94,7 +135,7 @@ HubSpot API key usage is **server-side only** (`src/lib/hubspot/api.ts`, API rou
 
 ### Medium risk — consider hardening
 - **`POST /api/signup` is unauthenticated** — open to spam, bot submissions, and quota abuse on HubSpot API. Mitigations to consider: rate limiting (Vercel middleware / Upstash), honeypot field, CAPTCHA (Turnstile/hCaptcha), server-side request logging.
-- **HubSpot failure returns success today** — users may believe they registered when HubSpot did not persist data. **Must change to fail-closed** per product decision (return 5xx/4xx with clear message).
+- ~~**HubSpot failure returns success**~~ — **fixed:** signup returns `502` with a user-visible error when HubSpot sync fails.
 - **Company association errors are swallowed** — signup succeeds even if university → company link fails; acceptable if non-critical, but worth monitoring.
 - **Capacity race condition** — two simultaneous signups near capacity could both pass the pre-check; HubSpot association count is eventually consistent. Acceptable if HubSpot is source of truth, but edge cases possible.
 - ~~**`/preview` and `/api/mock-signup`**~~ — removed; use Vitest + manual HubSpot testing instead.
@@ -103,7 +144,7 @@ HubSpot API key usage is **server-side only** (`src/lib/hubspot/api.ts`, API rou
 - Homepage server-renders by fetching `{host}/api/events`. In typical Vercel deployment this is same-origin and fine. Avoid passing user-controlled host values into upstream fetches elsewhere.
 
 ### Privacy
-- **`localProfileStore`** (when wired) stores PII in `localStorage` on the user’s device — document in privacy policy; no server-side persistence until submit.
+- **`profile-store.ts`** stores PII in `localStorage` on the user’s device — document in privacy policy; no server-side persistence until submit.
 
 ---
 
@@ -125,11 +166,11 @@ Team action needed — replace placeholders with real assets/links.
 | Favicon | Default Next.js / none custom | TCF favicon (`public/favicon.ico` or app icon) |
 | `public/` assets | Vercel/default SVGs only | Logo, any program imagery |
 
-### Homepage / event copy
+### Program listing / event copy
 | Location | Current | Needed |
 |---|---|---|
-| `page.tsx` — hero | Hard-coded MHFA 8-hour course copy | MHFA-specific page copy; separate QPR copy on future route |
-| `[program]/events/[id]/page.tsx` — notice block | Program-specific copy from config | HubSpot-driven description (optional) |
+| `src/lib/programs/config.ts` | MHFA/QPR listing intro + signup notices | Team copy review; consider non-dev-friendly edit path |
+| `[program]/events/[id]/page.tsx` — notice block | Program notices from config | HubSpot-driven description (optional) |
 | `[program]/events/[id]/success/page.tsx` | Event-specific confirmation | — |
 
 ### Signup form
@@ -180,31 +221,35 @@ Configured locally + Vercel. Do not commit values to git.
 
 ## Known issues & gaps
 
-### Must-fix for production alignment
-1. ~~**Signup should error when HubSpot fails**~~ — returns `502` on HubSpot sync failure.
-2. ~~**Sort order**~~ — furthest-future-first via `sortEventsForListing`.
-3. ~~**Full event page**~~ — form hidden when event is full or inactive.
-4. ~~**Wire `localProfileStore`**~~ — load on mount, save after successful submit.
-5. ~~**Remove mock/preview from production**~~ — removed; see `TESTING.md`.
+### Important (product / operations)
+1. **Non-developer maintainability** — **started:** copy in `content/`; runbook in `MAINTENANCE.md`. Remaining: branding assets, form labels in JSON, optional nav entries in `site.json` → `nav`.
 
-### Should-fix soon (can interleave with Phase 1–2)
-6. ~~**Unify data fetching**~~ — shared `loadProgramEvents` in `src/lib/programs/events.ts`.
-7. ~~**Use `CapacityIndicator`**~~ — on listing cards and event detail pages.
+### Must-fix for production alignment — done
+2. ~~Signup errors when HubSpot fails~~ — `502` on sync failure.
+3. ~~Sort order~~ — soonest-upcoming-first via `sortEventsForListing` (tests in `sort.test.ts`).
+4. ~~Full event page~~ — form hidden when full or inactive.
+5. ~~Wire profile autofill~~ — `profile-store.ts` on form mount / after success.
+6. ~~Remove mock/preview~~ — removed; see `TESTING.md`.
 
-### Multi-program (MHFA / QPR) — next priority
-11. ~~**Split homepage**~~ — `/mhfa` and `/qpr` with separate pipeline env vars.
-12. ~~Shared event listing component~~ — `ProgramListing` with program-specific copy.
+### Should-fix soon
+7. ~~Unify data fetching~~ — `loadProgramEvents` in `src/lib/programs/events.ts`.
+8. ~~CapacityIndicator~~ — on listing cards and event detail.
+9. **Branding** — logo, favicon, nav, footer, SMS legal URLs still placeholders.
+10. **Bot/spam protection** on `POST /api/signup` — not implemented.
 
-### After multi-program / UX polish
-13. ~~Mobile stacking layout~~ — form fields stack on small screens. Event-specific success page. ~~SMS consent mapping~~. Branding assets still pending.
-14. Search/filters — only if event volume grows.
-15. Confirmation emails — HubSpot workflow research.
-16. ~~Better dev testing~~ — Vitest suite + `TESTING.md` (manual HubSpot checklist).
+### Multi-program (MHFA / QPR) — done
+11. ~~`/mhfa` and `/qpr`~~ with per-program pipeline env vars.
+12. ~~`ProgramListing`~~ with program-specific copy from config.
+
+### Later / optional
+13. Search/filters — only if event volume grows.
+14. Confirmation emails — HubSpot workflow research (team).
+15. Duplicate signup policy across events — team confirmation pending.
 
 ### Code quality
-17. Reduce `any` types on homepage event list.
-18. ~~Add tests for `formatSignupFields`, signup API validation, phone parsing.~~ — see `TESTING.md`.
-19. Document extensibility pattern for new form fields (single source of truth for field list + HubSpot mapping).
+16. Reduce remaining `any` types (e.g. signup form error handling, HubSpot catch blocks).
+17. ~~Core signup tests~~ — Vitest; see `TESTING.md`.
+18. Document extensibility pattern for new form fields (partially in [Adding form fields](#adding-form-fields-extensibility-pattern); expand for non-dev readers).
 
 ---
 
@@ -227,16 +272,16 @@ Configured locally + Vercel. Do not commit values to git.
 - Root `/` program chooser
 - Shared components; signup form reused across programs
 
-### Phase 3 — UX polish (in progress)
-- ~~Mobile stacking layout~~
+### Phase 3 — UX polish (mostly done)
+- ~~Mobile stacking layout~~ (`grid-cols-1 sm:grid-cols-2` on form rows)
 - ~~Event-specific success confirmation~~
 - ~~SMS consent → HubSpot property~~ (`HUBSPOT_SMS_CONSENT_PROPERTY`, default `sms_consent`)
-- Branding placeholders → real links/assets
+- Branding placeholders → real links/assets (**remaining**)
 
-### Phase 4 — Hardening & optional features
+### Phase 4 — Maintainability, hardening & optional features
+- **Non-developer maintainability** (copy centralization, runbook, HubSpot-first ops)
 - Rate limiting / bot protection on `/api/signup`
 - Search/filters if needed
-- Dev testing infrastructure rewrite
 - Monitoring (failed HubSpot sync alerts)
 
 ---
@@ -264,6 +309,7 @@ Keep field labels, validation rules, and HubSpot mapping colocated or documented
 - [ ] Provide SMS Terms + Privacy Policy URLs
 - [ ] Provide logo, favicon, nav structure, footer content
 - [ ] Decide bot/spam protection for public signup endpoint
+- [ ] **Maintainability:** agree how non-developers update program copy, nav, and run routine checks (see [Non-developer maintainability](#non-developer-maintainability-important))
 
 ---
 
@@ -271,7 +317,11 @@ Keep field labels, validation rules, and HubSpot mapping colocated or documented
 
 | File | Role |
 |---|---|
+| `content/` | Editable site + program copy (JSON) |
+| `content/README.md` | How to edit copy without code |
+| `MAINTENANCE.md` | Plain-language ops runbook |
 | `REQUIREMENTS.md` | Original spec, wireframes, open questions |
+| `src/lib/content/` | Loads `content/*.json` for the app |
 | `src/lib/hubspot/api.ts` | HubSpot CRM integration |
 | `src/lib/hubspot/field-mappers.ts` | HubSpot option IDs, association helpers |
 | `src/lib/signup/format-fields.ts` | Form normalization + phone formatting |
@@ -282,7 +332,9 @@ Keep field labels, validation rules, and HubSpot mapping colocated or documented
 | `src/components/signup/EventSignupForm.tsx` | Signup form UI |
 | `src/components/events/ProgramListing.tsx` | Program event listing |
 | `src/app/api/signup/route.ts` | Signup endpoint |
-| `src/app/api/events/route.ts` | Public event list |
+| `src/app/api/events/route.ts` | Public event list API |
+| `src/app/page.tsx` | Root redirect to marketing site |
+| `deprecated/program-chooser-home/` | Archived `/` chooser (restore instructions in README) |
 | `TESTING.md` | How to run automated tests and manual HubSpot checks |
 | `src/test/fixtures/signup.ts` | Shared signup payloads for API tests |
 | `vitest.config.ts` | Test runner configuration |

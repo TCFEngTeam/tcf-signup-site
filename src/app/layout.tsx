@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { siteContent } from "@/lib/content";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,11 +15,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "TCF Event Signup",
-    template: "%s | TCF Event Signup",
+    default: siteContent.metadata.defaultTitle,
+    template: siteContent.metadata.titleTemplate,
   },
-  description:
-    "Sign up for Trusted Care Foundation mental health first-aid training sessions.",
+  description: siteContent.metadata.description,
 };
 
 export default function RootLayout({
