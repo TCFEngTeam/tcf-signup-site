@@ -19,7 +19,7 @@ import { loadProfile, saveProfile } from '@/lib/signup/profile-store'
 import PhoneNumberField from './PhoneNumberField'
 import type { TrainingProgramId } from '@/lib/programs/config'
 
-const { form: formContent, links: siteLinks } = siteContent
+const { form: formContent, links } = siteContent
 const sms = formContent.smsConsent
 const {
   fields: fieldLabels,
@@ -429,46 +429,47 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
         <RequiredText show={fieldHasError(fieldLabels.interestedInTeaching)} />
       </fieldset>
 
-      {/* SMS Consent Radio */}
+      {/* SMS Consent */}
       <div className="mb-4 bg-blue-50 rounded-lg text-sm p-4 border border-blue-100">
-        <div className="field-label text-sm font-medium mb-3">{sms.heading}</div>
+        <div className="field-label text-sm font-medium mb-2">{sms.heading}</div>
 
-        <div className="space-y-3">
-          <label className="flex items-start gap-2">
+        <p className="font-semibold text-slate-900 mb-3">{sms.introBold}</p>
+
+        <p className="text-xs text-gray-600 italic mb-4">
+          {sms.legalBeforeLink}{' '}
+          <a
+            href={links.smsPolicy}
+            className="underline not-italic font-medium text-slate-800"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {sms.policyLinkText}
+          </a>
+          .
+        </p>
+
+        <div className="flex flex-wrap gap-6">
+          <label className="flex items-center gap-2">
             <input
               type="radio"
               name="smsConsent"
               value="yes"
               checked={smsConsent === 'yes'}
               onChange={(e) => setSmsConsent(e.target.value)}
-              className="flex-shrink-0 mt-1"
             />
-            <span>{sms.yesLabel}</span>
+            <span className="text-sm">{sms.yesLabel}</span>
           </label>
 
-          <label className="flex items-start gap-2">
+          <label className="flex items-center gap-2">
             <input
               type="radio"
               name="smsConsent"
               value="no"
               checked={smsConsent === 'no'}
               onChange={(e) => setSmsConsent(e.target.value)}
-              className="flex-shrink-0 mt-1"
             />
-            <span>{sms.noLabel}</span>
+            <span className="text-sm">{sms.noLabel}</span>
           </label>
-        </div>
-
-        <div className="text-xs text-gray-600 mt-3">
-          {sms.legalIntro}{' '}
-          <a href={siteLinks.smsTerms} className="underline">
-            {sms.termsLinkText}
-          </a>{' '}
-          and acknowledge the{' '}
-          <a href={siteLinks.smsPrivacy} className="underline">
-            {sms.privacyLinkText}
-          </a>
-          .
         </div>
       </div>
 

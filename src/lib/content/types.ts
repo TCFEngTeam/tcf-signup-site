@@ -15,8 +15,7 @@ export type SiteContent = {
     description: string
   }
   links: {
-    smsTerms: string
-    smsPrivacy: string
+    smsPolicy: string
   }
   form: {
     universityWebsitePlaceholder: string
@@ -24,11 +23,11 @@ export type SiteContent = {
     submittingLabel: string
     smsConsent: {
       heading: string
+      introBold: string
+      legalBeforeLink: string
+      policyLinkText: string
       yesLabel: string
       noLabel: string
-      termsLinkText: string
-      privacyLinkText: string
-      legalIntro: string
     }
   }
   nav: Array<{ label: string; href: string }>

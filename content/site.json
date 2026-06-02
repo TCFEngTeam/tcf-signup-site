@@ -15,8 +15,7 @@
     "description": "Sign up for Trusted Care Foundation mental health training sessions."
   },
   "links": {
-    "smsTerms": "#",
-    "smsPrivacy": "#"
+    "smsPolicy": "https://www.trustedcarefoundation.org/sms-terms-of-service"
   },
   "form": {
     "universityWebsitePlaceholder": "virginia.edu",
@@ -24,11 +23,11 @@
     "submittingLabel": "Submitting…",
     "smsConsent": {
       "heading": "SMS Communication Consent",
-      "yesLabel": "I consent to receive SMS marketing text messages from Trusted Care Foundation. Message frequency varies. Message and data rates may apply. Reply STOP to opt out.",
-      "noLabel": "I do not consent to receiving marketing messages.",
-      "termsLinkText": "SMS Terms",
-      "privacyLinkText": "SMS Privacy Policy",
-      "legalIntro": "See our"
+      "introBold": "Trusted Care Foundation uses text messaging to send reminders and updates about trainings, events, and opportunities.",
+      "legalBeforeLink": "Message and data rates may apply. Reply STOP to opt out at any time; reply HELP for help. By selecting Yes below, I agree to the SMS Terms and acknowledge the SMS Privacy Policy:",
+      "policyLinkText": "SMS Privacy Policy & SMS Terms",
+      "yesLabel": "I consent to receive SMS marketing text messages.",
+      "noLabel": "I do not consent to receiving marketing text messages."
     }
   },
   "nav": []
