@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import {
+  contactHasRegistrantAssociation,
   contactHasTrainingAssociation,
   isDuplicateAssociationResponse,
   mapSmsConsentToHubSpot,
@@ -36,5 +37,33 @@ describe('contactHasTrainingAssociation', () => {
       contactHasTrainingAssociation([{ id: '111' }, { id: '222' }], '222')
     ).toBe(true)
     expect(contactHasTrainingAssociation([{ id: '111' }], '222')).toBe(false)
+  })
+
+  it('filters by association type when provided', () => {
+    expect(
+      contactHasTrainingAssociation(
+        [
+          { id: '222', type: 'waitlist' },
+          { id: '222', type: 'registrant' },
+        ],
+        '222',
+        'registrant'
+      )
+    ).toBe(true)
+    expect(
+      contactHasTrainingAssociation([{ id: '222', type: 'waitlist' }], '222', 'registrant')
+    ).toBe(false)
+  })
+})
+
+describe('contactHasRegistrantAssociation', () => {
+  it('checks registrant label only', () => {
+    expect(
+      contactHasRegistrantAssociation(
+        [{ id: '1', type: 'registrant' }],
+        '1',
+        'registrant'
+      )
+    ).toBe(true)
   })
 })

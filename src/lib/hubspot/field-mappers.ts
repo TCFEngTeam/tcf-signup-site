@@ -24,11 +24,38 @@ export function isDuplicateAssociationResponse(parsed: unknown, status: number) 
   )
 }
 
-export function contactHasTrainingAssociation(
-  associations: Array<{ id?: string }> | undefined,
+export type TrainingAssociationRow = {
   trainingId: string
+  associationType?: string
+}
+
+export function parseTrainingAssociationRows(
+  associations: Array<{ id?: string; type?: string }> | undefined
+): TrainingAssociationRow[] {
+  return (associations ?? [])
+    .filter((row) => row.id)
+    .map((row) => ({
+      trainingId: String(row.id),
+      associationType: row.type,
+    }))
+}
+
+export function contactHasTrainingAssociation(
+  associations: Array<{ id?: string; type?: string }> | undefined,
+  trainingId: string,
+  associationType?: string
 ) {
-  return (associations ?? []).some(
-    (row) => String(row.id) === String(trainingId)
-  )
+  return (associations ?? []).some((row) => {
+    if (String(row.id) !== String(trainingId)) return false
+    if (associationType === undefined) return true
+    return (row.type ?? '').trim() === associationType.trim()
+  })
+}
+
+export function contactHasRegistrantAssociation(
+  associations: Array<{ id?: string; type?: string }> | undefined,
+  trainingId: string,
+  registrantLabel: string
+) {
+  return contactHasTrainingAssociation(associations, trainingId, registrantLabel)
 }

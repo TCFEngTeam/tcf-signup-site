@@ -38,6 +38,17 @@ function getApiKey() {
   return process.env.HUBSPOT_API_KEY
 }
 
+export function getRegistrantAssociationLabel() {
+  return process.env.HUBSPOT_TRAINING_ASSOCIATION_LABEL || 'registrant'
+}
+
+export function getCancelledAssociationLabel() {
+  return (
+    process.env.HUBSPOT_TRAINING_CANCELLED_ASSOCIATION_LABEL ||
+    'cancelled_registration'
+  )
+}
+
 export interface ContactData {
   firstName: string
   lastName: string
@@ -95,6 +106,15 @@ function parseDateProperty(value?: string) {
   const parsed = new Date(value)
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
+
+export { formatTrainingSchedule } from '@/lib/dates/format-schedule'
+import {
+  contactHasRegistrantAssociation,
+  isDuplicateAssociationResponse,
+  mapSmsConsentToHubSpot,
+  parseTrainingAssociationRows,
+  type TrainingAssociationRow,
+} from '@/lib/hubspot/field-mappers'
 
 /**
  * Maps form data to HubSpot contact properties using environment variables
@@ -154,7 +174,131 @@ export async function isContactRegisteredForTraining(
     throw new Error(`Failed to check training registration: ${msg}`)
   }
 
-  return contactHasTrainingAssociation(parsed?.results, trainingId)
+  return contactHasRegistrantAssociation(
+    parsed?.results,
+    trainingId,
+    getRegistrantAssociationLabel()
+  )
+}
+
+export async function getContactTrainingAssociations(
+  contactId: string
+): Promise<TrainingAssociationRow[]> {
+  if (!getApiKey()) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  const trainingObjectType = getTrainingObjectType()
+  const url = `${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${contactId}/associations/${trainingObjectType}`
+  const response = await hubspotFetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${getApiKey()}`,
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (response.status === 404) {
+    return []
+  }
+
+  const parsed = await safeParseResponse(response)
+  if (!response.ok) {
+    const msg =
+      (parsed && (parsed.message || parsed.error || parsed.text)) || response.statusText
+    throw new Error(`Failed to list training associations: ${msg}`)
+  }
+
+  return parseTrainingAssociationRows(parsed?.results)
+}
+
+async function archiveContactTrainingAssociation(
+  contactId: string,
+  trainingId: string,
+  associationType: string
+): Promise<void> {
+  if (!getApiKey()) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  const trainingObjectType = getTrainingObjectType()
+  const url = `${HUBSPOT_API_BASE}/crm/v3/associations/contacts/${trainingObjectType}/batch/archive`
+  const response = await hubspotFetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${getApiKey()}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      inputs: [
+        {
+          from: { id: contactId },
+          to: { id: trainingId },
+          type: associationType,
+        },
+      ],
+    }),
+  })
+
+  if (response.status === 204) {
+    return
+  }
+
+  const parsed = await safeParseResponse(response)
+  if (!response.ok) {
+    const msg =
+      (parsed && (parsed.message || parsed.error || parsed.text)) || response.statusText
+    throw new Error(`Failed to remove training association: ${msg}`)
+  }
+}
+
+/**
+ * Unregister a contact from a training.
+ * - mode `remove`: archive the registrant association only.
+ * - mode `relabel`: archive registrant, then associate with cancelled label (audit trail).
+ */
+export async function unregisterContactFromTraining(
+  contactId: string,
+  trainingId: string,
+  mode: 'remove' | 'relabel' = 'remove'
+): Promise<void> {
+  const registrantLabel = getRegistrantAssociationLabel()
+
+  if (!(await isContactRegisteredForTraining(contactId, trainingId))) {
+    throw new Error('Contact is not registered for this training')
+  }
+
+  await archiveContactTrainingAssociation(contactId, trainingId, registrantLabel)
+
+  if (mode === 'relabel') {
+    const cancelledLabel = getCancelledAssociationLabel()
+    const trainingObjectType = getTrainingObjectType()
+    const url = `${HUBSPOT_API_BASE}/crm/v3/associations/contacts/${trainingObjectType}/batch/create`
+    const response = await hubspotFetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${getApiKey()}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        inputs: [
+          {
+            from: { id: contactId },
+            to: { id: trainingId },
+            type: cancelledLabel,
+          },
+        ],
+      }),
+    })
+
+    const parsed = await safeParseResponse(response)
+    if (!response.ok) {
+      console.error('Cancelled association label create failed:', parsed)
+      throw new Error(
+        `Registration removed, but could not apply cancelled label "${cancelledLabel}". Check HUBSPOT_TRAINING_CANCELLED_ASSOCIATION_LABEL in HubSpot.`
+      )
+    }
+  }
 }
 
 async function safeParseResponse(res: Response): Promise<any> {
@@ -361,7 +505,7 @@ export async function associateContactToTraining(contactId: string, trainingId: 
   // Use the batch associations endpoint which is the supported pattern
   // for creating associations between two object types.
   const url = `${HUBSPOT_API_BASE}/crm/v3/associations/contacts/${trainingObjectType}/batch/create`
-  const associationLabel = process.env.HUBSPOT_TRAINING_ASSOCIATION_LABEL || 'registrant'
+  const associationLabel = getRegistrantAssociationLabel()
   const response = await hubspotFetch(url, {
     method: 'POST',
     headers: {
