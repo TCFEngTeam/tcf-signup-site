@@ -110,8 +110,6 @@ export type PagesContent = {
     backToEvents: string
     inactive: string
     full: string
-    registrationClosedNotice: string
-    signupHeading: string
     registrationClosed: string
     signupHeading: string
     browseOtherEvents: string
