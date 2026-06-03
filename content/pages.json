@@ -1,6 +1,8 @@
 {
   "listing": {
-    "backToMainSite": "← Back to main site"
+    "backToMainSite": "← Back to main site",
+    "noSessions": "No upcoming sessions are available right now.",
+    "loadError": "Error loading events. Please try again later."
   },
   "eventCard": {
     "badgeFull": "Full",
@@ -10,13 +12,26 @@
     "fallbackTitle": "Event Title",
     "fallbackLocation": "Location"
   },
+  "capacity": {
+    "full": "Full",
+    "registrationClosed": "Registration closed",
+    "oneSeatRemaining": "{count} seat remaining",
+    "seatsRemaining": "{count} seats remaining"
+  },
+  "schedule": {
+    "dateToBeAnnounced": "Date to be announced",
+    "fallbackTimeZone": "EST"
+  },
+  "events": {
+    "defaultLocation": "Virtual",
+    "untitledEvent": "Untitled Training"
+  },
   "eventDetail": {
     "backToEvents": "← Back to {program} events",
     "inactive": "This event is currently unavailable.",
     "full": "This event is full.",
-    "registrationClosedNotice": "Registration is closed for this session.",
-    "signupHeading": "Sign up",
     "registrationClosed": "Registration is closed for this session.",
+    "signupHeading": "Sign up",
     "browseOtherEvents": "Browse other {program} events",
     "eventNotFoundEyebrow": "Event lookup",
     "eventNotFoundTitle": "Event not found",

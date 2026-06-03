@@ -71,7 +71,7 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
 
           <div className="notice-card text-sm text-zinc-700">
             {!event.active && <p>{detail.inactive}</p>}
-            {event.registrationClosed && <p>{detail.registrationClosedNotice}</p>}
+            {event.registrationClosed && <p>{detail.registrationClosed}</p>}
             {event.isFull && !event.registrationClosed && <p>{detail.full}</p>}
 
             <div className="mb-6 p-6 bg-blue-50 rounded-lg border border-blue-200">

@@ -36,6 +36,7 @@ vi.mock('@/lib/hubspot/api', async () => {
   }
 })
 
+import { signupFormContent } from '@/lib/content'
 import { POST } from './route'
 
 function postSignup(body: unknown) {
@@ -85,7 +86,7 @@ describe('POST /api/signup', () => {
 
     const res = await postSignup(signupRequestBody())
     expect(res.status).toBe(409)
-    expect(await res.json()).toMatchObject({ error: 'Registration is closed for this session' })
+    expect(await res.json()).toMatchObject({ error: signupFormContent.messages.registrationClosed })
   })
 
   it('returns 409 when the event is full', async () => {
@@ -96,7 +97,7 @@ describe('POST /api/signup', () => {
 
     const res = await postSignup(signupRequestBody())
     expect(res.status).toBe(409)
-    expect(await res.json()).toMatchObject({ error: 'Training is full' })
+    expect(await res.json()).toMatchObject({ error: signupFormContent.messages.trainingFull })
   })
 
   it('returns 409 when the contact is already registered', async () => {

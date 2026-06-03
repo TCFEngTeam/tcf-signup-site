@@ -1,4 +1,8 @@
+import pagesJson from '../../../content/pages.json'
+import type { PagesContent } from '@/lib/content/types'
+
 const SCHEDULE_TIME_ZONE = 'America/New_York'
+const scheduleLabels = (pagesJson as PagesContent).schedule
 
 export type TrainingSchedule = {
   session1Start?: string
@@ -63,7 +67,7 @@ function formatTimeZoneAbbreviation(date: Date): string {
     .formatToParts(date)
     .find((entry) => entry.type === 'timeZoneName')
 
-  return part?.value ?? 'EST'
+  return part?.value ?? scheduleLabels.fallbackTimeZone
 }
 
 export function formatSessionLineFromRange(start?: string, end?: string): string | null {
@@ -97,7 +101,7 @@ export function formatTrainingScheduleLines(schedule: TrainingSchedule): string[
     : null
 
   const lines = [line1, line2].filter((line): line is string => Boolean(line))
-  if (lines.length === 0) return ['Date to be announced']
+  if (lines.length === 0) return [scheduleLabels.dateToBeAnnounced]
   return lines
 }
 

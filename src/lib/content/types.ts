@@ -51,11 +51,18 @@ export type SignupFormContent = {
   requiredHint: string
   messages: {
     missingFields: string
+    invalidPhone: string
     eventFull: string
     eventRegistrationClosed: string
     signupSuccess: string
     signupFailed: string
     networkError: string
+    missingRequiredFields: string
+    trainingNotFound: string
+    trainingFull: string
+    registrationClosed: string
+    alreadyRegistered: string
+    signupUnavailable: string
   }
   fields: Record<SignupFormFieldKey, string>
   placeholders: {
@@ -74,6 +81,8 @@ export type SignupFormContent = {
 export type PagesContent = {
   listing: {
     backToMainSite: string
+    noSessions: string
+    loadError: string
   }
   eventCard: {
     badgeFull: string
@@ -83,13 +92,26 @@ export type PagesContent = {
     fallbackTitle: string
     fallbackLocation: string
   }
+  capacity: {
+    full: string
+    registrationClosed: string
+    oneSeatRemaining: string
+    seatsRemaining: string
+  }
+  schedule: {
+    dateToBeAnnounced: string
+    fallbackTimeZone: string
+  }
+  events: {
+    defaultLocation: string
+    untitledEvent: string
+  }
   eventDetail: {
     backToEvents: string
     inactive: string
     full: string
-    registrationClosedNotice: string
-    signupHeading: string
     registrationClosed: string
+    signupHeading: string
     browseOtherEvents: string
     eventNotFoundEyebrow: string
     eventNotFoundTitle: string

@@ -4,13 +4,17 @@
  * should be configured in .env.local
  */
 
-import type { TrainingSchedule } from '@/lib/dates/format-schedule'
-import { getTrainingSchedulePropertyKeys } from '@/lib/dates/format-schedule'
+import pagesJson from '../../../content/pages.json'
+import type { PagesContent } from '@/lib/content/types'
 import {
   contactHasTrainingAssociation,
   isDuplicateAssociationResponse,
   mapSmsConsentToHubSpot,
 } from '@/lib/hubspot/field-mappers'
+import type { TrainingSchedule } from '@/lib/dates/format-schedule'
+import { getTrainingSchedulePropertyKeys } from '@/lib/dates/format-schedule'
+
+const eventLabels = (pagesJson as PagesContent).events
 
 const HUBSPOT_API_BASE = 'https://api.hubapi.com'
 
@@ -564,10 +568,10 @@ export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
 
   return {
     id: training.id,
-    title: readTrainingProperty(props, 'hs_course_name', 'name') || 'Untitled Training',
+    title: readTrainingProperty(props, 'hs_course_name', 'name') || eventLabels.untitledEvent,
     schedule,
     sortDate: parsedStartDate?.toISOString() || schedule.session1Start,
-    location: 'Virtual',
+    location: readTrainingProperty(props, 'location') || eventLabels.defaultLocation,
     capacity,
     registered: Math.max(0, capacity - availableCapacity),
     availableCapacity,

@@ -9,6 +9,7 @@ import {
   isContactRegisteredForTraining,
   type ContactData,
 } from '@/lib/hubspot/api'
+import { signupFormContent } from '@/lib/content'
 import { formatSignupFormData, isSignupFormatError } from '@/lib/signup/format-fields'
 import { loadProgramEventById } from '@/lib/programs/events'
 import { isTrainingProgramId } from '@/lib/programs/config'
@@ -16,6 +17,8 @@ import { isTrainingProgramId } from '@/lib/programs/config'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: Request) {
+  const messages = signupFormContent.messages
+
   try {
     const body = await req.json()
     const { eventId, program, data } = body || {}
@@ -43,7 +46,7 @@ export async function POST(req: Request) {
       !data.interestReason ||
       !data.communitySupport
     ) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+      return NextResponse.json({ error: messages.missingRequiredFields }, { status: 400 })
     }
 
     const formatted = formatSignupFormData(data)
@@ -58,15 +61,15 @@ export async function POST(req: Request) {
     }
 
     if (!ev) {
-      return NextResponse.json({ error: 'Training event not found' }, { status: 404 })
+      return NextResponse.json({ error: messages.trainingNotFound }, { status: 404 })
     }
 
     if (ev.registrationClosed) {
-      return NextResponse.json({ error: 'Registration is closed for this session' }, { status: 409 })
+      return NextResponse.json({ error: messages.registrationClosed }, { status: 409 })
     }
 
     if (ev.isFull) {
-      return NextResponse.json({ error: 'Training is full' }, { status: 409 })
+      return NextResponse.json({ error: messages.trainingFull }, { status: 409 })
     }
 
     const existingContact = await getContactByEmail(formatted.email)
@@ -76,8 +79,7 @@ export async function POST(req: Request) {
     ) {
       return NextResponse.json(
         {
-          error:
-            'You are already registered for this event. Check your email for confirmation details.',
+          error: messages.alreadyRegistered,
         },
         { status: 409 }
       )
@@ -123,10 +125,7 @@ export async function POST(req: Request) {
       const hubspotError =
         hsError instanceof Error ? hsError.message : 'HubSpot sync failed'
       console.error('HubSpot integration error:', hubspotError)
-      return NextResponse.json(
-        { error: 'Unable to complete signup. Please try again or contact support.' },
-        { status: 502 }
-      )
+      return NextResponse.json({ error: messages.signupUnavailable }, { status: 502 })
     }
 
     return NextResponse.json({

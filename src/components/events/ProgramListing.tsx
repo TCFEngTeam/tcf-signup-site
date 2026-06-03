@@ -36,13 +36,11 @@ export default function ProgramListing({ program, events, error }: ProgramListin
         </div>
 
         {error && (
-          <p className="mb-6 text-yellow-700">
-            Error loading events. Please try again later.
-          </p>
+          <p className="mb-6 text-yellow-700">{pagesContent.listing.loadError}</p>
         )}
 
         {events.length === 0 && !error && (
-          <p className="text-slate-700">No upcoming sessions are available right now.</p>
+          <p className="text-slate-700">{pagesContent.listing.noSessions}</p>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

@@ -4,6 +4,7 @@ import {
   getDialCodeFromIso,
   getUniqueDialCodesLongestFirst,
 } from '@/lib/phone/country-codes'
+import { signupFormContent } from '@/lib/content'
 
 export type SignupFormData = {
   firstName: string
@@ -207,7 +208,7 @@ export function formatLongText(value: string) {
 export function formatSignupFormData(data: SignupFormData): SignupFormData | SignupFormatError {
   const phone = formatPhoneNumber(data.phone)
   if (!phone) {
-    return { error: 'Please enter a valid phone number.' }
+    return { error: signupFormContent.messages.invalidPhone }
   }
 
   return {

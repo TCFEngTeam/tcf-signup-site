@@ -24,7 +24,15 @@ describe('content', () => {
 
   it('loads page UI strings', () => {
     expect(pagesContent.eventCard.signUp).toBe('Sign up')
+    expect(pagesContent.listing.noSessions).toBeTruthy()
+    expect(pagesContent.capacity.seatsRemaining).toContain('{count}')
+    expect(pagesContent.schedule.dateToBeAnnounced).toBeTruthy()
     expect(pagesContent.success.heading).toBeTruthy()
+  })
+
+  it('loads signup API messages', () => {
+    expect(signupFormContent.messages.invalidPhone).toBeTruthy()
+    expect(signupFormContent.messages.alreadyRegistered).toContain('already registered')
   })
 
   it('formatContent replaces placeholders', () => {
