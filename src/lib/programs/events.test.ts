@@ -34,6 +34,42 @@ describe('toProgramEvent', () => {
     expect(event.schedule.session2Start).toBe('2030-06-04T19:00:00.000Z')
   })
 
+  it('marks registration closed when HubSpot stage matches config', () => {
+    const event = toProgramEvent(
+      mapTrainingToEvent({
+        id: '2',
+        properties: {
+          name: 'MHFA - Past cutoff',
+          hs_pipeline_stage: 'closed-stage-id',
+          available_capacity: '10',
+          capacity: '20',
+        },
+      }),
+      'closed-stage-id'
+    )
+
+    expect(event.registrationClosed).toBe(true)
+    expect(event.isFull).toBe(false)
+  })
+
+  it('marks registration closed when HubSpot stage matches config', () => {
+    const event = toProgramEvent(
+      mapTrainingToEvent({
+        id: '2',
+        properties: {
+          name: 'MHFA - Past cutoff',
+          hs_pipeline_stage: 'closed-stage-id',
+          available_capacity: '10',
+          capacity: '20',
+        },
+      }),
+      'closed-stage-id'
+    )
+
+    expect(event.registrationClosed).toBe(true)
+    expect(event.isFull).toBe(false)
+  })
+
   it('marks registration closed within 48 hours of first session start', () => {
     const sessionStart = '2030-06-10T19:00:00.000Z'
     const mapped = mapTrainingToEvent({
@@ -202,5 +238,39 @@ describe('toProgramEvent cutoff_time', () => {
 
     expect(event.registrationClosed).toBe(false)
     expect(canAcceptRegistration(event)).toBe(true)
+  })
+
+  it('canAcceptRegistration is false when registration is closed', () => {
+    const event = toProgramEvent(
+      mapTrainingToEvent({
+        id: '3',
+        properties: {
+          name: 'QPR Closed',
+          hs_pipeline_stage: 'qpr-closed',
+          available_capacity: '5',
+          capacity: '10',
+        },
+      }),
+      'qpr-closed'
+    )
+
+    expect(canAcceptRegistration(event)).toBe(false)
+  })
+
+  it('canAcceptRegistration is false when registration is closed', () => {
+    const event = toProgramEvent(
+      mapTrainingToEvent({
+        id: '3',
+        properties: {
+          name: 'QPR Closed',
+          hs_pipeline_stage: 'qpr-closed',
+          available_capacity: '5',
+          capacity: '10',
+        },
+      }),
+      'qpr-closed'
+    )
+
+    expect(canAcceptRegistration(event)).toBe(false)
   })
 })

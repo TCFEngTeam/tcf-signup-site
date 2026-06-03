@@ -68,6 +68,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: messages.registrationClosed }, { status: 409 })
     }
 
+    if (ev.registrationClosed) {
+      return NextResponse.json({ error: 'Registration is closed for this session' }, { status: 409 })
+    }
+
     if (ev.isFull) {
       return NextResponse.json({ error: messages.trainingFull }, { status: 409 })
     }
