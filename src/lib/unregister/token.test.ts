@@ -1,3 +1,4 @@
+import { createHmac } from 'crypto'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createUnregisterToken, verifyUnregisterToken } from '@/lib/unregister/token'
 
@@ -43,5 +44,22 @@ describe('unregister token', () => {
       trainingId: '1',
     })
     expect(() => verifyUnregisterToken(`${token}x`)).toThrow()
+  })
+
+  it('rejects invalid program in payload', () => {
+    const exp = Math.floor(Date.now() / 1000) + 3600
+    const body = {
+      jti: 'a'.repeat(32),
+      email: 'user@example.com',
+      program: 'invalid',
+      trainingId: '1',
+      exp,
+    }
+    const encoded = Buffer.from(JSON.stringify(body), 'utf8').toString('base64url')
+    const signature = createHmac('sha256', process.env.UNREGISTER_TOKEN_SECRET!)
+      .update(encoded)
+      .digest('base64url')
+
+    expect(() => verifyUnregisterToken(`${encoded}.${signature}`)).toThrow()
   })
 })

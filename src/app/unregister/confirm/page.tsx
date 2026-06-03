@@ -2,8 +2,14 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import Footer from '@/components/layout/Footer'
 import Header from '@/components/layout/Header'
-import { confirmUnregister } from '@/lib/unregister/service'
+import UnregisterConfirmClient from '@/components/unregister/UnregisterConfirmClient'
+import { pagesContent } from '@/lib/content'
 import { getTrainingProgram } from '@/lib/programs/config'
+import { peekUnregisterToken } from '@/lib/unregister/token'
+import { loadProgramEventById } from '@/lib/programs/events'
+import { getTrainingById } from '@/lib/hubspot/api'
+
+const confirm = pagesContent.unregister.confirm
 
 export const dynamic = 'force-dynamic'
 
@@ -16,11 +22,11 @@ export default async function UnregisterConfirmPage({ searchParams }: ConfirmPag
 
   if (!token?.trim()) {
     return (
-      <ConfirmShell title="Invalid link">
-        <p>This confirmation link is missing or invalid.</p>
+      <ConfirmShell title={confirm.invalidLinkTitle}>
+        <p>{confirm.invalidLinkBody}</p>
         <p className="mt-4">
           <Link href="/unregister" className="underline">
-            Request a new cancellation link
+            {confirm.requestNewLink}
           </Link>
         </p>
       </ConfirmShell>
@@ -28,38 +34,38 @@ export default async function UnregisterConfirmPage({ searchParams }: ConfirmPag
   }
 
   try {
-    const result = await confirmUnregister(token)
-    const program = getTrainingProgram(result.program)
+    const payload = peekUnregisterToken(token)
+    const program = getTrainingProgram(payload.program)
+    const { event } = await loadProgramEventById(payload.program, payload.trainingId)
+
+    let trainingTitle = event?.title
+    if (!trainingTitle) {
+      const training = await getTrainingById(payload.trainingId)
+      trainingTitle =
+        training?.properties.hs_course_name ||
+        training?.properties.name ||
+        pagesContent.unregister.confirm.fallbackSessionTitle
+    }
 
     return (
-      <ConfirmShell title="Registration cancelled">
-        <p>
-          You are no longer registered for{' '}
-          <strong>{result.trainingTitle}</strong>
-          {program ? ` (${program.shortLabel})` : ''}.
-        </p>
-        {result.mode === 'relabel' ? (
-          <p className="mt-3 text-sm helper-text">
-            Your registration was marked as cancelled in our system (audit record kept).
-          </p>
-        ) : null}
-        <p className="mt-6">
-          <Link href={`/${result.program}`} className="underline">
-            View other sessions
-          </Link>
-        </p>
+      <ConfirmShell title={confirm.previewTitle}>
+        <UnregisterConfirmClient
+          token={token}
+          trainingTitle={trainingTitle}
+          programSlug={payload.program}
+          programLabel={program?.shortLabel ?? payload.program.toUpperCase()}
+        />
       </ConfirmShell>
     )
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : 'Could not confirm cancellation.'
+    const message = error instanceof Error ? error.message : confirm.errorFallback
 
     return (
-      <ConfirmShell title="Could not confirm">
+      <ConfirmShell title={confirm.errorTitle}>
         <p>{message}</p>
         <p className="mt-4">
           <Link href="/unregister" className="underline">
-            Request a new cancellation link
+            {confirm.requestNewLink}
           </Link>
         </p>
       </ConfirmShell>

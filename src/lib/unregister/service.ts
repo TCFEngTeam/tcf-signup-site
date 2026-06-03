@@ -2,19 +2,25 @@ import {
   getContactByEmail,
   getContactTrainingAssociations,
   getRegistrantAssociationLabel,
+  getTrainingById,
   isContactRegisteredForTraining,
   unregisterContactFromTraining,
 } from '@/lib/hubspot/api'
+import { pagesContent } from '@/lib/content'
 import { formatEmail } from '@/lib/signup/format-fields'
 import {
+  getProgramPipelineConfig,
   getTrainingProgram,
   isTrainingProgramId,
   type TrainingProgramId,
 } from '@/lib/programs/config'
-import { loadProgramEventById, loadProgramEvents } from '@/lib/programs/events'
+import { loadProgramEventById } from '@/lib/programs/events'
+import { findRegistrantAssociationsForTraining } from '@/lib/hubspot/field-mappers'
 import { getUnregisterHubSpotMode } from '@/lib/unregister/config'
 import { createUnregisterToken, verifyUnregisterToken } from '@/lib/unregister/token'
 import { sendUnregisterConfirmationEmail } from '@/lib/unregister/email'
+
+const eventLabels = pagesContent.events
 
 export type RegistrationOption = {
   trainingId: string
@@ -29,22 +35,55 @@ export type RequestUnregisterResult =
 export const UNREGISTER_ACK_MESSAGE =
   'If that email is registered for the selected session, you will receive a confirmation link shortly.'
 
+function readTrainingTitle(training: { properties: Record<string, string> }) {
+  return (
+    training.properties.hs_course_name ||
+    training.properties.name ||
+    eventLabels.untitledEvent
+  )
+}
+
+function trainingMatchesProgram(
+  training: { properties: Record<string, string> },
+  programId: TrainingProgramId
+) {
+  const { pipelineType } = getProgramPipelineConfig(programId)
+  if (!pipelineType) return true
+  return (training.properties.hs_pipeline ?? '').trim() === pipelineType.trim()
+}
+
 export async function listRegistrationsForProgram(
   contactId: string,
   programId: TrainingProgramId
 ): Promise<RegistrationOption[]> {
   const registrantLabel = getRegistrantAssociationLabel()
+  const registrantTypeId = process.env.HUBSPOT_TRAINING_ASSOCIATION_TYPE_ID?.trim()
   const associations = await getContactTrainingAssociations(contactId)
-  const registrantTrainingIds = new Set(
-    associations
-      .filter((row) => (row.associationType ?? '').trim() === registrantLabel)
-      .map((row) => row.trainingId)
+
+  const uniqueIds = [
+    ...new Set(associations.map((row) => row.trainingId)),
+  ].filter(
+    (trainingId) =>
+      findRegistrantAssociationsForTraining(
+        associations,
+        trainingId,
+        registrantLabel,
+        registrantTypeId
+      ).length > 0
   )
 
-  const { events } = await loadProgramEvents(programId)
-  return events
-    .filter((event) => registrantTrainingIds.has(event.id))
-    .map((event) => ({ trainingId: event.id, title: event.title }))
+  const options: RegistrationOption[] = []
+
+  for (const trainingId of uniqueIds) {
+    const training = await getTrainingById(trainingId)
+    if (!training || !trainingMatchesProgram(training, programId)) continue
+    options.push({
+      trainingId,
+      title: readTrainingTitle(training),
+    })
+  }
+
+  return options.sort((a, b) => a.title.localeCompare(b.title))
 }
 
 export async function requestUnregisterEmail(input: {
@@ -72,7 +111,7 @@ export async function requestUnregisterEmail(input: {
   }
 
   let trainingId = input.trainingId?.trim()
-  let trainingTitle = 'Training session'
+  let trainingTitle = eventLabels.untitledEvent
 
   if (!trainingId) {
     const options = await listRegistrationsForProgram(contact.id, programId)
@@ -83,17 +122,21 @@ export async function requestUnregisterEmail(input: {
       return {
         status: 'select_training',
         options,
-        message: 'Select the session you want to cancel.',
+        message: pagesContent.unregister.request.selectSession,
       }
     }
     trainingId = options[0].trainingId
     trainingTitle = options[0].title
   } else {
     const { event } = await loadProgramEventById(programId, trainingId)
-    if (!event) {
-      return { status: 'sent', message: UNREGISTER_ACK_MESSAGE }
+    if (event) {
+      trainingTitle = event.title
+    } else {
+      const training = await getTrainingById(trainingId)
+      if (training) {
+        trainingTitle = readTrainingTitle(training)
+      }
     }
-    trainingTitle = event.title
 
     if (!(await isContactRegisteredForTraining(contact.id, trainingId))) {
       return { status: 'sent', message: UNREGISTER_ACK_MESSAGE }
@@ -125,14 +168,27 @@ export async function confirmUnregister(token: string) {
   }
 
   const mode = getUnregisterHubSpotMode()
-  await unregisterContactFromTraining(contact.id, payload.trainingId, mode)
+  const { alreadyCancelled } = await unregisterContactFromTraining(
+    contact.id,
+    payload.trainingId,
+    mode
+  )
 
   const { event } = await loadProgramEventById(payload.program, payload.trainingId)
+  let trainingTitle = event?.title
+
+  if (!trainingTitle) {
+    const training = await getTrainingById(payload.trainingId)
+    if (training) {
+      trainingTitle = readTrainingTitle(training)
+    }
+  }
 
   return {
     program: payload.program,
     trainingId: payload.trainingId,
-    trainingTitle: event?.title ?? 'your training session',
+    trainingTitle: trainingTitle ?? pagesContent.unregister.confirm.fallbackSessionTitle,
     mode,
+    alreadyCancelled,
   }
 }

@@ -28,6 +28,8 @@ describe('content', () => {
     expect(pagesContent.capacity.seatsRemaining).toContain('{count}')
     expect(pagesContent.schedule.dateToBeAnnounced).toBeTruthy()
     expect(pagesContent.success.heading).toBeTruthy()
+    expect(pagesContent.unregister.page.title).toBeTruthy()
+    expect(pagesContent.unregister.confirm.confirmButton).toBeTruthy()
   })
 
   it('loads signup API messages', () => {

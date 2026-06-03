@@ -120,6 +120,45 @@ export type PagesContent = {
     eventNotFoundLink: string
     eventNotFoundAfterLink: string
   }
+  unregister: {
+    page: {
+      eyebrow: string
+      title: string
+      intro: string
+    }
+    request: {
+      programLabel: string
+      sessionLabel: string
+      sessionPlaceholder: string
+      emailLabel: string
+      linkExpiryHint: string
+      invalidEmail: string
+      networkError: string
+      requestFailed: string
+      selectSession: string
+      submitSending: string
+      submitSelectSession: string
+      submitDefault: string
+    }
+    confirm: {
+      invalidLinkTitle: string
+      invalidLinkBody: string
+      previewTitle: string
+      previewIntro: string
+      confirmButton: string
+      confirming: string
+      successTitle: string
+      successIntro: string
+      alreadyCancelledTitle: string
+      alreadyCancelledBody: string
+      relabelNote: string
+      viewOtherSessions: string
+      requestNewLink: string
+      errorTitle: string
+      errorFallback: string
+      fallbackSessionTitle: string
+    }
+  }
   success: {
     metadataTitle: string
     metadataDescription: string

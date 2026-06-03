@@ -1,9 +1,12 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { formatContent, pagesContent } from '@/lib/content'
 import { TRAINING_PROGRAM_LIST, type TrainingProgramId } from '@/lib/programs/config'
 import { formatEmail } from '@/lib/signup/format-fields'
-import type { RegistrationOption } from '@/lib/unregister/service'
+import { UNREGISTER_ACK_MESSAGE, type RegistrationOption } from '@/lib/unregister/service'
+
+const request = pagesContent.unregister.request
 
 type UnregisterFormProps = {
   initialProgram?: TrainingProgramId
@@ -25,8 +28,10 @@ export default function UnregisterForm({
   const [submitting, setSubmitting] = useState(false)
 
   const needsSessionPick = sessionOptions.length > 0
-
   const programOptions = useMemo(() => TRAINING_PROGRAM_LIST, [])
+  const linkExpiryHint = formatContent(request.linkExpiryHint, {
+    hours: process.env.NEXT_PUBLIC_UNREGISTER_TOKEN_TTL_HOURS ?? '48',
+  })
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -35,7 +40,7 @@ export default function UnregisterForm({
 
     const normalizedEmail = formatEmail(email)
     if (!normalizedEmail) {
-      setError('Enter a valid email address.')
+      setError(request.invalidEmail)
       return
     }
 
@@ -54,23 +59,20 @@ export default function UnregisterForm({
       const payload = await res.json().catch(() => ({}))
 
       if (!res.ok) {
-        setError(payload?.error ?? 'Something went wrong. Please try again.')
+        setError(payload?.error ?? request.requestFailed)
         return
       }
 
       if (payload.status === 'select_training' && Array.isArray(payload.options)) {
         setSessionOptions(payload.options)
-        setMessage(payload.message ?? 'Select the session you want to cancel.')
+        setMessage(payload.message ?? request.selectSession)
         return
       }
 
       setSessionOptions([])
-      setMessage(
-        payload.message ??
-          'If that email is registered for the selected session, you will receive a confirmation link shortly.'
-      )
+      setMessage(payload.message ?? UNREGISTER_ACK_MESSAGE)
     } catch {
-      setError('Network error. Please try again.')
+      setError(request.networkError)
     } finally {
       setSubmitting(false)
     }
@@ -80,7 +82,7 @@ export default function UnregisterForm({
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
         <label htmlFor="unregister-program" className="block text-sm font-medium">
-          Program
+          {request.programLabel}
         </label>
         <select
           id="unregister-program"
@@ -104,7 +106,7 @@ export default function UnregisterForm({
       {needsSessionPick ? (
         <div>
           <label htmlFor="unregister-session" className="block text-sm font-medium">
-            Session
+            {request.sessionLabel}
           </label>
           <select
             id="unregister-session"
@@ -113,7 +115,7 @@ export default function UnregisterForm({
             className="mt-1 w-full"
             required
           >
-            <option value="">Select a session…</option>
+            <option value="">{request.sessionPlaceholder}</option>
             {sessionOptions.map((option) => (
               <option key={option.trainingId} value={option.trainingId}>
                 {option.title}
@@ -125,7 +127,7 @@ export default function UnregisterForm({
 
       <div>
         <label htmlFor="unregister-email" className="block text-sm font-medium">
-          Email address
+          {request.emailLabel}
         </label>
         <input
           id="unregister-email"
@@ -138,10 +140,7 @@ export default function UnregisterForm({
           required
           disabled={needsSessionPick && !trainingId}
         />
-        <p className="mt-2 text-sm helper-text">
-          We will email you a secure link to confirm cancellation. The link expires after{' '}
-          {process.env.NEXT_PUBLIC_UNREGISTER_TOKEN_TTL_HOURS ?? '48'} hours.
-        </p>
+        <p className="mt-2 text-sm helper-text">{linkExpiryHint}</p>
       </div>
 
       {error ? (
@@ -156,7 +155,11 @@ export default function UnregisterForm({
       ) : null}
 
       <button type="submit" className="btn-primary" disabled={submitting}>
-        {submitting ? 'Sending…' : needsSessionPick ? 'Send confirmation email' : 'Email me a confirmation link'}
+        {submitting
+          ? request.submitSending
+          : needsSessionPick
+            ? request.submitSelectSession
+            : request.submitDefault}
       </button>
     </form>
   )

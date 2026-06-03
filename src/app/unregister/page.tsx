@@ -1,7 +1,10 @@
 import Footer from '@/components/layout/Footer'
 import Header from '@/components/layout/Header'
 import UnregisterForm from '@/components/unregister/UnregisterForm'
+import { pagesContent } from '@/lib/content'
 import { isTrainingProgramId, type TrainingProgramId } from '@/lib/programs/config'
+
+const page = pagesContent.unregister.page
 
 export const dynamic = 'force-dynamic'
 
@@ -27,12 +30,9 @@ export default async function UnregisterPage({ searchParams }: UnregisterPagePro
       <main className="container mx-auto px-6 py-10">
         <div className="max-w-lg mx-auto section-panel">
           <div className="page-hero">
-            <div className="eyebrow">Registration</div>
-            <h1 className="text-3xl font-bold page-title">Cancel your registration</h1>
-            <p className="helper-text">
-              Enter the email you used to sign up. We will send a confirmation link; your
-              registration is not cancelled until you open that link.
-            </p>
+            <div className="eyebrow">{page.eyebrow}</div>
+            <h1 className="text-3xl font-bold page-title">{page.title}</h1>
+            <p className="helper-text">{page.intro}</p>
           </div>
 
           <div className="mt-8">

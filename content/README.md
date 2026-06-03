@@ -8,7 +8,7 @@
 |------|---------------------|
 | `site.json` | Site name, logo (text or image), footer, main site links, page title/description, SMS legal URLs, submit button labels |
 | `signup-form.json` | All signup field labels, validation messages, server signup error messages, state list, “year in school” options, Yes/No labels |
-| `pages.json` | Event cards, capacity labels, schedule fallbacks, listing empty/error states, event detail page, success page, “back to main site” link text |
+| `pages.json` | Event cards, capacity labels, schedule fallbacks, listing empty/error states, event detail page, success page, unregister/cancel flow, “back to main site” link text |
 | `programs/mhfa.json` | MHFA listing intro, signup notice, success-page next steps |
 | `programs/qpr.json` | QPR listing intro, signup notice, success-page next steps |
 

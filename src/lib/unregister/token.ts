@@ -1,5 +1,5 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
-import type { TrainingProgramId } from '@/lib/programs/config'
+import { isTrainingProgramId, type TrainingProgramId } from '@/lib/programs/config'
 import { getUnregisterTokenSecret, getUnregisterTokenTtlHours } from '@/lib/unregister/config'
 
 export type UnregisterTokenPayload = {
@@ -16,8 +16,7 @@ function createTokenJti() {
 }
 
 function base64UrlEncode(value: string) {
-  return Buffer.from(value, 'utf8')
-    .toString('base64url')
+  return Buffer.from(value, 'utf8').toString('base64url')
 }
 
 function base64UrlDecode(value: string) {
@@ -33,8 +32,7 @@ function sign(encodedPayload: string) {
 export function createUnregisterToken(
   payload: Omit<UnregisterTokenPayload, 'exp' | 'jti'>
 ) {
-  const exp =
-    Math.floor(Date.now() / 1000) + getUnregisterTokenTtlHours() * 60 * 60
+  const exp = Math.floor(Date.now() / 1000) + getUnregisterTokenTtlHours() * 60 * 60
   const body: UnregisterTokenPayload = {
     ...payload,
     jti: createTokenJti(),
@@ -46,7 +44,13 @@ export function createUnregisterToken(
 }
 
 export function verifyUnregisterToken(token: string): UnregisterTokenPayload {
-  const [encodedPayload, signature] = token.split('.')
+  const dotIndex = token.lastIndexOf('.')
+  if (dotIndex <= 0) {
+    throw new Error('Invalid confirmation link')
+  }
+
+  const encodedPayload = token.slice(0, dotIndex)
+  const signature = token.slice(dotIndex + 1)
   if (!encodedPayload || !signature) {
     throw new Error('Invalid confirmation link')
   }
@@ -71,9 +75,18 @@ export function verifyUnregisterToken(token: string): UnregisterTokenPayload {
     throw new Error('Invalid confirmation link')
   }
 
+  if (!isTrainingProgramId(payload.program)) {
+    throw new Error('Invalid confirmation link')
+  }
+
   if (payload.exp < Math.floor(Date.now() / 1000)) {
     throw new Error('This confirmation link has expired. Request a new email.')
   }
 
   return payload
+}
+
+/** Validates token shape/expiry without performing HubSpot changes. */
+export function peekUnregisterToken(token: string): UnregisterTokenPayload {
+  return verifyUnregisterToken(token)
 }

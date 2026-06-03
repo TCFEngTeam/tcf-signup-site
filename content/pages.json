@@ -41,6 +41,45 @@
     "eventNotFoundLink": "returning to the {program} event list",
     "eventNotFoundAfterLink": "and opening a known event."
   },
+  "unregister": {
+    "page": {
+      "eyebrow": "Registration",
+      "title": "Cancel your registration",
+      "intro": "Enter the email you used to sign up. We will send a confirmation link; your registration is not cancelled until you confirm below."
+    },
+    "request": {
+      "programLabel": "Program",
+      "sessionLabel": "Session",
+      "sessionPlaceholder": "Select a session…",
+      "emailLabel": "Email address",
+      "linkExpiryHint": "We will email you a secure link to confirm cancellation. The link expires after {hours} hours.",
+      "invalidEmail": "Enter a valid email address.",
+      "networkError": "Network error. Please try again.",
+      "requestFailed": "Something went wrong. Please try again.",
+      "selectSession": "Select the session you want to cancel.",
+      "submitSending": "Sending…",
+      "submitSelectSession": "Send confirmation email",
+      "submitDefault": "Email me a confirmation link"
+    },
+    "confirm": {
+      "invalidLinkTitle": "Invalid link",
+      "invalidLinkBody": "This confirmation link is missing or invalid.",
+      "previewTitle": "Confirm cancellation",
+      "previewIntro": "You are about to cancel your registration for:",
+      "confirmButton": "Yes, cancel my registration",
+      "confirming": "Cancelling…",
+      "successTitle": "Registration cancelled",
+      "successIntro": "You are no longer registered for",
+      "alreadyCancelledTitle": "Already cancelled",
+      "alreadyCancelledBody": "This registration was already cancelled.",
+      "relabelNote": "Your registration was marked as cancelled in our system (audit record kept).",
+      "viewOtherSessions": "View other sessions",
+      "requestNewLink": "Request a new cancellation link",
+      "errorTitle": "Could not confirm",
+      "errorFallback": "Could not confirm cancellation.",
+      "fallbackSessionTitle": "your training session"
+    }
+  },
   "success": {
     "metadataTitle": "Signup Confirmed",
     "metadataDescription": "Your training signup has been submitted successfully.",
