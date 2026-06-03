@@ -1,5 +1,5 @@
 import { getTrainingObjects, mapTrainingToEvent } from '@/lib/hubspot/api'
-import type { TrainingSchedule } from '@/lib/dates/format-schedule'
+import { parseScheduleDateTime, type TrainingSchedule } from '@/lib/dates/format-schedule'
 import { sortEventsForListing } from '@/lib/programs/sort'
 import {
   getProgramPipelineConfig,
@@ -18,9 +18,25 @@ export type ProgramEvent = {
   availableCapacity: number
   active: boolean
   isFull: boolean
-  /** HubSpot pipeline stage is "closed for registration" — listed, no signups */
+  /** Pipeline closed stage and/or within 48h of first session start — listed, no signups */
   registrationClosed: boolean
   description?: string
+}
+
+export const REGISTRATION_CLOSE_HOURS_BEFORE_START = 48
+
+const REGISTRATION_CLOSE_MS = REGISTRATION_CLOSE_HOURS_BEFORE_START * 60 * 60 * 1000
+
+/** Registration closes when current time is within 48 hours of the first session start. */
+export function isRegistrationClosedByTime(
+  schedule: TrainingSchedule,
+  now: Date = new Date()
+): boolean {
+  const sessionStart = parseScheduleDateTime(schedule.session1Start)
+  if (!sessionStart) return false
+
+  const registrationClosesAt = sessionStart.getTime() - REGISTRATION_CLOSE_MS
+  return now.getTime() >= registrationClosesAt
 }
 
 export function canAcceptRegistration(event: ProgramEvent): boolean {
@@ -39,12 +55,16 @@ export type ProgramEventResult = {
 
 export function toProgramEvent(
   event: ReturnType<typeof mapTrainingToEvent>,
-  closedPipelineStage?: string
+  closedPipelineStage?: string,
+  options?: { now?: Date }
 ): ProgramEvent {
-  const registrationClosed = Boolean(
+  const now = options?.now ?? new Date()
+  const pipelineClosed = Boolean(
     closedPipelineStage &&
       event.hubspotPipelineStage?.trim() === closedPipelineStage.trim()
   )
+  const registrationClosed =
+    pipelineClosed || isRegistrationClosedByTime(event.schedule, now)
 
   return {
     id: event.id,
