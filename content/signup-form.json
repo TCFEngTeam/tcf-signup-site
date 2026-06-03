@@ -20,8 +20,7 @@
     "currentYear": "Current Year in School",
     "isVirginiaResident": "Are you currently a Virginia resident or attending a college in Virginia?",
     "interestReason": "Why are you interested in this event?",
-    "communitySupport": "How do you plan to use this event to support others in your community or on your campus?",
-    "interestedInTeaching": "Would you be interested in teaching this event to others after completing the training?"
+    "communitySupport": "How do you plan to use this event to support others in your community or on your campus?"
   },
   "placeholders": {
     "hometownState": "Select a state",

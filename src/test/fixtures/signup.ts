@@ -12,7 +12,6 @@ export const validSignupFormData: SignupFormData = {
   isVirginiaResident: 'yes',
   interestReason: 'I want to support peers on campus.',
   communitySupport: 'I will share resources with my residence hall.',
-  interestedInTeaching: 'Maybe',
   smsConsent: 'no',
 }
 

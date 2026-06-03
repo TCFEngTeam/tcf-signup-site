@@ -38,7 +38,6 @@ export interface ContactData {
   trainingDates: string
   interestReason: string
   communitySupport: string
-  interestedInTeaching: string
   smsConsent?: string
 }
 
@@ -106,7 +105,6 @@ function mapContactProperties(data: ContactData): { [key: string]: string } {
     [process.env.HUBSPOT_VIRGINIA_RESIDENT_PROPERTY || 'virginia_resident']: data.isVirginiaResident,
     [process.env.HUBSPOT_INTEREST_REASON_PROPERTY || 'interest_reason']: data.interestReason,
     [process.env.HUBSPOT_COMMUNITY_SUPPORT_PROPERTY || 'community_support_plan']: data.communitySupport,
-    [process.env.HUBSPOT_TEACHING_INTEREST_PROPERTY || 'interested_in_teaching']: data.interestedInTeaching,
   }
 
   if (data.smsConsent) {

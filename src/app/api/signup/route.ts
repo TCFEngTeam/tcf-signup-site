@@ -41,8 +41,7 @@ export async function POST(req: Request) {
       !data.currentYear ||
       !data.isVirginiaResident ||
       !data.interestReason ||
-      !data.communitySupport ||
-      !data.interestedInTeaching
+      !data.communitySupport
     ) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
@@ -97,7 +96,6 @@ export async function POST(req: Request) {
       trainingDates: data.trainingDates,
       interestReason: formatted.interestReason,
       communitySupport: formatted.communitySupport,
-      interestedInTeaching: formatted.interestedInTeaching,
       smsConsent: formatted.smsConsent,
     }
 

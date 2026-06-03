@@ -17,7 +17,6 @@ export type SignupFormData = {
   isVirginiaResident: string
   interestReason: string
   communitySupport: string
-  interestedInTeaching: string
   smsConsent: string
 }
 
@@ -201,14 +200,6 @@ export function formatHubSpotYesNo(value: string) {
   return value.trim()
 }
 
-export function formatTeachingInterest(value: string) {
-  const normalized = value.trim().toLowerCase()
-  if (normalized === 'yes') return 'Yes'
-  if (normalized === 'no') return 'No'
-  if (normalized === 'maybe') return 'Maybe'
-  return value.trim()
-}
-
 export function formatLongText(value: string) {
   return value.trim().replace(/\s+/g, ' ')
 }
@@ -231,7 +222,6 @@ export function formatSignupFormData(data: SignupFormData): SignupFormData | Sig
     isVirginiaResident: formatHubSpotYesNo(data.isVirginiaResident),
     interestReason: formatLongText(data.interestReason),
     communitySupport: formatLongText(data.communitySupport),
-    interestedInTeaching: formatTeachingInterest(data.interestedInTeaching),
     smsConsent: data.smsConsent ? formatHubSpotYesNo(data.smsConsent) : '',
   }
 }

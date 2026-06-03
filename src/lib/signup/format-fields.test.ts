@@ -21,7 +21,6 @@ describe('formatSignupFormData', () => {
       isVirginiaResident: 'Yes',
       interestReason: '  Interested  ',
       communitySupport: '  Support plan  ',
-      interestedInTeaching: 'yes',
       smsConsent: 'No',
     })
 
@@ -35,7 +34,6 @@ describe('formatSignupFormData', () => {
     expect(result.universityWebsite).toBe('virginia.edu')
     expect(result.isVirginiaResident).toBe('yes')
     expect(result.smsConsent).toBe('no')
-    expect(result.interestedInTeaching).toBe('Yes')
   })
 
   it('returns an error for incomplete phone numbers', () => {
@@ -51,7 +49,6 @@ describe('formatSignupFormData', () => {
       isVirginiaResident: 'yes',
       interestReason: 'Reason',
       communitySupport: 'Support',
-      interestedInTeaching: 'no',
       smsConsent: 'no',
     })
 

@@ -45,7 +45,6 @@ export type SignupFormFieldKey =
   | 'isVirginiaResident'
   | 'interestReason'
   | 'communitySupport'
-  | 'interestedInTeaching'
 
 export type SignupFormContent = {
   requiredSuffix: string
