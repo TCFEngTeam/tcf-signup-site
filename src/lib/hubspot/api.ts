@@ -223,7 +223,9 @@ async function archiveContactTrainingAssociation(
   }
 
   if (row.associationCategory && row.associationTypeId !== undefined) {
-    const v4Url = `${HUBSPOT_API_BASE}/crm/v4/associations/contacts/${trainingObjectType}/batch/archive`
+    // Labeled associations: use labels/archive (single `to` object + `types`).
+    // Plain batch/archive expects `to` as an array and removes all labels between the pair.
+    const v4Url = `${HUBSPOT_API_BASE}/crm/v4/associations/contacts/${trainingObjectType}/batch/labels/archive`
     const v4Response = await hubspotFetch(v4Url, {
       method: 'POST',
       headers,
