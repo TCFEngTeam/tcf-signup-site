@@ -17,7 +17,13 @@ export type ProgramEvent = {
   availableCapacity: number
   active: boolean
   isFull: boolean
+  /** HubSpot pipeline stage is "closed for registration" — listed, no signups */
+  registrationClosed: boolean
   description?: string
+}
+
+export function canAcceptRegistration(event: ProgramEvent): boolean {
+  return event.active && !event.isFull && !event.registrationClosed
 }
 
 export type ProgramEventsResult = {
@@ -31,8 +37,14 @@ export type ProgramEventResult = {
 }
 
 export function toProgramEvent(
-  event: ReturnType<typeof mapTrainingToEvent>
+  event: ReturnType<typeof mapTrainingToEvent>,
+  closedPipelineStage?: string
 ): ProgramEvent {
+  const registrationClosed = Boolean(
+    closedPipelineStage &&
+      event.hubspotPipelineStage?.trim() === closedPipelineStage.trim()
+  )
+
   return {
     id: event.id,
     title: event.title,
@@ -44,6 +56,7 @@ export function toProgramEvent(
     availableCapacity: event.availableCapacity,
     active: event.active,
     isFull: event.availableCapacity <= 0,
+    registrationClosed,
     description: event.description,
   }
 }
@@ -55,12 +68,14 @@ export async function loadProgramEvents(
     return { events: [], error: new Error('Unknown program') }
   }
 
-  const { pipelineStage, pipelineType } = getProgramPipelineConfig(programId)
+  const { pipelineStage, pipelineType, closedPipelineStage } = getProgramPipelineConfig(programId)
 
   try {
-    const trainings = await getTrainingObjects(pipelineStage, pipelineType)
+    const trainings = await getTrainingObjects(pipelineStage, pipelineType, closedPipelineStage)
     const events = sortEventsForListing(
-      trainings.map(mapTrainingToEvent).map(toProgramEvent)
+      trainings
+        .map(mapTrainingToEvent)
+        .map((event) => toProgramEvent(event, closedPipelineStage))
     )
     return { events, error: null }
   } catch (hsErr) {

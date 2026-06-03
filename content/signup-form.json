@@ -4,6 +4,7 @@
   "messages": {
     "missingFields": "Please fill in the highlighted required fields",
     "eventFull": "Sorry, this event is now full. Please try another event.",
+    "eventRegistrationClosed": "Registration is closed for this session. Please choose another event.",
     "signupSuccess": "Successfully signed up!",
     "signupFailed": "Failed to signup",
     "networkError": "Network error"

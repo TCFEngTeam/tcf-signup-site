@@ -150,6 +150,11 @@ h1, h2, h3 {
   color: var(--error-red);
 }
 
+.badge-registration-closed {
+  background: rgba(44, 96, 164, 0.1);
+  color: var(--primary-blue);
+}
+
 .btn-primary {
   border: none;
   background: linear-gradient(135deg, var(--primary-blue), var(--medium-blue));

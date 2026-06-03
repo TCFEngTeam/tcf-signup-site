@@ -53,6 +53,7 @@ export type SignupFormContent = {
   messages: {
     missingFields: string
     eventFull: string
+    eventRegistrationClosed: string
     signupSuccess: string
     signupFailed: string
     networkError: string
@@ -77,6 +78,7 @@ export type PagesContent = {
   }
   eventCard: {
     badgeFull: string
+    badgeRegistrationClosed: string
     badgeOpen: string
     signUp: string
     fallbackTitle: string
@@ -86,6 +88,7 @@ export type PagesContent = {
     backToEvents: string
     inactive: string
     full: string
+    registrationClosedNotice: string
     signupHeading: string
     registrationClosed: string
     browseOtherEvents: string

@@ -72,6 +72,22 @@ describe('POST /api/signup', () => {
     expect(res.status).toBe(400)
   })
 
+  it('returns 409 when registration is closed', async () => {
+    loadProgramEventById.mockResolvedValue({
+      event: {
+        id: 'event-123',
+        isFull: false,
+        registrationClosed: true,
+        availableCapacity: 5,
+      },
+      error: null,
+    })
+
+    const res = await postSignup(signupRequestBody())
+    expect(res.status).toBe(409)
+    expect(await res.json()).toMatchObject({ error: 'Registration is closed for this session' })
+  })
+
   it('returns 409 when the event is full', async () => {
     loadProgramEventById.mockResolvedValue({
       event: { id: 'event-123', isFull: true, availableCapacity: 0 },

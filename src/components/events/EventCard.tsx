@@ -19,12 +19,27 @@ type EventCardProps = {
     capacity?: number
     registered?: number
     isFull?: boolean
+    registrationClosed?: boolean
   }
   program: TrainingProgramId
 }
 
+function eventBadgeLabel(event: EventCardProps['event']) {
+  if (event?.registrationClosed) return card.badgeRegistrationClosed
+  if (event?.isFull) return card.badgeFull
+  return card.badgeOpen
+}
+
+function eventBadgeClass(event: EventCardProps['event']) {
+  if (event?.registrationClosed) return 'badge-registration-closed'
+  if (event?.isFull) return 'badge-full'
+  return 'badge-open'
+}
+
 export default function EventCard({ event, program }: EventCardProps) {
   const schedule = formatTrainingSchedule(event?.startDate, event?.endDate)
+  const signupBlocked = event?.registrationClosed || event?.isFull
+  const blockedLabel = event?.registrationClosed ? card.badgeRegistrationClosed : card.badgeFull
 
   return (
     <article className="event-card">
@@ -32,19 +47,20 @@ export default function EventCard({ event, program }: EventCardProps) {
       //<div className="event-image">{/* placeholder image */}</div>
       }
       <div className="event-body">
-        <div className={`event-badge ${event?.isFull ? 'badge-full' : 'badge-open'}`}>
-          {event?.isFull ? card.badgeFull : card.badgeOpen}
-        </div>
+        <div className={`event-badge ${eventBadgeClass(event)}`}>{eventBadgeLabel(event)}</div>
         <h3 className="event-title text-lg font-semibold">{event?.title ?? card.fallbackTitle}</h3>
         <p className="event-meta text-sm">{schedule}</p>
         <p className="event-location text-sm">{event?.location ?? card.fallbackLocation}</p>
         <CapacityIndicator
           capacity={event?.capacity}
           registered={event?.registered}
+          registrationClosed={event?.registrationClosed}
         />
 
-        {event?.isFull ? (
-          <span className="btn-primary inline-flex justify-center mt-3 cursor-not-allowed opacity-60">{card.badgeFull}</span>
+        {signupBlocked ? (
+          <span className="btn-primary inline-flex justify-center mt-3 cursor-not-allowed opacity-60">
+            {blockedLabel}
+          </span>
         ) : (
           <Link href={`/${program}/events/${event?.id}`} className="btn-primary inline-flex justify-center mt-3">
             {card.signUp}

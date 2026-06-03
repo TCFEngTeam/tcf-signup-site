@@ -56,6 +56,7 @@ If **no events show**:
 
 1. Confirm trainings exist in HubSpot.
 2. Compare the training’s pipeline stage ID to `HUBSPOT_MHFA_PIPELINE_STAGE` / `HUBSPOT_QPR_PIPELINE_STAGE` in Vercel (or ask a developer).
+3. Trainings moved to **closed for registration** must use `HUBSPOT_MHFA_CLOSED_PIPELINE_STAGE` / `HUBSPOT_QPR_CLOSED_PIPELINE_STAGE` — they stay listed but show “Registration Closed” instead of “Full”.
 
 ---
 
@@ -96,9 +97,11 @@ Never commit secrets. Developers maintain these in Vercel and local `.env.local`
 | Variable | Purpose |
 |----------|---------|
 | `HUBSPOT_API_KEY` | HubSpot private app token |
-| `HUBSPOT_MHFA_PIPELINE_STAGE` | Which MHFA trainings appear on `/mhfa` |
+| `HUBSPOT_MHFA_PIPELINE_STAGE` | MHFA trainings open for signup |
+| `HUBSPOT_MHFA_CLOSED_PIPELINE_STAGE` | MHFA trainings listed with registration closed |
 | `HUBSPOT_MHFA_PIPELINE_TYPE` | MHFA pipeline filter |
-| `HUBSPOT_QPR_PIPELINE_STAGE` | QPR listing filter |
+| `HUBSPOT_QPR_PIPELINE_STAGE` | QPR trainings open for signup |
+| `HUBSPOT_QPR_CLOSED_PIPELINE_STAGE` | QPR trainings listed with registration closed |
 | `HUBSPOT_QPR_PIPELINE_TYPE` | QPR pipeline filter |
 | `HUBSPOT_TRAINING_OBJECT_ID` | Custom training object type |
 | `HUBSPOT_TRAINING_ASSOCIATION_LABEL` | Contact → training link type (e.g. `registrant`) |

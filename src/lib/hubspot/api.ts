@@ -74,6 +74,7 @@ export interface TrainingEvent {
   availableCapacity: number
   active: boolean
   description?: string
+  hubspotPipelineStage?: string
 }
 
 function parseDateProperty(value?: string) {
@@ -437,11 +438,16 @@ export async function getContactByEmail(email: string): Promise<HubSpotContact |
  * Fetch training objects from HubSpot filtered by pipeline stage.
  * The stage is matched against the custom object property `hs_pipeline`.
  *
- * @param pipelineStage The exact stage name from .env.local (for example, "Accepting Applications")
- * @param pipelineType The exact pipeline stage name from .env.local
+ * @param pipelineStage Open-for-registration stage (`hs_pipeline_stage`)
+ * @param pipelineType Pipeline filter (`hs_pipeline`)
+ * @param closedPipelineStage Optional closed stage; listed on site but not open for signup
  * @returns Array of training objects from HubSpot
  */
-export async function getTrainingObjects(pipelineStage?: string, pipelineType?: string): Promise<HubSpotTraining[]> {
+export async function getTrainingObjects(
+  pipelineStage?: string,
+  pipelineType?: string,
+  closedPipelineStage?: string
+): Promise<HubSpotTraining[]> {
   if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
@@ -494,6 +500,7 @@ export async function getTrainingObjects(pipelineStage?: string, pipelineType?: 
     console.debug('[hubspotApi] raw training objects fetched', {
       objectType,
       pipelineStage,
+      closedPipelineStage,
       pipelineType,
       requestedProperties,
       count: allResults.length,
@@ -509,13 +516,14 @@ export async function getTrainingObjects(pipelineStage?: string, pipelineType?: 
             return stage === targetStage
         })
     }
-    if (pipelineStage) {
-      const targetStage = pipelineStage.trim()
-        allResults = allResults.filter((training) => {
-            const stage = (training.properties?.hs_pipeline_stage ?? '').trim()
-            //console.debug('[hubspotApi] comparing pipeline stage', { trainingId: training.id, stage, targetStage })
-            return stage === targetStage
-        })
+    const allowedPipelineStages = [pipelineStage, closedPipelineStage]
+      .map((value) => value?.trim())
+      .filter((value): value is string => Boolean(value))
+    if (allowedPipelineStages.length > 0) {
+      allResults = allResults.filter((training) => {
+        const stage = (training.properties?.hs_pipeline_stage ?? '').trim()
+        return allowedPipelineStages.includes(stage)
+      })
     }
 
     return allResults
@@ -562,5 +570,6 @@ export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
     availableCapacity,
     active: true,
     description: props.description,
+    hubspotPipelineStage: props.hs_pipeline_stage,
   }
 }

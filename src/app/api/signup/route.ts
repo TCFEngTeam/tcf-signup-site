@@ -62,6 +62,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Training event not found' }, { status: 404 })
     }
 
+    if (ev.registrationClosed) {
+      return NextResponse.json({ error: 'Registration is closed for this session' }, { status: 409 })
+    }
+
     if (ev.isFull) {
       return NextResponse.json({ error: 'Training is full' }, { status: 409 })
     }

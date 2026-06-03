@@ -8,7 +8,7 @@ import EventSignupForm from '@/components/signup/EventSignupForm'
 import Footer from '@/components/layout/Footer'
 import Header from '@/components/layout/Header'
 import { formatContent, pagesContent } from '@/lib/content'
-import { loadProgramEventById } from '@/lib/programs/events'
+import { canAcceptRegistration, loadProgramEventById } from '@/lib/programs/events'
 import { getTrainingProgram } from '@/lib/programs/config'
 
 const detail = pagesContent.eventDetail
@@ -71,14 +71,15 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
 
           <div className="notice-card text-sm text-zinc-700">
             {!event.active && <p>{detail.inactive}</p>}
-            {event.isFull && <p>{detail.full}</p>}
+            {event.registrationClosed && <p>{detail.registrationClosedNotice}</p>}
+            {event.isFull && !event.registrationClosed && <p>{detail.full}</p>}
 
             <div className="mb-6 p-6 bg-blue-50 rounded-lg border border-blue-200">
               <ProgramContentBlocks blocks={program.signupNotice} />
             </div>
           </div>
 
-          {!event.isFull && event.active ? (
+          {canAcceptRegistration(event) ? (
             <section className="section-panel">
               <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--primary-blue)' }}>
                 {detail.signupHeading}

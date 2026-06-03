@@ -217,8 +217,17 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
         if (shouldUseProgramEvents) {
           const eventRes = await fetch(`/api/events?program=${programId}`)
           if (eventRes.ok) {
-            const allEvents: { id: string; isFull?: boolean }[] = await eventRes.json()
+            const allEvents: {
+              id: string
+              isFull?: boolean
+              registrationClosed?: boolean
+            }[] = await eventRes.json()
             const currentEvent = allEvents.find((entry) => entry.id === eventId)
+            if (currentEvent?.registrationClosed) {
+              setMessage(formMessages.eventRegistrationClosed)
+              setSubmitting(false)
+              return
+            }
             if (currentEvent?.isFull) {
               setMessage(formMessages.eventFull)
               setSubmitting(false)
