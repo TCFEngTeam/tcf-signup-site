@@ -9,8 +9,10 @@ describe('toProgramEvent', () => {
         id: '559388347197',
         properties: {
           hs_course_name: 'MHFA - June 3',
-          training_start_date: '2026-06-03',
-          training_end_date: '2026-06-04',
+          training_1st_day_start_datetime: '2026-06-03T19:00:00.000Z',
+          training_1st_day_end_datetime: '2026-06-03T22:00:00.000Z',
+          training_2nd_day_start_datetime: '2026-06-04T19:00:00.000Z',
+          training_2nd_day_end_datetime: '2026-06-04T22:00:00.000Z',
           hs_enrollment_capacity: '20',
           available_capacity: '0',
         },
@@ -22,6 +24,8 @@ describe('toProgramEvent', () => {
     expect(event.registrationClosed).toBe(false)
     expect(event.registered).toBe(20)
     expect(event.capacity).toBe(20)
+    expect(event.schedule.session1Start).toBe('2026-06-03T19:00:00.000Z')
+    expect(event.schedule.session2Start).toBe('2026-06-04T19:00:00.000Z')
   })
 
   it('marks registration closed when HubSpot stage matches config', () => {
@@ -31,6 +35,8 @@ describe('toProgramEvent', () => {
         properties: {
           name: 'MHFA - Past cutoff',
           hs_pipeline_stage: 'closed-stage-id',
+          training_1st_day_start_datetime: '2026-06-03T19:00:00.000Z',
+          training_1st_day_end_datetime: '2026-06-03T22:00:00.000Z',
           available_capacity: '10',
           capacity: '20',
         },
@@ -42,14 +48,14 @@ describe('toProgramEvent', () => {
     expect(event.isFull).toBe(false)
   })
 
-  it('falls back to alternate HubSpot property names', () => {
+  it('maps single-day QPR session schedule', () => {
     const event = toProgramEvent(
       mapTrainingToEvent({
         id: '1',
         properties: {
           name: 'QPR Session',
-          start_date: '2026-07-01',
-          end_date: '2026-07-01',
+          training_1st_day_start_datetime: '2026-07-01T17:00:00.000Z',
+          training_1st_day_end_datetime: '2026-07-01T18:00:00.000Z',
           capacity: '10',
           available_capacity: '7',
         },
@@ -59,6 +65,7 @@ describe('toProgramEvent', () => {
     expect(event.title).toBe('QPR Session')
     expect(event.isFull).toBe(false)
     expect(event.availableCapacity).toBe(7)
+    expect(event.schedule.session2Start).toBeUndefined()
   })
 
   it('canAcceptRegistration is false when registration is closed', () => {
@@ -68,6 +75,8 @@ describe('toProgramEvent', () => {
         properties: {
           name: 'QPR Closed',
           hs_pipeline_stage: 'qpr-closed',
+          training_1st_day_start_datetime: '2026-06-03T19:00:00.000Z',
+          training_1st_day_end_datetime: '2026-06-03T22:00:00.000Z',
           available_capacity: '5',
           capacity: '10',
         },

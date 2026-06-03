@@ -4,6 +4,14 @@
  * should be configured in .env.local
  */
 
+import type { TrainingSchedule } from '@/lib/dates/format-schedule'
+import { getTrainingSchedulePropertyKeys } from '@/lib/dates/format-schedule'
+import {
+  contactHasTrainingAssociation,
+  isDuplicateAssociationResponse,
+  mapSmsConsentToHubSpot,
+} from '@/lib/hubspot/field-mappers'
+
 const HUBSPOT_API_BASE = 'https://api.hubapi.com'
 
 /** HubSpot must always be live; Next.js caches `fetch` in production by default. */
@@ -65,8 +73,8 @@ export interface HubSpotTraining {
 export interface TrainingEvent {
   id: string
   title: string
-  startDate?: string
-  endDate?: string
+  schedule: TrainingSchedule
+  sortDate?: string
   location: string
   capacity: number
   registered: number
@@ -81,13 +89,6 @@ function parseDateProperty(value?: string) {
   const parsed = new Date(value)
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
-
-export { formatTrainingSchedule } from '@/lib/dates/format-schedule'
-import {
-  contactHasTrainingAssociation,
-  isDuplicateAssociationResponse,
-  mapSmsConsentToHubSpot,
-} from '@/lib/hubspot/field-mappers'
 
 /**
  * Maps form data to HubSpot contact properties using environment variables
@@ -455,7 +456,7 @@ export async function getTrainingObjects(
   let after: string | null = null
   const requestedProperties = (
     process.env.HUBSPOT_TRAINING_PROPERTIES ||
-    'hs_pipeline,hs_pipeline_stage,start_date,end_date,available_capacity,name,location,capacity,description'
+    'hs_pipeline,hs_pipeline_stage,training_1st_day_start_datetime,training_1st_day_end_datetime,training_2nd_day_start_datetime,training_2nd_day_end_datetime,available_capacity,name,location,capacity,description'
   )
     .split(',')
     .map((value) => value.trim())
@@ -552,16 +553,20 @@ export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
     10
   )
   const availableCapacity = parseInt(props.available_capacity || '0', 10)
-  const startDateRaw = readTrainingProperty(props, 'training_start_date', 'start_date')
-  const endDateRaw = readTrainingProperty(props, 'training_end_date', 'end_date')
-  const parsedStartDate = parseDateProperty(startDateRaw)
-  const parsedEndDate = parseDateProperty(endDateRaw)
+  const scheduleKeys = getTrainingSchedulePropertyKeys()
+  const schedule: TrainingSchedule = {
+    session1Start: readTrainingProperty(props, scheduleKeys.session1Start),
+    session1End: readTrainingProperty(props, scheduleKeys.session1End),
+    session2Start: readTrainingProperty(props, scheduleKeys.session2Start),
+    session2End: readTrainingProperty(props, scheduleKeys.session2End),
+  }
+  const parsedStartDate = parseDateProperty(schedule.session1Start)
 
   return {
     id: training.id,
     title: readTrainingProperty(props, 'hs_course_name', 'name') || 'Untitled Training',
-    startDate: parsedStartDate?.toISOString() || startDateRaw,
-    endDate: parsedEndDate?.toISOString() || endDateRaw,
+    schedule,
+    sortDate: parsedStartDate?.toISOString() || schedule.session1Start,
     location: 'Virtual',
     capacity,
     registered: Math.max(0, capacity - availableCapacity),

@@ -2,10 +2,11 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { formatTrainingSchedule } from '@/lib/dates/format-schedule'
+import type { TrainingSchedule } from '@/lib/dates/format-schedule'
 import { pagesContent } from '@/lib/content'
 import type { TrainingProgramId } from '@/lib/programs/config'
 import CapacityIndicator from './CapacityIndicator'
+import TrainingScheduleText from './TrainingScheduleText'
 
 const card = pagesContent.eventCard
 
@@ -13,8 +14,7 @@ type EventCardProps = {
   event?: {
     id?: string
     title?: string
-    startDate?: string
-    endDate?: string
+    schedule?: TrainingSchedule
     location?: string
     capacity?: number
     registered?: number
@@ -37,7 +37,6 @@ function eventBadgeClass(event: EventCardProps['event']) {
 }
 
 export default function EventCard({ event, program }: EventCardProps) {
-  const schedule = formatTrainingSchedule(event?.startDate, event?.endDate)
   const signupBlocked = event?.registrationClosed || event?.isFull
   const blockedLabel = event?.registrationClosed ? card.badgeRegistrationClosed : card.badgeFull
 
@@ -49,7 +48,7 @@ export default function EventCard({ event, program }: EventCardProps) {
       <div className="event-body">
         <div className={`event-badge ${eventBadgeClass(event)}`}>{eventBadgeLabel(event)}</div>
         <h3 className="event-title text-lg font-semibold">{event?.title ?? card.fallbackTitle}</h3>
-        <p className="event-meta text-sm">{schedule}</p>
+        <TrainingScheduleText schedule={event?.schedule} className="event-meta text-sm" />
         <p className="event-location text-sm">{event?.location ?? card.fallbackLocation}</p>
         <CapacityIndicator
           capacity={event?.capacity}

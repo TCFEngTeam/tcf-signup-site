@@ -1,4 +1,5 @@
 import { getTrainingObjects, mapTrainingToEvent } from '@/lib/hubspot/api'
+import type { TrainingSchedule } from '@/lib/dates/format-schedule'
 import { sortEventsForListing } from '@/lib/programs/sort'
 import {
   getProgramPipelineConfig,
@@ -9,8 +10,8 @@ import {
 export type ProgramEvent = {
   id: string
   title: string
-  startDate: string
-  endDate: string
+  schedule: TrainingSchedule
+  sortDate?: string
   location: string
   capacity: number
   registered: number
@@ -48,8 +49,8 @@ export function toProgramEvent(
   return {
     id: event.id,
     title: event.title,
-    startDate: event.startDate ?? '',
-    endDate: event.endDate ?? '',
+    schedule: event.schedule,
+    sortDate: event.sortDate,
     location: event.location,
     capacity: event.capacity,
     registered: event.registered,
