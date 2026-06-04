@@ -35,6 +35,7 @@ describe('content', () => {
   it('loads signup API messages', () => {
     expect(signupFormContent.messages.invalidPhone).toBeTruthy()
     expect(signupFormContent.messages.alreadyRegistered).toContain('already registered')
+    expect(signupFormContent.confirmationEmail.subject).toContain('{program}')
   })
 
   it('formatContent replaces placeholders', () => {

@@ -13,6 +13,7 @@ import { signupFormContent } from '@/lib/content'
 import { formatSignupFormData, isSignupFormatError } from '@/lib/signup/format-fields'
 import { loadProgramEventById } from '@/lib/programs/events'
 import { isTrainingProgramId } from '@/lib/programs/config'
+import { sendRegistrationConfirmationEmail } from '@/lib/signup/email'
 
 export const dynamic = 'force-dynamic'
 
@@ -130,6 +131,17 @@ export async function POST(req: Request) {
         hsError instanceof Error ? hsError.message : 'HubSpot sync failed'
       console.error('HubSpot integration error:', hubspotError)
       return NextResponse.json({ error: messages.signupUnavailable }, { status: 502 })
+    }
+
+    try {
+      await sendRegistrationConfirmationEmail({
+        to: formatted.email,
+        firstName: formatted.firstName,
+        program,
+        event: ev,
+      })
+    } catch (emailError) {
+      console.error('Registration confirmation email failed:', emailError)
     }
 
     return NextResponse.json({

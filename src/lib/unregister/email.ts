@@ -1,4 +1,5 @@
 import { getAppBaseUrl } from '@/lib/app-url'
+import { escapeHtml, sendResendEmail } from '@/lib/email/resend'
 import type { TrainingProgramId } from '@/lib/programs/config'
 import { getTrainingProgram } from '@/lib/programs/config'
 
@@ -10,8 +11,6 @@ type SendUnregisterEmailInput = {
 }
 
 export async function sendUnregisterConfirmationEmail(input: SendUnregisterEmailInput) {
-  const apiKey = process.env.RESEND_API_KEY?.trim()
-  const from = process.env.RESEND_FROM_EMAIL?.trim()
   const confirmUrl = `${getAppBaseUrl()}/unregister/confirm?token=${encodeURIComponent(input.token)}`
   const program = getTrainingProgram(input.program)
   const programLabel = program?.shortLabel ?? input.program.toUpperCase()
@@ -35,44 +34,11 @@ export async function sendUnregisterConfirmationEmail(input: SendUnregisterEmail
     <p>If you did not request this, you can ignore this email.</p>
   `.trim()
 
-  if (!apiKey || !from) {
-    if (process.env.NODE_ENV === 'development') {
-      console.info('[unregister] Email not configured. Confirmation URL:\n', confirmUrl)
-      return { delivered: false, devLogged: true as const }
-    }
-    throw new Error(
-      'Email is not configured. Set RESEND_API_KEY and RESEND_FROM_EMAIL in the environment.'
-    )
-  }
-
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from,
-      to: [input.to],
-      subject,
-      text,
-      html,
-    }),
-    cache: 'no-store',
+  return sendResendEmail({
+    to: input.to,
+    subject,
+    text,
+    html,
+    logLabel: 'unregister',
   })
-
-  if (!response.ok) {
-    const body = await response.text().catch(() => '')
-    throw new Error(`Failed to send email (${response.status}): ${body}`)
-  }
-
-  return { delivered: true as const, devLogged: false as const }
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
 }

@@ -64,6 +64,16 @@ export type SignupFormContent = {
     alreadyRegistered: string
     signupUnavailable: string
   }
+  confirmationEmail: {
+    subject: string
+    greeting: string
+    intro: string
+    scheduleHeading: string
+    locationHeading: string
+    nextStepsHeading: string
+    viewEventLink: string
+    closing: string
+  }
   fields: Record<SignupFormFieldKey, string>
   placeholders: {
     hometownState: string
