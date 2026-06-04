@@ -72,6 +72,8 @@ export type SignupFormContent = {
     locationHeading: string
     nextStepsHeading: string
     viewEventLink: string
+    cancelRegistrationIntro: string
+    cancelRegistrationLink: string
     closing: string
   }
   fields: Record<SignupFormFieldKey, string>

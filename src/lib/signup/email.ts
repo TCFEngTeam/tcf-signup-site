@@ -21,6 +21,7 @@ export async function sendRegistrationConfirmationEmail(
   const programLabel = program?.shortLabel ?? input.program.toUpperCase()
   const scheduleLines = formatTrainingScheduleLines(input.event.schedule)
   const eventUrl = `${getAppBaseUrl()}/${input.program}/events/${input.event.id}`
+  const unregisterUrl = `${getAppBaseUrl()}/unregister?program=${encodeURIComponent(input.program)}&eventId=${encodeURIComponent(input.event.id)}`
   const tokens = {
     firstName: input.firstName,
     program: programLabel,
@@ -47,6 +48,8 @@ export async function sendRegistrationConfirmationEmail(
     '',
     `${copy.viewEventLink}: ${eventUrl}`,
     '',
+    `${copy.cancelRegistrationIntro} ${unregisterUrl}`,
+    '',
     copy.closing,
   ].join('\n')
 
@@ -67,6 +70,7 @@ export async function sendRegistrationConfirmationEmail(
     <p><strong>${escapeHtml(copy.nextStepsHeading)}</strong></p>
     <ul>${nextStepsHtml}</ul>
     <p><a href="${escapeHtml(eventUrl)}">${escapeHtml(copy.viewEventLink)}</a></p>
+    <p>${escapeHtml(copy.cancelRegistrationIntro)} <a href="${escapeHtml(unregisterUrl)}">${escapeHtml(copy.cancelRegistrationLink)}</a></p>
     <p>${escapeHtml(copy.closing)}</p>
   `.trim()
 

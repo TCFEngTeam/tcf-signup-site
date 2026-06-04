@@ -24,6 +24,8 @@
     "locationHeading": "Location",
     "nextStepsHeading": "What's next",
     "viewEventLink": "View event details",
+    "cancelRegistrationIntro": "Need to cancel? Request a cancellation here:",
+    "cancelRegistrationLink": "Cancel your registration",
     "closing": "We look forward to seeing you."
   },
   "fields": {
