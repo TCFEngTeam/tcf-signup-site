@@ -34,7 +34,13 @@ export default function ProgramChooserHome() {
                   {program.shortLabel}
                 </div>
                 <h2 className="mt-2 text-xl font-semibold text-slate-900">{program.name}</h2>
-                <p className="mt-2 text-sm text-slate-700">{program.listingIntro[0]}</p>
+                <p className="mt-2 text-sm text-slate-700">
+                  {program.listingIntro[0]?.type === 'paragraph'
+                    ? program.listingIntro[0].text
+                    : program.listingIntro[0]?.type === 'list'
+                      ? program.listingIntro[0].items[0]
+                      : ''}
+                </p>
                 <span className="mt-4 inline-flex text-sm font-semibold text-blue-800">
                   View sessions →
                 </span>

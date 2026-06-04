@@ -4,14 +4,30 @@
   "shortLabel": "QPR",
   "listingTitle": "Question, Persuade, and Refer Suicide Prevention Training",
   "listingIntro": [
-    "Question, Persuade, and Refer (QPR) Training is a suicide prevention program that teaches individuals how to recognize the warning signs of a suicide crisis and how to respond effectively. The training focuses on three key steps: Question the person about suicidal thoughts, Persuade them to seek help, and Refer them to appropriate resources.",
-    "Designed for anyone, regardless of background, QPR equips participants with practical tools to intervene early, offer hope, and potentially save lives. It is often compared to CPR, emphasizing the importance of early action in a mental health emergency.",
-    "This session includes 1 hour of virtual training with instructors. Certification is received at course completion."
+    {
+      "type": "paragraph",
+      "text": "Question, Persuade, and Refer (QPR) Training is a suicide prevention program that teaches individuals how to recognize the warning signs of a suicide crisis and how to respond effectively. The training focuses on three key steps: Question the person about suicidal thoughts, Persuade them to seek help, and Refer them to appropriate resources."
+    },
+    {
+      "type": "list",
+      "items": [
+        "Designed for anyone, regardless of background, QPR equips participants with practical tools to intervene early, offer hope, and potentially save lives. It is often compared to CPR, emphasizing the importance of early action in a mental health emergency.",
+        "This session includes 1 hour of virtual training with instructors. Certification is received at course completion."
+      ]
+    }
   ],
   "signupNotice": [
-    "Question, Persuade, and Refer (QPR) Training is a suicide prevention program that teaches individuals how to recognize the warning signs of a suicide crisis and how to respond effectively. The training focuses on three key steps: Question the person about suicidal thoughts, Persuade them to seek help, and Refer them to appropriate resources.",
-    "Designed for anyone, regardless of background, QPR equips participants with practical tools to intervene early, offer hope, and potentially save lives. It is often compared to CPR, emphasizing the importance of early action in a mental health emergency.",
-    "This session includes 1 hour of virtual training with instructors. Certification is received at course completion."
+    {
+      "type": "paragraph",
+      "text": "Question, Persuade, and Refer (QPR) Training is a suicide prevention program that teaches individuals how to recognize the warning signs of a suicide crisis and how to respond effectively. The training focuses on three key steps: Question the person about suicidal thoughts, Persuade them to seek help, and Refer them to appropriate resources."
+    },
+    {
+      "type": "list",
+      "items": [
+        "Designed for anyone, regardless of background, QPR equips participants with practical tools to intervene early, offer hope, and potentially save lives. It is often compared to CPR, emphasizing the importance of early action in a mental health emergency.",
+        "This session includes 1 hour of virtual training with instructors. Certification is received at course completion."
+      ]
+    }
   ],
   "successNextSteps": [
     "Check your email for confirmation and session details.",

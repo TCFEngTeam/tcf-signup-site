@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import ProgramContentBlocks from '@/components/content/ProgramContentBlocks'
 import EventCard from './EventCard'
 import Footer from '@/components/layout/Footer'
 import Header from '@/components/layout/Header'
@@ -30,12 +31,8 @@ export default function ProgramListing({ program, events, error }: ProgramListin
 
         <h1 className="text-2xl font-semibold mb-6">{program.listingTitle}</h1>
 
-        <div className="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-200 space-y-3">
-          {program.listingIntro.map((paragraph) => (
-            <p key={paragraph} className="text-slate-900">
-              {paragraph}
-            </p>
-          ))}
+        <div className="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
+          <ProgramContentBlocks blocks={program.listingIntro} />
         </div>
 
         {error && (

@@ -14,9 +14,12 @@ describe('content', () => {
     expect(signupFormContent.currentYearOptions.length).toBeGreaterThan(0)
   })
 
-  it('loads program copy', () => {
-    expect(getProgramContent('mhfa').shortLabel).toBe('MHFA')
-    expect(getProgramContent('qpr').listingIntro.length).toBeGreaterThan(0)
+  it('loads program copy with mixed intro blocks', () => {
+    const mhfa = getProgramContent('mhfa')
+    expect(mhfa.shortLabel).toBe('MHFA')
+    expect(mhfa.listingIntro[0]).toMatchObject({ type: 'paragraph' })
+    expect(mhfa.listingIntro.some((block) => block.type === 'list')).toBe(true)
+    expect(getProgramContent('qpr').signupNotice.length).toBeGreaterThan(0)
   })
 
   it('loads page UI strings', () => {

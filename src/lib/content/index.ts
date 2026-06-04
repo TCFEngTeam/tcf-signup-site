@@ -5,8 +5,16 @@ import mhfaJson from '../../../content/programs/mhfa.json'
 import qprJson from '../../../content/programs/qpr.json'
 import type { PagesContent, ProgramContent, SignupFormContent, SiteContent } from './types'
 
-export type { PagesContent, ProgramContent, SignupFormContent, SiteContent, SignupFormFieldKey } from './types'
+export type {
+  PagesContent,
+  ProgramContent,
+  ProgramContentBlock,
+  SignupFormContent,
+  SiteContent,
+  SignupFormFieldKey,
+} from './types'
 export { formatContent } from './format'
+export { getProgramIntroPreview } from './program-blocks'
 
 /** Site-wide copy and links — edit `content/site.json`. */
 export const siteContent = siteJson as SiteContent

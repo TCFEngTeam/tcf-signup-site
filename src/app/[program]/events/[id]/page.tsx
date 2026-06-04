@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import ProgramContentBlocks from '@/components/content/ProgramContentBlocks'
 import EventDetails from '@/components/events/EventDetails'
 
 export const dynamic = 'force-dynamic'
@@ -72,12 +73,8 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
             {!event.active && <p>{detail.inactive}</p>}
             {event.isFull && <p>{detail.full}</p>}
 
-            <div className="mb-6 p-6 bg-blue-50 rounded-lg border border-blue-200 space-y-3">
-              {program.signupNotice.map((paragraph) => (
-                <p key={paragraph} className="text-slate-900">
-                  {paragraph}
-                </p>
-              ))}
+            <div className="mb-6 p-6 bg-blue-50 rounded-lg border border-blue-200">
+              <ProgramContentBlocks blocks={program.signupNotice} />
             </div>
           </div>
 

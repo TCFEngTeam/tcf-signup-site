@@ -51,9 +51,50 @@ For a quick local preview, a developer runs `npm run dev` and opens `/mhfa` or `
 ## JSON tips
 
 - Use double quotes `"` for all strings.
-- Paragraphs are a **list** in square brackets, one string per paragraph.
 - Links must be full URLs including `https://`.
 - Placeholder links like `"#"` are fine until legal provides real SMS policy URLs.
+
+### Program intro and signup notice (`listingIntro`, `signupNotice`)
+
+These fields use **mixed blocks**: an ordered list where each entry is either a paragraph or a bullet list.
+
+**Paragraph block:**
+
+```json
+{ "type": "paragraph", "text": "Opening sentence or paragraph." }
+```
+
+**Bullet list block:**
+
+```json
+{
+  "type": "list",
+  "items": [
+    "First bullet point.",
+    "Second bullet point."
+  ]
+}
+```
+
+**Example** (intro paragraph, then bullets):
+
+```json
+"listingIntro": [
+  {
+    "type": "paragraph",
+    "text": "This FREE training teaches students how to recognize signs of mental health challenges."
+  },
+  {
+    "type": "list",
+    "items": [
+      "For college students only.",
+      "Full attendance is required for certification."
+    ]
+  }
+]
+```
+
+You can repeat blocks in any order (e.g. paragraph → list → paragraph). `successNextSteps` stays a simple string list (one bullet per line on the success page).
 
 ## Need a new program page?
 

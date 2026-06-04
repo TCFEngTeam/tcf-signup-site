@@ -108,12 +108,16 @@ export type PagesContent = {
   }
 }
 
+export type ProgramContentBlock =
+  | { type: 'paragraph'; text: string }
+  | { type: 'list'; items: string[] }
+
 export type ProgramContent = {
   id: 'mhfa' | 'qpr'
   name: string
   shortLabel: string
   listingTitle: string
-  listingIntro: string[]
-  signupNotice: string[]
+  listingIntro: ProgramContentBlock[]
+  signupNotice: ProgramContentBlock[]
   successNextSteps: string[]
 }
