@@ -9,26 +9,66 @@
       "text": "This FREE 8-hour training teaches college students how to recognize signs of mental health or substance use challenges, how to offer and provide initial help, and how to guide a person toward appropriate care."
     },
     {
+      "type": "paragraph",
+      "text": "This training is for college students only."
+    },
+    {
+      "type": "paragraph",
+      "text": "This training will require:"
+    },
+    {
       "type": "list",
       "items": [
-        "This training is for college students only.",
-        "Attendance of the full session is mandatory for certification. Certification lasts for 3 years.",
-        "Complete the training and receive a $100 gift card (as funding allows)!"
+        "2 hours of online pre-work to be completed before class",
+        "6 hours of a virtual training with an instructor",
+        "2 hours of online post-work to be completed after class"
       ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Attendance of the full session is mandatory for certification. Certification lasts for 3 years."
+    },
+    {
+      "type": "paragraph",
+      "text": "You will receive an email from the Mental Health First Aid platform with your login information to start your pre-work. You will also receive an email from our Mental Health coordinator to help you if you have any questions."
+    },
+    {
+      "type": "paragraph",
+      "text": "Students will receive a $100 gift card upon completion of the training (as funding allows)."
     }
   ],
   "signupNotice": [
     {
       "type": "paragraph",
-      "text": "This FREE 8-hour course teaches individuals how to recognize signs of mental health or substance use challenges, how to offer and provide initial help, and how to guide a person toward appropriate care. Please complete this form if you are interested in the mental health first-aid training session."
+      "text": "This FREE 8-hour training teaches college students how to recognize signs of mental health or substance use challenges, how to offer and provide initial help, and how to guide a person toward appropriate care."
+    },
+    {
+      "type": "paragraph",
+      "text": "This training is for college students only."
+    },
+    {
+      "type": "paragraph",
+      "text": "This training will require:"
     },
     {
       "type": "list",
       "items": [
-        "Be mindful that this training will require 2 hours of pre-work and 6 hours of a virtual instructor-led training.",
-        "Attendance of the full session is mandatory for certification. Certification lasts for 3 years.",
-        "Complete the training and receive a $100 gift card (as funding allows)!"
+        "2 hours of online pre-work to be completed before class",
+        "6 hours of a virtual training with an instructor",
+        "2 hours of online post-work to be completed after class"
       ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Attendance of the full session is mandatory for certification. Certification lasts for 3 years."
+    },
+    {
+      "type": "paragraph",
+      "text": "You will receive an email from the Mental Health First Aid platform with your login information to start your pre-work. You will also receive an email from our Mental Health coordinator to help you if you have any questions."
+    },
+    {
+      "type": "paragraph",
+      "text": "Students will receive a $100 gift card upon completion of the training (as funding allows)."
     }
   ],
   "successNextSteps": [
