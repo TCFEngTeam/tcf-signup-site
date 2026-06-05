@@ -1,8 +1,15 @@
 import pagesJson from '../../../content/pages.json'
 import type { PagesContent } from '@/lib/content/types'
 
-const SCHEDULE_TIME_ZONE = 'America/New_York'
+const DEFAULT_SCHEDULE_TIME_ZONE = 'America/New_York'
 const scheduleLabels = (pagesJson as PagesContent).schedule
+
+export type FormatScheduleOptions = {
+  /** IANA timezone (e.g. America/New_York). Defaults to Eastern for server/email use. */
+  timeZone?: string
+}
+
+export { DEFAULT_SCHEDULE_TIME_ZONE }
 
 export type TrainingSchedule = {
   session1Start?: string
@@ -43,29 +50,29 @@ export function parseScheduleDateTime(value?: string): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
-function formatDatePart(date: Date): string {
+function formatDatePart(date: Date, timeZone: string): string {
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-    timeZone: SCHEDULE_TIME_ZONE,
+    timeZone,
   }).format(date)
 }
 
-function formatTimePart(date: Date): string {
+function formatTimePart(date: Date, timeZone: string): string {
   const formatted = new Intl.DateTimeFormat('en-US', {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
-    timeZone: SCHEDULE_TIME_ZONE,
+    timeZone,
   }).format(date)
 
   return formatted.replace(/\s/g, '').toLowerCase()
 }
 
-function formatTimeZoneAbbreviation(date: Date): string {
+function formatTimeZoneAbbreviation(date: Date, timeZone: string): string {
   const part = new Intl.DateTimeFormat('en-US', {
-    timeZone: SCHEDULE_TIME_ZONE,
+    timeZone,
     timeZoneName: 'short',
   })
     .formatToParts(date)
@@ -74,34 +81,42 @@ function formatTimeZoneAbbreviation(date: Date): string {
   return part?.value ?? scheduleLabels.fallbackTimeZone
 }
 
-export function formatSessionLineFromRange(start?: string, end?: string): string | null {
+export function formatSessionLineFromRange(
+  start?: string,
+  end?: string,
+  options?: FormatScheduleOptions
+): string | null {
+  const timeZone = options?.timeZone ?? DEFAULT_SCHEDULE_TIME_ZONE
   const startDate = parseScheduleDateTime(start)
   const endDate = parseScheduleDateTime(end)
 
   if (!startDate && !endDate) return null
 
   if (startDate && endDate) {
-    const dateLabel = formatDatePart(startDate)
-    const startTime = formatTimePart(startDate)
-    const endTime = formatTimePart(endDate)
-    const timeZone = formatTimeZoneAbbreviation(startDate)
-    return `${dateLabel}, ${startTime} - ${endTime} ${timeZone}`
+    const dateLabel = formatDatePart(startDate, timeZone)
+    const startTime = formatTimePart(startDate, timeZone)
+    const endTime = formatTimePart(endDate, timeZone)
+    const timeZoneLabel = formatTimeZoneAbbreviation(startDate, timeZone)
+    return `${dateLabel}, ${startTime} - ${endTime} ${timeZoneLabel}`
   }
 
   const single = startDate ?? endDate
   if (!single) return null
 
-  return `${formatDatePart(single)}, ${formatTimePart(single)} ${formatTimeZoneAbbreviation(single)}`
+  return `${formatDatePart(single, timeZone)}, ${formatTimePart(single, timeZone)} ${formatTimeZoneAbbreviation(single, timeZone)}`
 }
 
 export function hasSecondTrainingSession(schedule: TrainingSchedule): boolean {
   return Boolean(schedule.session2Start?.trim() && schedule.session2End?.trim())
 }
 
-export function formatTrainingScheduleLines(schedule: TrainingSchedule): string[] {
-  const line1 = formatSessionLineFromRange(schedule.session1Start, schedule.session1End)
+export function formatTrainingScheduleLines(
+  schedule: TrainingSchedule,
+  options?: FormatScheduleOptions
+): string[] {
+  const line1 = formatSessionLineFromRange(schedule.session1Start, schedule.session1End, options)
   const line2 = hasSecondTrainingSession(schedule)
-    ? formatSessionLineFromRange(schedule.session2Start, schedule.session2End)
+    ? formatSessionLineFromRange(schedule.session2Start, schedule.session2End, options)
     : null
 
   const lines = [line1, line2].filter((line): line is string => Boolean(line))
