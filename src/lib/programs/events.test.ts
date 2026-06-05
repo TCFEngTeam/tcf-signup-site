@@ -137,4 +137,70 @@ describe('isRegistrationClosedByTime', () => {
       true
     )
   })
+
+  it('uses cutoff_time when set instead of the 48-hour default', () => {
+    const cutoffTime = '2030-06-05T12:00:00.000Z'
+
+    expect(
+      isRegistrationClosedByTime(schedule, new Date('2030-06-05T11:59:59.000Z'), cutoffTime)
+    ).toBe(false)
+    expect(
+      isRegistrationClosedByTime(schedule, new Date('2030-06-05T12:00:00.000Z'), cutoffTime)
+    ).toBe(true)
+    expect(
+      isRegistrationClosedByTime(schedule, new Date('2030-06-09T00:00:00.000Z'), cutoffTime)
+    ).toBe(true)
+  })
+
+  it('falls back to 48 hours before start when cutoff_time is empty', () => {
+    expect(
+      isRegistrationClosedByTime(schedule, new Date('2030-06-08T18:59:59.000Z'), '')
+    ).toBe(false)
+    expect(
+      isRegistrationClosedByTime(schedule, new Date('2030-06-08T19:00:00.000Z'), undefined)
+    ).toBe(true)
+  })
+})
+
+describe('toProgramEvent cutoff_time', () => {
+  it('marks registration closed when HubSpot cutoff_time is in the past', () => {
+    const mapped = mapTrainingToEvent({
+      id: 'custom-cutoff',
+      properties: {
+        name: 'Custom cutoff session',
+        training_1st_day_start_datetime: '2030-06-10T19:00:00.000Z',
+        training_1st_day_end_datetime: '2030-06-10T22:00:00.000Z',
+        available_capacity: '5',
+        capacity: '10',
+        cutoff_time: '2030-06-01T12:00:00.000Z',
+      },
+    })
+
+    const event = toProgramEvent(mapped, undefined, {
+      now: new Date('2030-06-02T00:00:00.000Z'),
+    })
+
+    expect(event.registrationClosed).toBe(true)
+  })
+
+  it('keeps registration open before HubSpot cutoff_time even within 48 hours of start', () => {
+    const mapped = mapTrainingToEvent({
+      id: 'late-cutoff',
+      properties: {
+        name: 'Late cutoff session',
+        training_1st_day_start_datetime: '2030-06-10T19:00:00.000Z',
+        training_1st_day_end_datetime: '2030-06-10T22:00:00.000Z',
+        available_capacity: '5',
+        capacity: '10',
+        cutoff_time: '2030-06-10T18:00:00.000Z',
+      },
+    })
+
+    const event = toProgramEvent(mapped, undefined, {
+      now: new Date('2030-06-09T00:00:00.000Z'),
+    })
+
+    expect(event.registrationClosed).toBe(false)
+    expect(canAcceptRegistration(event)).toBe(true)
+  })
 })

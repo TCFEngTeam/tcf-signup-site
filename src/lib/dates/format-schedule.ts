@@ -11,6 +11,10 @@ export type TrainingSchedule = {
   session2End?: string
 }
 
+export function getTrainingCutoffPropertyKey() {
+  return process.env.HUBSPOT_TRAINING_CUTOFF_PROPERTY ?? 'cutoff_time'
+}
+
 export function getTrainingSchedulePropertyKeys() {
   return {
     session1Start:

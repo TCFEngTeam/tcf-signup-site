@@ -18,7 +18,7 @@ export type ProgramEvent = {
   availableCapacity: number
   active: boolean
   isFull: boolean
-  /** Pipeline closed stage and/or within 48h of first session start — listed, no signups */
+  /** Pipeline closed stage and/or past registration cutoff (HubSpot `cutoff_time` or 48h before start) */
   registrationClosed: boolean
   description?: string
 }
@@ -27,11 +27,17 @@ export const REGISTRATION_CLOSE_HOURS_BEFORE_START = 48
 
 const REGISTRATION_CLOSE_MS = REGISTRATION_CLOSE_HOURS_BEFORE_START * 60 * 60 * 1000
 
-/** Registration closes when current time is within 48 hours of the first session start. */
+/** When `cutoffTime` is set on the training, registration closes at that instant; otherwise 48h before start. */
 export function isRegistrationClosedByTime(
   schedule: TrainingSchedule,
-  now: Date = new Date()
+  now: Date = new Date(),
+  cutoffTime?: string
 ): boolean {
+  const explicitCutoff = parseScheduleDateTime(cutoffTime)
+  if (explicitCutoff) {
+    return now.getTime() >= explicitCutoff.getTime()
+  }
+
   const sessionStart = parseScheduleDateTime(schedule.session1Start)
   if (!sessionStart) return false
 
@@ -64,7 +70,7 @@ export function toProgramEvent(
       event.hubspotPipelineStage?.trim() === closedPipelineStage.trim()
   )
   const registrationClosed =
-    pipelineClosed || isRegistrationClosedByTime(event.schedule, now)
+    pipelineClosed || isRegistrationClosedByTime(event.schedule, now, event.cutoffTime)
 
   return {
     id: event.id,

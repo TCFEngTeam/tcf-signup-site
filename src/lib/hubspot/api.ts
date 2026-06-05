@@ -12,7 +12,7 @@ import {
   mapSmsConsentToHubSpot,
 } from '@/lib/hubspot/field-mappers'
 import type { TrainingSchedule } from '@/lib/dates/format-schedule'
-import { getTrainingSchedulePropertyKeys } from '@/lib/dates/format-schedule'
+import { getTrainingCutoffPropertyKey, getTrainingSchedulePropertyKeys } from '@/lib/dates/format-schedule'
 
 const eventLabels = (pagesJson as PagesContent).events
 
@@ -86,6 +86,8 @@ export interface TrainingEvent {
   active: boolean
   description?: string
   hubspotPipelineStage?: string
+  /** HubSpot datetime when registration closes; empty uses 48h-before-start default in app logic */
+  cutoffTime?: string
 }
 
 function parseDateProperty(value?: string) {
@@ -460,7 +462,7 @@ export async function getTrainingObjects(
   let after: string | null = null
   const requestedProperties = (
     process.env.HUBSPOT_TRAINING_PROPERTIES ||
-    'hs_pipeline,hs_pipeline_stage,training_1st_day_start_datetime,training_1st_day_end_datetime,training_2nd_day_start_datetime,training_2nd_day_end_datetime,available_capacity,name,location,capacity,description'
+    'hs_pipeline,hs_pipeline_stage,training_1st_day_start_datetime,training_1st_day_end_datetime,training_2nd_day_start_datetime,training_2nd_day_end_datetime,available_capacity,name,location,capacity,description,cutoff_time'
   )
     .split(',')
     .map((value) => value.trim())
@@ -558,6 +560,7 @@ export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
   )
   const availableCapacity = parseInt(props.available_capacity || '0', 10)
   const scheduleKeys = getTrainingSchedulePropertyKeys()
+  const cutoffKey = getTrainingCutoffPropertyKey()
   const schedule: TrainingSchedule = {
     session1Start: readTrainingProperty(props, scheduleKeys.session1Start),
     session1End: readTrainingProperty(props, scheduleKeys.session1End),
@@ -578,5 +581,6 @@ export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
     active: true,
     description: props.description,
     hubspotPipelineStage: props.hs_pipeline_stage,
+    cutoffTime: readTrainingProperty(props, cutoffKey),
   }
 }
