@@ -20,6 +20,14 @@ export type ProgramEvent = {
   description?: string
 }
 
+export function canAcceptWaitlist(event: ProgramEvent): boolean {
+  return event.active && event.isFull
+}
+
+export function canAcceptRegistration(event: ProgramEvent): boolean {
+  return event.active && !event.isFull
+}
+
 export type ProgramEventsResult = {
   events: ProgramEvent[]
   error: Error | null

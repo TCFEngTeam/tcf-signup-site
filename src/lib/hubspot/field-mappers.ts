@@ -25,10 +25,13 @@ export function isDuplicateAssociationResponse(parsed: unknown, status: number) 
 }
 
 export function contactHasTrainingAssociation(
-  associations: Array<{ id?: string }> | undefined,
-  trainingId: string
+  associations: Array<{ id?: string; type?: string }> | undefined,
+  trainingId: string,
+  associationType?: string
 ) {
-  return (associations ?? []).some(
-    (row) => String(row.id) === String(trainingId)
-  )
+  return (associations ?? []).some((row) => {
+    if (String(row.id) !== String(trainingId)) return false
+    if (associationType === undefined) return true
+    return (row.type ?? '').trim().toLowerCase() === associationType.trim().toLowerCase()
+  })
 }

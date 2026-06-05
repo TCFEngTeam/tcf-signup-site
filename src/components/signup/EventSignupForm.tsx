@@ -40,6 +40,7 @@ type SignupFormProps = {
   programId?: TrainingProgramId
   prefillData?: Partial<SignupFormData>
   submitUrl?: string
+  waitlist?: boolean
 }
 
 function RequiredText({ show }: { show: boolean }) {
@@ -47,7 +48,13 @@ function RequiredText({ show }: { show: boolean }) {
   return <p className="mt-1 text-xs text-red-600">{requiredHint}</p>
 }
 
-export default function EventSignupForm({ eventId, programId, prefillData, submitUrl }: SignupFormProps) {
+export default function EventSignupForm({
+  eventId,
+  programId,
+  prefillData,
+  submitUrl,
+  waitlist = false,
+}: SignupFormProps) {
   const router = useRouter()
   const initialPhone = parseStoredPhone(prefillData?.phone ?? '')
   const [firstName, setFirstName] = useState<string>(prefillData?.firstName ?? '')
@@ -95,7 +102,6 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
   }, [prefillData])
 
   const shouldRedirectOnSuccess = !submitUrl || submitUrl === '/api/signup'
-  const shouldUseProgramEvents = shouldRedirectOnSuccess && Boolean(programId)
   const composedPhone = composePhoneNumber(phoneCountryIso, phoneNationalDigits) ?? ''
 
   const missingFieldLabels = (() => {
@@ -213,20 +219,6 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
 
     ;(async () => {
       try {
-        // Check if event is still available (not over capacity)
-        if (shouldUseProgramEvents) {
-          const eventRes = await fetch(`/api/events?program=${programId}`)
-          if (eventRes.ok) {
-            const allEvents: { id: string; isFull?: boolean }[] = await eventRes.json()
-            const currentEvent = allEvents.find((entry) => entry.id === eventId)
-            if (currentEvent?.isFull) {
-              setMessage(formMessages.eventFull)
-              setSubmitting(false)
-              return
-            }
-          }
-        }
-
         const endpoint = submitUrl || '/api/signup'
         const res = await fetch(endpoint, {
           method: 'POST',
@@ -256,9 +248,11 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
           setMessage(errMsg)
         } else {
           saveProfile(formatted)
-          setMessage(formMessages.signupSuccess)
+          const joinedWaitlist = Boolean(payload?.waitlisted)
+          setMessage(joinedWaitlist ? formMessages.waitlistSuccess : formMessages.signupSuccess)
           if (shouldRedirectOnSuccess && programId) {
-            router.push(`/${programId}/events/${eventId}/success`)
+            const query = joinedWaitlist ? '?waitlist=1' : ''
+            router.push(`/${programId}/events/${eventId}/success${query}`)
           }
         }
       } catch (err: any) {
@@ -476,7 +470,11 @@ export default function EventSignupForm({ eventId, programId, prefillData, submi
       {/* Submit Button */}
       <div className="flex items-center gap-4">
         <button type="submit" disabled={submitting} className="btn-primary">
-          {submitting ? formContent.submittingLabel : formContent.submitLabel}
+          {submitting
+            ? formContent.submittingLabel
+            : waitlist
+              ? formContent.waitlistSubmitLabel
+              : formContent.submitLabel}
         </button>
         {message && (
           <div className={`text-sm ${message === formMessages.signupSuccess ? 'success-chip' : 'error-chip'}`}>

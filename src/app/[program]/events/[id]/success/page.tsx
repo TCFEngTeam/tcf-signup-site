@@ -10,19 +10,30 @@ import { getTrainingProgram } from '@/lib/programs/config'
 
 const success = pagesContent.success
 
-export const metadata: Metadata = {
-  title: success.metadataTitle,
-  description: success.metadataDescription,
-}
-
 type ProgramEventSuccessPageProps = {
   params: Promise<{ program: string; id: string }>
+  searchParams: Promise<{ waitlist?: string }>
+}
+
+export async function generateMetadata({
+  searchParams,
+}: Pick<ProgramEventSuccessPageProps, 'searchParams'>): Promise<Metadata> {
+  const { waitlist } = await searchParams
+  const isWaitlist = waitlist === '1'
+
+  return {
+    title: isWaitlist ? success.waitlistMetadataTitle : success.metadataTitle,
+    description: isWaitlist ? success.waitlistMetadataDescription : success.metadataDescription,
+  }
 }
 
 export default async function ProgramEventSuccessPage({
   params,
+  searchParams,
 }: ProgramEventSuccessPageProps) {
   const { program: programSlug, id: eventId } = await params
+  const { waitlist } = await searchParams
+  const isWaitlist = waitlist === '1'
   const program = getTrainingProgram(programSlug)
 
   if (!program) {
@@ -65,15 +76,21 @@ export default async function ProgramEventSuccessPage({
             </div>
 
             <div className="page-hero items-center">
-              <div className="eyebrow">{success.eyebrow}</div>
-              <h1 className="text-3xl font-bold page-title">{success.heading}</h1>
+              <div className="eyebrow">
+                {isWaitlist ? success.waitlistEyebrow : success.eyebrow}
+              </div>
+              <h1 className="text-3xl font-bold page-title">
+                {isWaitlist ? success.waitlistHeading : success.heading}
+              </h1>
               <p className="helper-text max-w-md mx-auto font-medium" style={{ color: 'var(--dark-green)' }}>
                 {event.title}
               </p>
               {eventSchedule && (
                 <p className="helper-text max-w-md mx-auto">{eventSchedule}</p>
               )}
-              <p className="helper-text max-w-md mx-auto">{success.thankYou}</p>
+              <p className="helper-text max-w-md mx-auto">
+                {isWaitlist ? success.waitlistThankYou : success.thankYou}
+              </p>
             </div>
 
             <div
@@ -84,7 +101,7 @@ export default async function ProgramEventSuccessPage({
               }}
             >
               <p className="font-semibold mb-2" style={{ color: 'var(--dark-green)' }}>
-                {success.nextStepsHeading}
+                {isWaitlist ? success.waitlistNextStepsHeading : success.nextStepsHeading}
               </p>
               <ul className="space-y-2 helper-text list-disc list-inside">
                 {program.successNextSteps.map((step) => (

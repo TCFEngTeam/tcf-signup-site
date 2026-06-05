@@ -8,7 +8,7 @@ import EventSignupForm from '@/components/signup/EventSignupForm'
 import Footer from '@/components/layout/Footer'
 import Header from '@/components/layout/Header'
 import { formatContent, pagesContent } from '@/lib/content'
-import { loadProgramEventById } from '@/lib/programs/events'
+import { canAcceptRegistration, canAcceptWaitlist, loadProgramEventById } from '@/lib/programs/events'
 import { getTrainingProgram } from '@/lib/programs/config'
 
 const detail = pagesContent.eventDetail
@@ -55,6 +55,9 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
     )
   }
 
+  const waitlistMode = canAcceptWaitlist(event)
+  const signupOpen = canAcceptRegistration(event) || waitlistMode
+
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 text-slate-900">
       <Header />
@@ -71,20 +74,24 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
 
           <div className="notice-card text-sm text-zinc-700">
             {!event.active && <p>{detail.inactive}</p>}
-            {event.isFull && <p>{detail.full}</p>}
+            {waitlistMode && <p>{detail.waitlistNotice}</p>}
 
             <div className="mb-6 p-6 bg-blue-50 rounded-lg border border-blue-200">
               <ProgramContentBlocks blocks={program.signupNotice} />
             </div>
           </div>
 
-          {!event.isFull && event.active ? (
+          {signupOpen ? (
             <section className="section-panel">
               <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--primary-blue)' }}>
-                {detail.signupHeading}
+                {waitlistMode ? detail.waitlistHeading : detail.signupHeading}
               </h2>
               <div className="w-full">
-                <EventSignupForm eventId={event.id} programId={program.id} />
+                <EventSignupForm
+                  eventId={event.id}
+                  programId={program.id}
+                  waitlist={waitlistMode}
+                />
               </div>
             </section>
           ) : (

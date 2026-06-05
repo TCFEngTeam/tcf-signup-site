@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mapTrainingToEvent } from '@/lib/hubspot/api'
-import { toProgramEvent } from '@/lib/programs/events'
+import { canAcceptRegistration, canAcceptWaitlist, toProgramEvent } from '@/lib/programs/events'
 
 describe('toProgramEvent', () => {
   it('maps HubSpot training fields and full status', () => {
@@ -40,5 +40,33 @@ describe('toProgramEvent', () => {
     expect(event.title).toBe('QPR Session')
     expect(event.isFull).toBe(false)
     expect(event.availableCapacity).toBe(7)
+  })
+})
+
+describe('waitlist eligibility', () => {
+  it('allows waitlist when full and active', () => {
+    const event = toProgramEvent(
+      mapTrainingToEvent({
+        id: '1',
+        properties: { available_capacity: '0', capacity: '10' },
+      })
+    )
+
+    expect(canAcceptWaitlist(event)).toBe(true)
+    expect(canAcceptRegistration(event)).toBe(false)
+  })
+
+  it('blocks waitlist when inactive', () => {
+    const event = {
+      ...toProgramEvent(
+        mapTrainingToEvent({
+          id: '1',
+          properties: { available_capacity: '0', capacity: '10' },
+        })
+      ),
+      active: false,
+    }
+
+    expect(canAcceptWaitlist(event)).toBe(false)
   })
 })

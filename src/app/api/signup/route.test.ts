@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { signupFormContent } from '@/lib/content'
 import { signupRequestBody } from '@/test/fixtures/signup'
 
 const {
   loadProgramEventById,
   getContactByEmail,
   isContactRegisteredForTraining,
+  isContactOnWaitlistForTraining,
   createOrUpdateContact,
   getOrCreateCompanyByWebsite,
   associateContactToCompany,
@@ -13,15 +15,22 @@ const {
   loadProgramEventById: vi.fn(),
   getContactByEmail: vi.fn(),
   isContactRegisteredForTraining: vi.fn(),
+  isContactOnWaitlistForTraining: vi.fn(),
   createOrUpdateContact: vi.fn(),
   getOrCreateCompanyByWebsite: vi.fn(),
   associateContactToCompany: vi.fn(),
   associateContactToTraining: vi.fn(),
 }))
 
-vi.mock('@/lib/programs/events', () => ({
-  loadProgramEventById,
-}))
+vi.mock('@/lib/programs/events', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/programs/events')>(
+    '@/lib/programs/events'
+  )
+  return {
+    ...actual,
+    loadProgramEventById,
+  }
+})
 
 vi.mock('@/lib/hubspot/api', async () => {
   const actual = await vi.importActual<typeof import('@/lib/hubspot/api')>('@/lib/hubspot/api')
@@ -29,6 +38,7 @@ vi.mock('@/lib/hubspot/api', async () => {
     ...actual,
     getContactByEmail,
     isContactRegisteredForTraining,
+    isContactOnWaitlistForTraining,
     createOrUpdateContact,
     getOrCreateCompanyByWebsite,
     associateContactToCompany,
@@ -55,12 +65,14 @@ describe('POST /api/signup', () => {
       event: {
         id: 'event-123',
         isFull: false,
+        active: true,
         availableCapacity: 5,
       },
       error: null,
     })
     getContactByEmail.mockResolvedValue(null)
     isContactRegisteredForTraining.mockResolvedValue(false)
+    isContactOnWaitlistForTraining.mockResolvedValue(false)
     createOrUpdateContact.mockResolvedValue({ id: 'contact-1' })
     getOrCreateCompanyByWebsite.mockResolvedValue({ id: 'company-1' })
     associateContactToCompany.mockResolvedValue(undefined)
@@ -72,15 +84,32 @@ describe('POST /api/signup', () => {
     expect(res.status).toBe(400)
   })
 
-  it('returns 409 when the event is full', async () => {
+  it('waitlists when the event is full and active', async () => {
     loadProgramEventById.mockResolvedValue({
-      event: { id: 'event-123', isFull: true, availableCapacity: 0 },
+      event: { id: 'event-123', isFull: true, active: true, availableCapacity: 0 },
+      error: null,
+    })
+
+    const res = await postSignup(signupRequestBody())
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({
+      success: true,
+      waitlisted: true,
+    })
+    expect(associateContactToTraining).toHaveBeenCalledWith('contact-1', 'event-123', 'waitlist')
+  })
+
+  it('returns 409 when the event is inactive', async () => {
+    loadProgramEventById.mockResolvedValue({
+      event: { id: 'event-123', isFull: true, active: false, availableCapacity: 0 },
       error: null,
     })
 
     const res = await postSignup(signupRequestBody())
     expect(res.status).toBe(409)
-    expect(await res.json()).toMatchObject({ error: 'Training is full' })
+    expect(await res.json()).toMatchObject({
+      error: signupFormContent.messages.trainingUnavailable,
+    })
   })
 
   it('returns 409 when the contact is already registered', async () => {
@@ -90,9 +119,20 @@ describe('POST /api/signup', () => {
     const res = await postSignup(signupRequestBody())
     expect(res.status).toBe(409)
     expect(await res.json()).toMatchObject({
-      error: expect.stringContaining('already registered'),
+      error: signupFormContent.messages.alreadyRegistered,
     })
     expect(createOrUpdateContact).not.toHaveBeenCalled()
+  })
+
+  it('returns 409 when the contact is already on the waitlist', async () => {
+    getContactByEmail.mockResolvedValue({ id: 'contact-1' })
+    isContactOnWaitlistForTraining.mockResolvedValue(true)
+
+    const res = await postSignup(signupRequestBody())
+    expect(res.status).toBe(409)
+    expect(await res.json()).toMatchObject({
+      error: signupFormContent.messages.alreadyOnWaitlist,
+    })
   })
 
   it('returns success when HubSpot sync succeeds', async () => {
@@ -100,8 +140,9 @@ describe('POST /api/signup', () => {
     expect(res.status).toBe(200)
     expect(await res.json()).toMatchObject({
       success: true,
+      waitlisted: false,
       hubspotContactId: 'contact-1',
     })
-    expect(associateContactToTraining).toHaveBeenCalledWith('contact-1', 'event-123')
+    expect(associateContactToTraining).toHaveBeenCalledWith('contact-1', 'event-123', 'registrant')
   })
 })

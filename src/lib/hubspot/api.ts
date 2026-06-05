@@ -26,6 +26,45 @@ function getApiKey() {
   return process.env.HUBSPOT_API_KEY
 }
 
+export type TrainingAssociationRole = 'registrant' | 'waitlist'
+
+export function getRegistrantAssociationLabel() {
+  return process.env.HUBSPOT_TRAINING_ASSOCIATION_LABEL || 'registrant'
+}
+
+export function getWaitlistAssociationLabel() {
+  return process.env.HUBSPOT_TRAINING_WAITLIST_ASSOCIATION_LABEL || 'waitlist'
+}
+
+async function getContactTrainingAssociationResults(contactId: string) {
+  if (!getApiKey()) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  const trainingObjectType = getTrainingObjectType()
+  const url = `${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${contactId}/associations/${trainingObjectType}`
+  const response = await hubspotFetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${getApiKey()}`,
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (response.status === 404) {
+    return []
+  }
+
+  const parsed = await safeParseResponse(response)
+  if (!response.ok) {
+    const msg =
+      (parsed && (parsed.message || parsed.error || parsed.text)) || response.statusText
+    throw new Error(`Failed to check training registration: ${msg}`)
+  }
+
+  return (parsed?.results ?? []) as Array<{ id?: string; type?: string }>
+}
+
 export interface ContactData {
   firstName: string
   lastName: string
@@ -117,38 +156,31 @@ function mapContactProperties(data: ContactData): { [key: string]: string } {
 }
 
 /**
- * Returns true if the contact is already linked to this training in HubSpot.
+ * Returns true if the contact has a registrant association to this training.
  */
 export async function isContactRegisteredForTraining(
   contactId: string,
   trainingId: string
 ): Promise<boolean> {
-  if (!getApiKey()) {
-    throw new Error('HUBSPOT_API_KEY is not configured')
-  }
+  const associations = await getContactTrainingAssociationResults(contactId)
+  return contactHasTrainingAssociation(
+    associations,
+    trainingId,
+    getRegistrantAssociationLabel()
+  )
+}
 
-  const trainingObjectType = getTrainingObjectType()
-  const url = `${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${contactId}/associations/${trainingObjectType}`
-  const response = await hubspotFetch(url, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${getApiKey()}`,
-      'Content-Type': 'application/json',
-    },
-  })
-
-  if (response.status === 404) {
-    return false
-  }
-
-  const parsed = await safeParseResponse(response)
-  if (!response.ok) {
-    const msg =
-      (parsed && (parsed.message || parsed.error || parsed.text)) || response.statusText
-    throw new Error(`Failed to check training registration: ${msg}`)
-  }
-
-  return contactHasTrainingAssociation(parsed?.results, trainingId)
+/** Returns true if the contact has a waitlist association to this training. */
+export async function isContactOnWaitlistForTraining(
+  contactId: string,
+  trainingId: string
+): Promise<boolean> {
+  const associations = await getContactTrainingAssociationResults(contactId)
+  return contactHasTrainingAssociation(
+    associations,
+    trainingId,
+    getWaitlistAssociationLabel()
+  )
 }
 
 async function safeParseResponse(res: Response): Promise<any> {
@@ -341,7 +373,11 @@ export async function associateContactToCompany(contactId: string, companyId: st
  * @param contactId HubSpot contact ID
  * @param trainingId Training event ID (e.g., from eventId in form data)
  */
-export async function associateContactToTraining(contactId: string, trainingId: string): Promise<void> {
+export async function associateContactToTraining(
+  contactId: string,
+  trainingId: string,
+  role: TrainingAssociationRole = 'registrant'
+): Promise<void> {
   if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
@@ -350,12 +386,17 @@ export async function associateContactToTraining(contactId: string, trainingId: 
     throw new AlreadyRegisteredError()
   }
 
+  if (role === 'waitlist' && (await isContactOnWaitlistForTraining(contactId, trainingId))) {
+    throw new AlreadyRegisteredError('You are already on the waitlist for this event.')
+  }
+
   const trainingObjectType = getTrainingObjectType()
 
   // Use the batch associations endpoint which is the supported pattern
   // for creating associations between two object types.
   const url = `${HUBSPOT_API_BASE}/crm/v3/associations/contacts/${trainingObjectType}/batch/create`
-  const associationLabel = process.env.HUBSPOT_TRAINING_ASSOCIATION_LABEL || 'registrant'
+  const associationLabel =
+    role === 'waitlist' ? getWaitlistAssociationLabel() : getRegistrantAssociationLabel()
   const response = await hubspotFetch(url, {
     method: 'POST',
     headers: {

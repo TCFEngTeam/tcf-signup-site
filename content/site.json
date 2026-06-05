@@ -20,6 +20,7 @@
   "form": {
     "universityWebsitePlaceholder": "virginia.edu",
     "submitLabel": "Submit",
+    "waitlistSubmitLabel": "Join waitlist",
     "submittingLabel": "Submitting…",
     "smsConsent": {
       "heading": "SMS Communication Consent",

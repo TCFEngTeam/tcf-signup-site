@@ -37,4 +37,21 @@ describe('contactHasTrainingAssociation', () => {
     ).toBe(true)
     expect(contactHasTrainingAssociation([{ id: '111' }], '222')).toBe(false)
   })
+
+  it('filters by association type when provided', () => {
+    expect(
+      contactHasTrainingAssociation(
+        [{ id: '222', type: 'registrant' }],
+        '222',
+        'registrant'
+      )
+    ).toBe(true)
+    expect(
+      contactHasTrainingAssociation(
+        [{ id: '222', type: 'waitlist' }],
+        '222',
+        'registrant'
+      )
+    ).toBe(false)
+  })
 })

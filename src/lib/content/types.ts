@@ -20,6 +20,7 @@ export type SiteContent = {
   form: {
     universityWebsitePlaceholder: string
     submitLabel: string
+    waitlistSubmitLabel: string
     submittingLabel: string
     smsConsent: {
       heading: string
@@ -52,10 +53,18 @@ export type SignupFormContent = {
   requiredHint: string
   messages: {
     missingFields: string
+    missingRequiredFields: string
     eventFull: string
     signupSuccess: string
+    waitlistSuccess: string
     signupFailed: string
     networkError: string
+    trainingNotFound: string
+    trainingFull: string
+    trainingUnavailable: string
+    alreadyRegistered: string
+    alreadyOnWaitlist: string
+    signupUnavailable: string
   }
   fields: Record<SignupFormFieldKey, string>
   placeholders: {
@@ -75,10 +84,17 @@ export type PagesContent = {
   listing: {
     backToMainSite: string
   }
+  capacity: {
+    full: string
+    oneSeatRemaining: string
+    seatsRemaining: string
+  }
   eventCard: {
     badgeFull: string
+    badgeWaitlist: string
     badgeOpen: string
     signUp: string
+    joinWaitlist: string
     fallbackTitle: string
     fallbackLocation: string
   }
@@ -86,7 +102,9 @@ export type PagesContent = {
     backToEvents: string
     inactive: string
     full: string
+    waitlistNotice: string
     signupHeading: string
+    waitlistHeading: string
     registrationClosed: string
     browseOtherEvents: string
     eventNotFoundEyebrow: string
@@ -99,10 +117,16 @@ export type PagesContent = {
   success: {
     metadataTitle: string
     metadataDescription: string
+    waitlistMetadataTitle: string
+    waitlistMetadataDescription: string
     eyebrow: string
+    waitlistEyebrow: string
     heading: string
+    waitlistHeading: string
     thankYou: string
+    waitlistThankYou: string
     nextStepsHeading: string
+    waitlistNextStepsHeading: string
     backToEvents: string
     viewEventDetails: string
   }

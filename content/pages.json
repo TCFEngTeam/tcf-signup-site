@@ -2,10 +2,17 @@
   "listing": {
     "backToMainSite": "← Back to main site"
   },
+  "capacity": {
+    "full": "Full",
+    "oneSeatRemaining": "1 seat remaining",
+    "seatsRemaining": "{count} seats remaining"
+  },
   "eventCard": {
     "badgeFull": "Full",
+    "badgeWaitlist": "Waitlist open",
     "badgeOpen": "Open",
     "signUp": "Sign up",
+    "joinWaitlist": "Join Waitlist",
     "fallbackTitle": "Event Title",
     "fallbackLocation": "Location"
   },
@@ -13,7 +20,9 @@
     "backToEvents": "← Back to {program} events",
     "inactive": "This event is currently unavailable.",
     "full": "This event is full.",
+    "waitlistNotice": "This session is full. Join the waitlist below and we will contact you if a seat opens.",
     "signupHeading": "Sign up",
+    "waitlistHeading": "Join waitlist",
     "registrationClosed": "Registration is closed for this session.",
     "browseOtherEvents": "Browse other {program} events",
     "eventNotFoundEyebrow": "Event lookup",
@@ -26,10 +35,16 @@
   "success": {
     "metadataTitle": "Signup Confirmed",
     "metadataDescription": "Your training signup has been submitted successfully.",
+    "waitlistMetadataTitle": "Waitlist Confirmed",
+    "waitlistMetadataDescription": "You have been added to the training waitlist.",
     "eyebrow": "Signup complete",
+    "waitlistEyebrow": "Waitlist confirmed",
     "heading": "You're signed up!",
+    "waitlistHeading": "You're on the waitlist!",
     "thankYou": "Thank you for registering. Your submission has been received and we'll be in touch with next steps for your training session.",
+    "waitlistThankYou": "Thank you for joining the waitlist. We'll email you if a seat opens for this session.",
     "nextStepsHeading": "What happens next",
+    "waitlistNextStepsHeading": "What happens next",
     "backToEvents": "Back to {program} events",
     "viewEventDetails": "View event details"
   }

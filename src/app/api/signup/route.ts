@@ -6,16 +6,20 @@ import {
   createOrUpdateContact,
   getContactByEmail,
   getOrCreateCompanyByWebsite,
+  isContactOnWaitlistForTraining,
   isContactRegisteredForTraining,
   type ContactData,
 } from '@/lib/hubspot/api'
+import { signupFormContent } from '@/lib/content'
 import { formatSignupFormData, isSignupFormatError } from '@/lib/signup/format-fields'
-import { loadProgramEventById } from '@/lib/programs/events'
+import { canAcceptRegistration, canAcceptWaitlist, loadProgramEventById } from '@/lib/programs/events'
 import { isTrainingProgramId } from '@/lib/programs/config'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: Request) {
+  const messages = signupFormContent.messages
+
   try {
     const body = await req.json()
     const { eventId, program, data } = body || {}
@@ -44,7 +48,7 @@ export async function POST(req: Request) {
       !data.communitySupport ||
       !data.interestedInTeaching
     ) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+      return NextResponse.json({ error: messages.missingRequiredFields }, { status: 400 })
     }
 
     const formatted = formatSignupFormData(data)
@@ -59,25 +63,25 @@ export async function POST(req: Request) {
     }
 
     if (!ev) {
-      return NextResponse.json({ error: 'Training event not found' }, { status: 404 })
+      return NextResponse.json({ error: messages.trainingNotFound }, { status: 404 })
     }
 
-    if (ev.isFull) {
-      return NextResponse.json({ error: 'Training is full' }, { status: 409 })
+    const waitlisted = canAcceptWaitlist(ev)
+    if (!canAcceptRegistration(ev) && !waitlisted) {
+      if (!ev.active) {
+        return NextResponse.json({ error: messages.trainingUnavailable }, { status: 409 })
+      }
+      return NextResponse.json({ error: messages.trainingFull }, { status: 409 })
     }
 
     const existingContact = await getContactByEmail(formatted.email)
-    if (
-      existingContact?.id &&
-      (await isContactRegisteredForTraining(existingContact.id, eventId))
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            'You are already registered for this event. Check your email for confirmation details.',
-        },
-        { status: 409 }
-      )
+    if (existingContact?.id) {
+      if (await isContactRegisteredForTraining(existingContact.id, eventId)) {
+        return NextResponse.json({ error: messages.alreadyRegistered }, { status: 409 })
+      }
+      if (await isContactOnWaitlistForTraining(existingContact.id, eventId)) {
+        return NextResponse.json({ error: messages.alreadyOnWaitlist }, { status: 409 })
+      }
     }
 
     // Contact data with all form fields
@@ -107,13 +111,17 @@ export async function POST(req: Request) {
       try {
         const company = await getOrCreateCompanyByWebsite(formatted.universityWebsite)
         await associateContactToCompany(hubspotContactId, company.id)
-      } catch (companyError: any) {
-        console.error('Company creation/association error:', companyError?.message)
+      } catch (companyError: unknown) {
+        const message = companyError instanceof Error ? companyError.message : String(companyError)
+        console.error('Company creation/association error:', message)
         // Don't fail the entire signup if company association fails
       }
 
-      // Associate contact with training event
-      await associateContactToTraining(hubspotContactId, eventId)
+      await associateContactToTraining(
+        hubspotContactId,
+        eventId,
+        waitlisted ? 'waitlist' : 'registrant'
+      )
     } catch (hsError: unknown) {
       if (hsError instanceof AlreadyRegisteredError) {
         return NextResponse.json({ error: hsError.message }, { status: 409 })
@@ -121,18 +129,17 @@ export async function POST(req: Request) {
       const hubspotError =
         hsError instanceof Error ? hsError.message : 'HubSpot sync failed'
       console.error('HubSpot integration error:', hubspotError)
-      return NextResponse.json(
-        { error: 'Unable to complete signup. Please try again or contact support.' },
-        { status: 502 }
-      )
+      return NextResponse.json({ error: messages.signupUnavailable }, { status: 502 })
     }
 
     return NextResponse.json({
       success: true,
+      waitlisted,
       event: { id: ev.id, availableCapacity: ev.availableCapacity },
       hubspotContactId,
     })
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message ?? 'Unknown error' }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
