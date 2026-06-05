@@ -7,7 +7,7 @@
 import pagesJson from '../../../content/pages.json'
 import type { PagesContent } from '@/lib/content/types'
 import type { TrainingSchedule } from '@/lib/dates/format-schedule'
-import { getTrainingSchedulePropertyKeys } from '@/lib/dates/format-schedule'
+import { getTrainingCutoffPropertyKey, getTrainingSchedulePropertyKeys } from '@/lib/dates/format-schedule'
 import {
   contactHasRegistrantAssociation,
   findRegistrantAssociationsForTraining,
