@@ -109,6 +109,13 @@ export async function POST(req: Request) {
       const contact = await createOrUpdateContact(contactData)
       hubspotContactId = contact.id
 
+      if (await isContactRegisteredForTraining(hubspotContactId, eventId)) {
+        return NextResponse.json({ error: messages.alreadyRegistered }, { status: 409 })
+      }
+      if (waitlisted && (await isContactOnWaitlistForTraining(hubspotContactId, eventId))) {
+        return NextResponse.json({ error: messages.alreadyOnWaitlist }, { status: 409 })
+      }
+
       // Create or find the company by website and associate the contact to it
       try {
         const company = await getOrCreateCompanyByWebsite(formatted.universityWebsite)

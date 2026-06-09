@@ -72,8 +72,13 @@ export default function EventSignupForm({
   const [smsConsent, setSmsConsent] = useState<string>(prefillData?.smsConsent ?? '')
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [signupBlocked, setSignupBlocked] = useState<'none' | 'registered' | 'waitlisted'>('none')
+  const [checkingStatus, setCheckingStatus] = useState(false)
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({})
   const [submitAttempted, setSubmitAttempted] = useState(false)
+
+  const shouldRedirectOnSuccess = !submitUrl || submitUrl === '/api/signup'
+  const shouldUseProgramEvents = shouldRedirectOnSuccess && Boolean(programId)
 
   useEffect(() => {
     if (prefillData) return
@@ -99,8 +104,63 @@ export default function EventSignupForm({
     if (saved.smsConsent) setSmsConsent(saved.smsConsent)
   }, [prefillData])
 
-  const shouldRedirectOnSuccess = !submitUrl || submitUrl === '/api/signup'
-  const shouldUseProgramEvents = shouldRedirectOnSuccess && Boolean(programId)
+  async function checkSignupStatus(emailValue: string) {
+    if (!shouldUseProgramEvents || !programId) return
+
+    const formattedEmail = formatEmail(emailValue).trim()
+    if (!formattedEmail || !formattedEmail.includes('@')) {
+      setSignupBlocked('none')
+      return
+    }
+
+    setCheckingStatus(true)
+    try {
+      const res = await fetch('/api/signup/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formattedEmail,
+          eventId,
+          program: programId,
+        }),
+      })
+
+      if (!res.ok) {
+        setSignupBlocked('none')
+        return
+      }
+
+      const payload = (await res.json()) as { registered?: boolean; waitlisted?: boolean }
+      if (payload.waitlisted) {
+        setSignupBlocked('waitlisted')
+        setMessage(formMessages.alreadyOnWaitlist)
+      } else if (payload.registered) {
+        setSignupBlocked('registered')
+        setMessage(formMessages.alreadyRegistered)
+      } else {
+        setSignupBlocked('none')
+        setMessage((current) =>
+          current === formMessages.alreadyOnWaitlist || current === formMessages.alreadyRegistered
+            ? null
+            : current
+        )
+      }
+    } catch {
+      setSignupBlocked('none')
+    } finally {
+      setCheckingStatus(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!shouldUseProgramEvents || !programId) return
+    const initialEmail = prefillData?.email ?? loadProfile()?.email
+    if (initialEmail) {
+      void checkSignupStatus(initialEmail)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId, programId, prefillData?.email, shouldUseProgramEvents])
+
   const composedPhone = composePhoneNumber(phoneCountryIso, phoneNationalDigits) ?? ''
 
   const missingFieldLabels = (() => {
@@ -156,8 +216,18 @@ export default function EventSignupForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setMessage(null)
     setSubmitAttempted(true)
+
+    if (signupBlocked === 'waitlisted') {
+      setMessage(formMessages.alreadyOnWaitlist)
+      return
+    }
+    if (signupBlocked === 'registered') {
+      setMessage(formMessages.alreadyRegistered)
+      return
+    }
+
+    setMessage(null)
 
     const form = e.currentTarget as HTMLFormElement
     const missing = getMissingFieldLabelsFromForm(form)
@@ -314,7 +384,31 @@ export default function EventSignupForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <label className="block">
           <div className={`field-label text-sm font-medium ${fieldHasError(fieldLabels.email) ? 'text-red-600' : ''}`}>{displayLabel('email')}</div>
-          <input name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={() => applyBlurFormat(fieldLabels.email, setEmail, formatEmail)} className="mt-1 w-full" required />
+          <input
+            name="email"
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value)
+              if (signupBlocked !== 'none') {
+                setSignupBlocked('none')
+                setMessage((current) =>
+                  current === formMessages.alreadyOnWaitlist ||
+                  current === formMessages.alreadyRegistered
+                    ? null
+                    : current
+                )
+              }
+            }}
+            onBlur={() => {
+              markTouched(fieldLabels.email)
+              const formatted = formatEmail(email)
+              setEmail(formatted)
+              void checkSignupStatus(formatted)
+            }}
+            className="mt-1 w-full"
+            required
+          />
           <RequiredText show={fieldHasError(fieldLabels.email)} />
         </label>
 
@@ -467,7 +561,11 @@ export default function EventSignupForm({
 
       {/* Submit Button */}
       <div className="flex items-center gap-4">
-        <button type="submit" disabled={submitting} className="btn-primary">
+        <button
+          type="submit"
+          disabled={submitting || checkingStatus || signupBlocked !== 'none'}
+          className="btn-primary"
+        >
           {submitting
             ? formContent.submittingLabel
             : waitlist
@@ -475,7 +573,13 @@ export default function EventSignupForm({
               : formContent.submitLabel}
         </button>
         {message && (
-          <div className={`text-sm ${message === formMessages.signupSuccess ? 'success-chip' : 'error-chip'}`}>
+          <div
+            className={`text-sm ${
+              message === formMessages.signupSuccess || message === formMessages.waitlistSuccess
+                ? 'success-chip'
+                : 'error-chip'
+            }`}
+          >
             {message}
           </div>
         )}

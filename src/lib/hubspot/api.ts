@@ -7,9 +7,11 @@
 import pagesJson from '../../../content/pages.json'
 import type { PagesContent } from '@/lib/content/types'
 import {
-  contactHasTrainingAssociation,
+  contactHasAssociationForTraining,
   isDuplicateAssociationResponse,
   mapSmsConsentToHubSpot,
+  parseTrainingAssociationRows,
+  type TrainingAssociationRow,
 } from '@/lib/hubspot/field-mappers'
 import type { TrainingSchedule } from '@/lib/dates/format-schedule'
 import { getTrainingCutoffPropertyKey, getTrainingSchedulePropertyKeys } from '@/lib/dates/format-schedule'
@@ -48,33 +50,54 @@ export function getWaitlistAssociationLabel() {
   return process.env.HUBSPOT_TRAINING_WAITLIST_ASSOCIATION_LABEL || 'waitlist'
 }
 
-async function getContactTrainingAssociationResults(contactId: string) {
+function getRegistrantAssociationTypeId() {
+  return process.env.HUBSPOT_TRAINING_ASSOCIATION_TYPE_ID
+}
+
+function getWaitlistAssociationTypeId() {
+  return process.env.HUBSPOT_TRAINING_WAITLIST_ASSOCIATION_TYPE_ID
+}
+
+async function getContactTrainingAssociations(
+  contactId: string
+): Promise<TrainingAssociationRow[]> {
   if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
 
   const trainingObjectType = getTrainingObjectType()
-  const url = `${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${contactId}/associations/${trainingObjectType}`
-  const response = await hubspotFetch(url, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${getApiKey()}`,
-      'Content-Type': 'application/json',
-    },
-  })
+  const headers = {
+    Authorization: `Bearer ${getApiKey()}`,
+    'Content-Type': 'application/json',
+  }
 
-  if (response.status === 404) {
+  const v4Url = `${HUBSPOT_API_BASE}/crm/v4/objects/contacts/${contactId}/associations/${trainingObjectType}`
+  const v4Response = await hubspotFetch(v4Url, { method: 'GET', headers })
+
+  if (v4Response.status !== 404) {
+    const v4Parsed = await safeParseResponse(v4Response)
+    if (v4Response.ok) {
+      const rows = parseTrainingAssociationRows(v4Parsed?.results)
+      if (rows.length > 0) return rows
+    }
+  }
+
+  const v3Url = `${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${contactId}/associations/${trainingObjectType}`
+  const v3Response = await hubspotFetch(v3Url, { method: 'GET', headers })
+
+  if (v3Response.status === 404) {
     return []
   }
 
-  const parsed = await safeParseResponse(response)
-  if (!response.ok) {
+  const v3Parsed = await safeParseResponse(v3Response)
+  if (!v3Response.ok) {
     const msg =
-      (parsed && (parsed.message || parsed.error || parsed.text)) || response.statusText
+      (v3Parsed && (v3Parsed.message || v3Parsed.error || v3Parsed.text)) ||
+      v3Response.statusText
     throw new Error(`Failed to check training registration: ${msg}`)
   }
 
-  return (parsed?.results ?? []) as Array<{ id?: string; type?: string }>
+  return parseTrainingAssociationRows(v3Parsed?.results)
 }
 
 export interface ContactData {
@@ -168,11 +191,12 @@ export async function isContactRegisteredForTraining(
   contactId: string,
   trainingId: string
 ): Promise<boolean> {
-  const associations = await getContactTrainingAssociationResults(contactId)
-  return contactHasTrainingAssociation(
+  const associations = await getContactTrainingAssociations(contactId)
+  return contactHasAssociationForTraining(
     associations,
     trainingId,
-    getRegistrantAssociationLabel()
+    getRegistrantAssociationLabel(),
+    getRegistrantAssociationTypeId()
   )
 }
 
@@ -181,11 +205,12 @@ export async function isContactOnWaitlistForTraining(
   contactId: string,
   trainingId: string
 ): Promise<boolean> {
-  const associations = await getContactTrainingAssociationResults(contactId)
-  return contactHasTrainingAssociation(
+  const associations = await getContactTrainingAssociations(contactId)
+  return contactHasAssociationForTraining(
     associations,
     trainingId,
-    getWaitlistAssociationLabel()
+    getWaitlistAssociationLabel(),
+    getWaitlistAssociationTypeId()
   )
 }
 
@@ -424,7 +449,11 @@ export async function associateContactToTraining(
   if (!response.ok) {
     console.error('Association error response:', parsed)
     if (isDuplicateAssociationResponse(parsed, response.status)) {
-      throw new AlreadyRegisteredError()
+      throw new AlreadyRegisteredError(
+        role === 'waitlist'
+          ? 'You are already on the waitlist for this event.'
+          : undefined
+      )
     }
     let msg = (parsed && (parsed.message || parsed.error || parsed.text)) || response.statusText
     // Hide large HTML error bodies and give a concise message instead

@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import {
   contactHasTrainingAssociation,
+  contactHasAssociationForTraining,
   isDuplicateAssociationResponse,
   mapSmsConsentToHubSpot,
+  parseTrainingAssociationRows,
 } from '@/lib/hubspot/field-mappers'
 
 describe('mapSmsConsentToHubSpot', () => {
@@ -53,5 +55,52 @@ describe('contactHasTrainingAssociation', () => {
         'registrant'
       )
     ).toBe(false)
+  })
+})
+
+describe('parseTrainingAssociationRows', () => {
+  it('parses HubSpot v4 association rows with labels', () => {
+    const rows = parseTrainingAssociationRows([
+      {
+        toObjectId: 5790939450,
+        associationTypes: [{ label: 'waitlisted', category: 'USER_DEFINED', typeId: 42 }],
+      },
+    ])
+    expect(rows).toEqual([
+      {
+        trainingId: '5790939450',
+        associationType: 'waitlisted',
+        associationCategory: 'USER_DEFINED',
+        associationTypeId: 42,
+      },
+    ])
+  })
+
+  it('parses HubSpot v3 association rows', () => {
+    const rows = parseTrainingAssociationRows([{ id: '111', type: 'registrant' }])
+    expect(rows).toEqual([{ trainingId: '111', associationType: 'registrant' }])
+  })
+})
+
+describe('contactHasAssociationForTraining', () => {
+  it('matches association labels case-insensitively', () => {
+    const rows = parseTrainingAssociationRows([
+      {
+        toObjectId: '222',
+        associationTypes: [{ label: 'Waitlisted', typeId: 7 }],
+      },
+    ])
+    expect(contactHasAssociationForTraining(rows, '222', 'waitlisted')).toBe(true)
+    expect(contactHasAssociationForTraining(rows, '222', 'registrant')).toBe(false)
+  })
+
+  it('matches by configured type id when label differs', () => {
+    const rows = parseTrainingAssociationRows([
+      {
+        toObjectId: '222',
+        associationTypes: [{ label: 'custom', typeId: 99 }],
+      },
+    ])
+    expect(contactHasAssociationForTraining(rows, '222', 'waitlisted', '99')).toBe(true)
   })
 })
