@@ -74,7 +74,8 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
 
           <div className="notice-card text-sm text-zinc-700">
             {!event.active && <p>{detail.inactive}</p>}
-            {waitlistMode && <p>{detail.waitlistNotice}</p>}
+            {event.registrationClosed && <p>{detail.registrationClosed}</p>}
+            {waitlistMode && !event.registrationClosed && <p>{detail.waitlistNotice}</p>}
 
             <div className="mb-6 p-6 bg-blue-50 rounded-lg border border-blue-200">
               <ProgramContentBlocks blocks={program.signupNotice} />

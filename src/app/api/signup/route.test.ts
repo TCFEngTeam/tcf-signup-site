@@ -46,6 +46,7 @@ vi.mock('@/lib/hubspot/api', async () => {
   }
 })
 
+import { signupFormContent } from '@/lib/content'
 import { POST } from './route'
 
 function postSignup(body: unknown) {
@@ -82,6 +83,22 @@ describe('POST /api/signup', () => {
   it('returns 400 when required fields are missing', async () => {
     const res = await postSignup({ eventId: 'event-123', program: 'mhfa', data: {} })
     expect(res.status).toBe(400)
+  })
+
+  it('returns 409 when registration is closed', async () => {
+    loadProgramEventById.mockResolvedValue({
+      event: {
+        id: 'event-123',
+        isFull: false,
+        registrationClosed: true,
+        availableCapacity: 5,
+      },
+      error: null,
+    })
+
+    const res = await postSignup(signupRequestBody())
+    expect(res.status).toBe(409)
+    expect(await res.json()).toMatchObject({ error: signupFormContent.messages.registrationClosed })
   })
 
   it('waitlists when the event is full and active', async () => {

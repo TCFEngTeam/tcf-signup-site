@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import Footer from '@/components/layout/Footer'
 import Header from '@/components/layout/Header'
-import { formatTrainingSchedule } from '@/lib/dates/format-schedule'
+import TrainingScheduleText from '@/components/events/TrainingScheduleText'
 import { formatContent, pagesContent } from '@/lib/content'
 import { loadProgramEventById } from '@/lib/programs/events'
 import { getTrainingProgram } from '@/lib/programs/config'
@@ -47,7 +47,6 @@ export default async function ProgramEventSuccessPage({
   }
 
   const programLabel = program.shortLabel
-  const eventSchedule = formatTrainingSchedule(event.startDate, event.endDate)
   const backHref = `/${program.slug}`
   const eventHref = `/${program.slug}/events/${eventId}`
 
@@ -85,9 +84,9 @@ export default async function ProgramEventSuccessPage({
               <p className="helper-text max-w-md mx-auto font-medium" style={{ color: 'var(--dark-green)' }}>
                 {event.title}
               </p>
-              {eventSchedule && (
-                <p className="helper-text max-w-md mx-auto">{eventSchedule}</p>
-              )}
+              <div className="max-w-md mx-auto">
+                <TrainingScheduleText schedule={event.schedule} className="helper-text" />
+              </div>
               <p className="helper-text max-w-md mx-auto">
                 {isWaitlist ? success.waitlistThankYou : success.thankYou}
               </p>

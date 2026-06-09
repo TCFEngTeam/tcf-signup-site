@@ -4,6 +4,18 @@
  * should be configured in .env.local
  */
 
+import pagesJson from '../../../content/pages.json'
+import type { PagesContent } from '@/lib/content/types'
+import {
+  contactHasTrainingAssociation,
+  isDuplicateAssociationResponse,
+  mapSmsConsentToHubSpot,
+} from '@/lib/hubspot/field-mappers'
+import type { TrainingSchedule } from '@/lib/dates/format-schedule'
+import { getTrainingCutoffPropertyKey, getTrainingSchedulePropertyKeys } from '@/lib/dates/format-schedule'
+
+const eventLabels = (pagesJson as PagesContent).events
+
 const HUBSPOT_API_BASE = 'https://api.hubapi.com'
 
 /** HubSpot must always be live; Next.js caches `fetch` in production by default. */
@@ -77,7 +89,6 @@ export interface ContactData {
   trainingDates: string
   interestReason: string
   communitySupport: string
-  interestedInTeaching: string
   smsConsent?: string
 }
 
@@ -105,14 +116,17 @@ export interface HubSpotTraining {
 export interface TrainingEvent {
   id: string
   title: string
-  startDate?: string
-  endDate?: string
+  schedule: TrainingSchedule
+  sortDate?: string
   location: string
   capacity: number
   registered: number
   availableCapacity: number
   active: boolean
   description?: string
+  hubspotPipelineStage?: string
+  /** HubSpot datetime when registration closes; empty uses 48h-before-start default in app logic */
+  cutoffTime?: string
 }
 
 function parseDateProperty(value?: string) {
@@ -120,13 +134,6 @@ function parseDateProperty(value?: string) {
   const parsed = new Date(value)
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
-
-export { formatTrainingSchedule } from '@/lib/dates/format-schedule'
-import {
-  contactHasTrainingAssociation,
-  isDuplicateAssociationResponse,
-  mapSmsConsentToHubSpot,
-} from '@/lib/hubspot/field-mappers'
 
 /**
  * Maps form data to HubSpot contact properties using environment variables
@@ -144,7 +151,6 @@ function mapContactProperties(data: ContactData): { [key: string]: string } {
     [process.env.HUBSPOT_VIRGINIA_RESIDENT_PROPERTY || 'virginia_resident']: data.isVirginiaResident,
     [process.env.HUBSPOT_INTEREST_REASON_PROPERTY || 'interest_reason']: data.interestReason,
     [process.env.HUBSPOT_COMMUNITY_SUPPORT_PROPERTY || 'community_support_plan']: data.communitySupport,
-    [process.env.HUBSPOT_TEACHING_INTEREST_PROPERTY || 'interested_in_teaching']: data.interestedInTeaching,
   }
 
   if (data.smsConsent) {
@@ -478,11 +484,16 @@ export async function getContactByEmail(email: string): Promise<HubSpotContact |
  * Fetch training objects from HubSpot filtered by pipeline stage.
  * The stage is matched against the custom object property `hs_pipeline`.
  *
- * @param pipelineStage The exact stage name from .env.local (for example, "Accepting Applications")
- * @param pipelineType The exact pipeline stage name from .env.local
+ * @param pipelineStage Open-for-registration stage (`hs_pipeline_stage`)
+ * @param pipelineType Pipeline filter (`hs_pipeline`)
+ * @param closedPipelineStage Optional closed stage; listed on site but not open for signup
  * @returns Array of training objects from HubSpot
  */
-export async function getTrainingObjects(pipelineStage?: string, pipelineType?: string): Promise<HubSpotTraining[]> {
+export async function getTrainingObjects(
+  pipelineStage?: string,
+  pipelineType?: string,
+  closedPipelineStage?: string
+): Promise<HubSpotTraining[]> {
   if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
@@ -492,7 +503,7 @@ export async function getTrainingObjects(pipelineStage?: string, pipelineType?: 
   let after: string | null = null
   const requestedProperties = (
     process.env.HUBSPOT_TRAINING_PROPERTIES ||
-    'hs_pipeline,hs_pipeline_stage,start_date,end_date,available_capacity,name,location,capacity,description'
+    'hs_pipeline,hs_pipeline_stage,training_1st_day_start_datetime,training_1st_day_end_datetime,training_2nd_day_start_datetime,training_2nd_day_end_datetime,available_capacity,name,location,capacity,description,cutoff_time'
   )
     .split(',')
     .map((value) => value.trim())
@@ -535,6 +546,7 @@ export async function getTrainingObjects(pipelineStage?: string, pipelineType?: 
     console.debug('[hubspotApi] raw training objects fetched', {
       objectType,
       pipelineStage,
+      closedPipelineStage,
       pipelineType,
       requestedProperties,
       count: allResults.length,
@@ -550,13 +562,14 @@ export async function getTrainingObjects(pipelineStage?: string, pipelineType?: 
             return stage === targetStage
         })
     }
-    if (pipelineStage) {
-      const targetStage = pipelineStage.trim()
-        allResults = allResults.filter((training) => {
-            const stage = (training.properties?.hs_pipeline_stage ?? '').trim()
-            //console.debug('[hubspotApi] comparing pipeline stage', { trainingId: training.id, stage, targetStage })
-            return stage === targetStage
-        })
+    const allowedPipelineStages = [pipelineStage, closedPipelineStage]
+      .map((value) => value?.trim())
+      .filter((value): value is string => Boolean(value))
+    if (allowedPipelineStages.length > 0) {
+      allResults = allResults.filter((training) => {
+        const stage = (training.properties?.hs_pipeline_stage ?? '').trim()
+        return allowedPipelineStages.includes(stage)
+      })
     }
 
     return allResults
@@ -587,21 +600,28 @@ export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
     10
   )
   const availableCapacity = parseInt(props.available_capacity || '0', 10)
-  const startDateRaw = readTrainingProperty(props, 'training_start_date', 'start_date')
-  const endDateRaw = readTrainingProperty(props, 'training_end_date', 'end_date')
-  const parsedStartDate = parseDateProperty(startDateRaw)
-  const parsedEndDate = parseDateProperty(endDateRaw)
+  const scheduleKeys = getTrainingSchedulePropertyKeys()
+  const cutoffKey = getTrainingCutoffPropertyKey()
+  const schedule: TrainingSchedule = {
+    session1Start: readTrainingProperty(props, scheduleKeys.session1Start),
+    session1End: readTrainingProperty(props, scheduleKeys.session1End),
+    session2Start: readTrainingProperty(props, scheduleKeys.session2Start),
+    session2End: readTrainingProperty(props, scheduleKeys.session2End),
+  }
+  const parsedStartDate = parseDateProperty(schedule.session1Start)
 
   return {
     id: training.id,
-    title: readTrainingProperty(props, 'hs_course_name', 'name') || 'Untitled Training',
-    startDate: parsedStartDate?.toISOString() || startDateRaw,
-    endDate: parsedEndDate?.toISOString() || endDateRaw,
-    location: 'Virtual',
+    title: readTrainingProperty(props, 'hs_course_name', 'name') || eventLabels.untitledEvent,
+    schedule,
+    sortDate: parsedStartDate?.toISOString() || schedule.session1Start,
+    location: readTrainingProperty(props, 'location') || eventLabels.defaultLocation,
     capacity,
     registered: Math.max(0, capacity - availableCapacity),
     availableCapacity,
     active: true,
     description: props.description,
+    hubspotPipelineStage: props.hs_pipeline_stage,
+    cutoffTime: readTrainingProperty(props, cutoffKey),
   }
 }

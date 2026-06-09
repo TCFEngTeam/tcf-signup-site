@@ -10,6 +10,8 @@ export type TrainingProgram = ProgramContent & {
 export type ProgramPipelineConfig = {
   pipelineStage?: string
   pipelineType?: string
+  /** HubSpot `hs_pipeline_stage` for trainings that stay listed but do not accept signups */
+  closedPipelineStage?: string
 }
 
 function toTrainingProgram(content: ProgramContent): TrainingProgram {
@@ -44,11 +46,13 @@ export function getProgramPipelineConfig(programId: TrainingProgramId): ProgramP
       pipelineType:
         process.env.HUBSPOT_MHFA_PIPELINE_TYPE ??
         process.env.HUBSPOT_TRAINING_PIPELINE_TYPE,
+      closedPipelineStage: process.env.HUBSPOT_MHFA_CLOSED_PIPELINE_STAGE,
     }
   }
 
   return {
     pipelineStage: process.env.HUBSPOT_QPR_PIPELINE_STAGE,
     pipelineType: process.env.HUBSPOT_QPR_PIPELINE_TYPE,
+    closedPipelineStage: process.env.HUBSPOT_QPR_CLOSED_PIPELINE_STAGE,
   }
 }

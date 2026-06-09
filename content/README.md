@@ -7,8 +7,8 @@
 | File | What you can change |
 |------|---------------------|
 | `site.json` | Site name, logo (text or image), footer, main site links, page title/description, SMS legal URLs, submit button labels |
-| `signup-form.json` | All signup field labels, validation messages, state list, “year in school” options, Yes/No/Maybe labels |
-| `pages.json` | Event cards, event detail page, success page, “back to main site” link text |
+| `signup-form.json` | All signup field labels, validation messages, server signup error messages, state list, “year in school” options, Yes/No labels |
+| `pages.json` | Event cards, capacity labels, schedule fallbacks, listing empty/error states, event detail page, success page, “back to main site” link text |
 | `programs/mhfa.json` | MHFA listing intro, signup notice, success-page next steps |
 | `programs/qpr.json` | QPR listing intro, signup notice, success-page next steps |
 
@@ -36,9 +36,10 @@ In `site.json`, under `logo`:
 
 ## Placeholders in `pages.json`
 
-Some strings include `{program}`, replaced with **MHFA** or **QPR** automatically, e.g.:
+Some strings include `{program}` or `{count}`, replaced automatically, e.g.:
 
-`"Back to {program} events"` → “Back to MHFA events”
+- `"Back to {program} events"` → “Back to MHFA events”
+- `"{count} seats remaining"` → “3 seats remaining”
 
 ## How changes go live
 

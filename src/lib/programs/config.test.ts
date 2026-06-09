@@ -9,8 +9,10 @@ describe('trainingPrograms', () => {
   afterEach(() => {
     delete process.env.HUBSPOT_MHFA_PIPELINE_STAGE
     delete process.env.HUBSPOT_MHFA_PIPELINE_TYPE
+    delete process.env.HUBSPOT_MHFA_CLOSED_PIPELINE_STAGE
     delete process.env.HUBSPOT_QPR_PIPELINE_STAGE
     delete process.env.HUBSPOT_QPR_PIPELINE_TYPE
+    delete process.env.HUBSPOT_QPR_CLOSED_PIPELINE_STAGE
     delete process.env.HUBSPOT_TRAINING_PIPELINE_STAGE
     delete process.env.HUBSPOT_TRAINING_PIPELINE_TYPE
   })
@@ -32,9 +34,12 @@ describe('trainingPrograms', () => {
     process.env.HUBSPOT_MHFA_PIPELINE_STAGE = 'mhfa-stage'
     process.env.HUBSPOT_MHFA_PIPELINE_TYPE = 'mhfa-type'
 
+    process.env.HUBSPOT_MHFA_CLOSED_PIPELINE_STAGE = 'mhfa-closed'
+
     expect(getProgramPipelineConfig('mhfa')).toEqual({
       pipelineStage: 'mhfa-stage',
       pipelineType: 'mhfa-type',
+      closedPipelineStage: 'mhfa-closed',
     })
   })
 

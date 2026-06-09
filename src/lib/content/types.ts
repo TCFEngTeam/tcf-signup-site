@@ -46,25 +46,27 @@ export type SignupFormFieldKey =
   | 'isVirginiaResident'
   | 'interestReason'
   | 'communitySupport'
-  | 'interestedInTeaching'
 
 export type SignupFormContent = {
   requiredSuffix: string
   requiredHint: string
   messages: {
     missingFields: string
+    invalidPhone: string
     missingRequiredFields: string
     eventFull: string
+    eventRegistrationClosed: string
     signupSuccess: string
     waitlistSuccess: string
     signupFailed: string
     networkError: string
     trainingNotFound: string
     trainingFull: string
-    trainingUnavailable: string
+    registrationClosed: string
     alreadyRegistered: string
-    alreadyOnWaitlist: string
     signupUnavailable: string
+    trainingUnavailable: string
+    alreadyOnWaitlist: string
   }
   fields: Record<SignupFormFieldKey, string>
   placeholders: {
@@ -83,14 +85,12 @@ export type SignupFormContent = {
 export type PagesContent = {
   listing: {
     backToMainSite: string
-  }
-  capacity: {
-    full: string
-    oneSeatRemaining: string
-    seatsRemaining: string
+    noSessions: string
+    loadError: string
   }
   eventCard: {
     badgeFull: string
+    badgeRegistrationClosed: string
     badgeWaitlist: string
     badgeOpen: string
     signUp: string
@@ -98,14 +98,28 @@ export type PagesContent = {
     fallbackTitle: string
     fallbackLocation: string
   }
+  capacity: {
+    full: string
+    registrationClosed: string
+    oneSeatRemaining: string
+    seatsRemaining: string
+  }
+  schedule: {
+    dateToBeAnnounced: string
+    fallbackTimeZone: string
+  }
+  events: {
+    defaultLocation: string
+    untitledEvent: string
+  }
   eventDetail: {
     backToEvents: string
     inactive: string
     full: string
     waitlistNotice: string
-    signupHeading: string
     waitlistHeading: string
     registrationClosed: string
+    signupHeading: string
     browseOtherEvents: string
     eventNotFoundEyebrow: string
     eventNotFoundTitle: string

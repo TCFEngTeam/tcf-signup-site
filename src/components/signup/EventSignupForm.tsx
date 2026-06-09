@@ -69,7 +69,6 @@ export default function EventSignupForm({
   const [isVirginiaResident, setIsVirginiaResident] = useState<string>(prefillData?.isVirginiaResident ?? '')
   const [interestReason, setInterestReason] = useState<string>(prefillData?.interestReason ?? '')
   const [communitySupport, setCommunitySupport] = useState<string>(prefillData?.communitySupport ?? '')
-  const [interestedInTeaching, setInterestedInTeaching] = useState<string>(prefillData?.interestedInTeaching ?? '')
   const [smsConsent, setSmsConsent] = useState<string>(prefillData?.smsConsent ?? '')
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -97,7 +96,6 @@ export default function EventSignupForm({
     if (saved.isVirginiaResident) setIsVirginiaResident(saved.isVirginiaResident)
     if (saved.interestReason) setInterestReason(saved.interestReason)
     if (saved.communitySupport) setCommunitySupport(saved.communitySupport)
-    if (saved.interestedInTeaching) setInterestedInTeaching(saved.interestedInTeaching)
     if (saved.smsConsent) setSmsConsent(saved.smsConsent)
   }, [prefillData])
 
@@ -119,7 +117,6 @@ export default function EventSignupForm({
     if (!isVirginiaResident) missing.push(fieldLabels.isVirginiaResident)
     if (!interestReason.trim()) missing.push(fieldLabels.interestReason)
     if (!communitySupport.trim()) missing.push(fieldLabels.communitySupport)
-    if (!interestedInTeaching) missing.push(fieldLabels.interestedInTeaching)
     return missing
   })()
 
@@ -152,7 +149,6 @@ export default function EventSignupForm({
     if (!String(formData.get('isVirginiaResident') ?? '').trim()) missing.push(fieldLabels.isVirginiaResident)
     if (!String(formData.get('interestReason') ?? '').trim()) missing.push(fieldLabels.interestReason)
     if (!String(formData.get('communitySupport') ?? '').trim()) missing.push(fieldLabels.communitySupport)
-    if (!String(formData.get('interestedInTeaching') ?? '').trim()) missing.push(fieldLabels.interestedInTeaching)
 
     return missing
   }
@@ -189,7 +185,6 @@ export default function EventSignupForm({
       isVirginiaResident,
       interestReason,
       communitySupport,
-      interestedInTeaching,
       smsConsent,
     })
 
@@ -212,13 +207,35 @@ export default function EventSignupForm({
     setIsVirginiaResident(formatted.isVirginiaResident.toLowerCase())
     setInterestReason(formatted.interestReason)
     setCommunitySupport(formatted.communitySupport)
-    setInterestedInTeaching(formatted.interestedInTeaching)
     setSmsConsent(formatted.smsConsent.toLowerCase())
 
     setSubmitting(true)
 
     ;(async () => {
       try {
+        // Check if event is still available (not over capacity)
+        if (shouldUseProgramEvents) {
+          const eventRes = await fetch(`/api/events?program=${programId}`)
+          if (eventRes.ok) {
+            const allEvents: {
+              id: string
+              isFull?: boolean
+              registrationClosed?: boolean
+            }[] = await eventRes.json()
+            const currentEvent = allEvents.find((entry) => entry.id === eventId)
+            if (currentEvent?.registrationClosed) {
+              setMessage(formMessages.eventRegistrationClosed)
+              setSubmitting(false)
+              return
+            }
+            if (currentEvent?.isFull) {
+              setMessage(formMessages.eventFull)
+              setSubmitting(false)
+              return
+            }
+          }
+        }
+
         const endpoint = submitUrl || '/api/signup'
         const res = await fetch(endpoint, {
           method: 'POST',
@@ -402,26 +419,6 @@ export default function EventSignupForm({
         />
         <RequiredText show={fieldHasError(fieldLabels.communitySupport)} />
       </label>
-
-      {/* Interested in Teaching */}
-      <fieldset className="mb-4">
-        <div className={`field-label text-sm font-medium mb-2 ${fieldHasError(fieldLabels.interestedInTeaching) ? 'text-red-600' : ''}`}>{displayLabel('interestedInTeaching')}</div>
-        <div className="flex gap-6">
-          <label className="flex items-center gap-2">
-            <input type="radio" name="interestedInTeaching" value="Yes" checked={interestedInTeaching === 'Yes'} onChange={(e) => setInterestedInTeaching(e.target.value)} onBlur={() => markTouched(fieldLabels.interestedInTeaching)} required />
-            <span className="text-sm">{formChoices.yes}</span>
-          </label>
-          <label className="flex items-center gap-2">
-            <input type="radio" name="interestedInTeaching" value="No" checked={interestedInTeaching === 'No'} onChange={(e) => setInterestedInTeaching(e.target.value)} onBlur={() => markTouched(fieldLabels.interestedInTeaching)} required />
-            <span className="text-sm">{formChoices.no}</span>
-          </label>
-          <label className="flex items-center gap-2">
-            <input type="radio" name="interestedInTeaching" value="Maybe" checked={interestedInTeaching === 'Maybe'} onChange={(e) => setInterestedInTeaching(e.target.value)} onBlur={() => markTouched(fieldLabels.interestedInTeaching)} required />
-            <span className="text-sm">{formChoices.maybe}</span>
-          </label>
-        </div>
-        <RequiredText show={fieldHasError(fieldLabels.interestedInTeaching)} />
-      </fieldset>
 
       {/* SMS Consent */}
       <div className="mb-4 bg-blue-50 rounded-lg text-sm p-4 border border-blue-100">

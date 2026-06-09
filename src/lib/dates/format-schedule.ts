@@ -1,38 +1,139 @@
-function formatDateLabel(value?: string) {
-  if (!value) return ''
+import pagesJson from '../../../content/pages.json'
+import type { PagesContent } from '@/lib/content/types'
 
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return value
+const DEFAULT_SCHEDULE_TIME_ZONE = 'America/New_York'
+const scheduleLabels = (pagesJson as PagesContent).schedule
 
-  return new Intl.DateTimeFormat(undefined, {
+export type FormatScheduleOptions = {
+  /** IANA timezone (e.g. America/New_York). Defaults to Eastern for server/email use. */
+  timeZone?: string
+}
+
+export { DEFAULT_SCHEDULE_TIME_ZONE }
+
+export type TrainingSchedule = {
+  session1Start?: string
+  session1End?: string
+  session2Start?: string
+  session2End?: string
+}
+
+export function getTrainingCutoffPropertyKey() {
+  return process.env.HUBSPOT_TRAINING_CUTOFF_PROPERTY ?? 'cutoff_time'
+}
+
+export function getTrainingSchedulePropertyKeys() {
+  return {
+    session1Start:
+      process.env.HUBSPOT_TRAINING_1ST_DAY_START_PROPERTY ??
+      'training_1st_day_start_datetime',
+    session1End:
+      process.env.HUBSPOT_TRAINING_1ST_DAY_END_PROPERTY ?? 'training_1st_day_end_datetime',
+    session2Start:
+      process.env.HUBSPOT_TRAINING_2ND_DAY_START_PROPERTY ??
+      'training_2nd_day_start_datetime',
+    session2End:
+      process.env.HUBSPOT_TRAINING_2ND_DAY_END_PROPERTY ?? 'training_2nd_day_end_datetime',
+  }
+}
+
+export function parseScheduleDateTime(value?: string): Date | null {
+  if (!value?.trim()) return null
+
+  const trimmed = value.trim()
+  if (/^\d+$/.test(trimmed)) {
+    const parsed = new Date(Number(trimmed))
+    return Number.isNaN(parsed.getTime()) ? null : parsed
+  }
+
+  const parsed = new Date(trimmed)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+function formatDatePart(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-    timeZone: 'UTC',
-  }).format(parsed)
+    timeZone,
+  }).format(date)
 }
 
-export function formatTrainingSchedule(startDate?: string, endDate?: string) {
-  if (!startDate && !endDate) return 'Date to be announced'
+function formatTimePart(date: Date, timeZone: string): string {
+  const formatted = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone,
+  }).format(date)
+
+  return formatted.replace(/\s/g, '').toLowerCase()
+}
+
+function formatTimeZoneAbbreviation(date: Date, timeZone: string): string {
+  const part = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    timeZoneName: 'short',
+  })
+    .formatToParts(date)
+    .find((entry) => entry.type === 'timeZoneName')
+
+  return part?.value ?? scheduleLabels.fallbackTimeZone
+}
+
+export function formatSessionLineFromRange(
+  start?: string,
+  end?: string,
+  options?: FormatScheduleOptions
+): string | null {
+  const timeZone = options?.timeZone ?? DEFAULT_SCHEDULE_TIME_ZONE
+  const startDate = parseScheduleDateTime(start)
+  const endDate = parseScheduleDateTime(end)
+
+  if (!startDate && !endDate) return null
 
   if (startDate && endDate) {
-    const formattedStart = formatDateLabel(startDate)
-    const formattedEnd = formatDateLabel(endDate)
-
-    if (formattedStart && formattedStart === formattedEnd) {
-      return formattedStart
-    }
-
-    if (formattedStart && formattedEnd) {
-      return `${formattedStart} – ${formattedEnd}`
-    }
-
-    if (startDate === endDate) {
-      return formatDateLabel(startDate)
-    }
-
-    return `${formatDateLabel(startDate) || startDate} – ${formatDateLabel(endDate) || endDate}`
+    const dateLabel = formatDatePart(startDate, timeZone)
+    const startTime = formatTimePart(startDate, timeZone)
+    const endTime = formatTimePart(endDate, timeZone)
+    const timeZoneLabel = formatTimeZoneAbbreviation(startDate, timeZone)
+    return `${dateLabel}, ${startTime} - ${endTime} ${timeZoneLabel}`
   }
 
-  return formatDateLabel(startDate || endDate) || startDate || endDate || 'Date to be announced'
+  const single = startDate ?? endDate
+  if (!single) return null
+
+  return `${formatDatePart(single, timeZone)}, ${formatTimePart(single, timeZone)} ${formatTimeZoneAbbreviation(single, timeZone)}`
+}
+
+export function hasSecondTrainingSession(schedule: TrainingSchedule): boolean {
+  return Boolean(schedule.session2Start?.trim() && schedule.session2End?.trim())
+}
+
+export function formatTrainingScheduleLines(
+  schedule: TrainingSchedule,
+  options?: FormatScheduleOptions
+): string[] {
+  const line1 = formatSessionLineFromRange(schedule.session1Start, schedule.session1End, options)
+  const line2 = hasSecondTrainingSession(schedule)
+    ? formatSessionLineFromRange(schedule.session2Start, schedule.session2End, options)
+    : null
+
+  const lines = [line1, line2].filter((line): line is string => Boolean(line))
+  if (lines.length === 0) return [scheduleLabels.dateToBeAnnounced]
+  return lines
+}
+
+/** ISO date for sorting listings (first session start). */
+export function getScheduleSortDate(schedule: TrainingSchedule): string | undefined {
+  const parsed = parseScheduleDateTime(schedule.session1Start)
+  return parsed?.toISOString()
+}
+
+/** @deprecated Use formatTrainingScheduleLines */
+export function formatTrainingSchedule(startDate?: string, endDate?: string): string {
+  return formatTrainingScheduleLines({
+    session1Start: startDate,
+    session1End: endDate,
+  }).join('\n')
 }

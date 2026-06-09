@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { sortEventsForListing, sortEventsSoonestFirst } from '@/lib/programs/sort'
 
 const sampleEvents = [
-  { id: 'a', startDate: '2026-01-01T00:00:00.000Z' },
-  { id: 'b', startDate: '2026-06-01T00:00:00.000Z' },
-  { id: 'c', startDate: '2026-03-01T00:00:00.000Z' },
-  { id: 'd', startDate: undefined },
+  { id: 'a', sortDate: '2026-01-01T00:00:00.000Z' },
+  { id: 'b', sortDate: '2026-06-01T00:00:00.000Z' },
+  { id: 'c', sortDate: '2026-03-01T00:00:00.000Z' },
+  { id: 'd', sortDate: undefined },
 ]
 
 describe('sortEventsForListing', () => {

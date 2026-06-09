@@ -45,8 +45,7 @@ export async function POST(req: Request) {
       !data.currentYear ||
       !data.isVirginiaResident ||
       !data.interestReason ||
-      !data.communitySupport ||
-      !data.interestedInTeaching
+      !data.communitySupport
     ) {
       return NextResponse.json({ error: messages.missingRequiredFields }, { status: 400 })
     }
@@ -64,6 +63,10 @@ export async function POST(req: Request) {
 
     if (!ev) {
       return NextResponse.json({ error: messages.trainingNotFound }, { status: 404 })
+    }
+
+    if (ev.registrationClosed) {
+      return NextResponse.json({ error: messages.registrationClosed }, { status: 409 })
     }
 
     const waitlisted = canAcceptWaitlist(ev)
@@ -97,7 +100,6 @@ export async function POST(req: Request) {
       trainingDates: data.trainingDates,
       interestReason: formatted.interestReason,
       communitySupport: formatted.communitySupport,
-      interestedInTeaching: formatted.interestedInTeaching,
       smsConsent: formatted.smsConsent,
     }
 

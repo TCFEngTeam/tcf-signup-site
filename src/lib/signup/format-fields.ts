@@ -4,6 +4,7 @@ import {
   getDialCodeFromIso,
   getUniqueDialCodesLongestFirst,
 } from '@/lib/phone/country-codes'
+import { signupFormContent } from '@/lib/content'
 
 export type SignupFormData = {
   firstName: string
@@ -17,7 +18,6 @@ export type SignupFormData = {
   isVirginiaResident: string
   interestReason: string
   communitySupport: string
-  interestedInTeaching: string
   smsConsent: string
 }
 
@@ -201,14 +201,6 @@ export function formatHubSpotYesNo(value: string) {
   return value.trim()
 }
 
-export function formatTeachingInterest(value: string) {
-  const normalized = value.trim().toLowerCase()
-  if (normalized === 'yes') return 'Yes'
-  if (normalized === 'no') return 'No'
-  if (normalized === 'maybe') return 'Maybe'
-  return value.trim()
-}
-
 export function formatLongText(value: string) {
   return value.trim().replace(/\s+/g, ' ')
 }
@@ -216,7 +208,7 @@ export function formatLongText(value: string) {
 export function formatSignupFormData(data: SignupFormData): SignupFormData | SignupFormatError {
   const phone = formatPhoneNumber(data.phone)
   if (!phone) {
-    return { error: 'Please enter a valid phone number.' }
+    return { error: signupFormContent.messages.invalidPhone }
   }
 
   return {
@@ -231,7 +223,6 @@ export function formatSignupFormData(data: SignupFormData): SignupFormData | Sig
     isVirginiaResident: formatHubSpotYesNo(data.isVirginiaResident),
     interestReason: formatLongText(data.interestReason),
     communitySupport: formatLongText(data.communitySupport),
-    interestedInTeaching: formatTeachingInterest(data.interestedInTeaching),
     smsConsent: data.smsConsent ? formatHubSpotYesNo(data.smsConsent) : '',
   }
 }
