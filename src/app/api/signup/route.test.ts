@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { signupFormContent } from '@/lib/content'
 import { signupRequestBody } from '@/test/fixtures/signup'
 
 const {

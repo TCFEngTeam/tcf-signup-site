@@ -10,46 +10,45 @@ import TrainingScheduleText from './TrainingScheduleText'
 
 const card = pagesContent.eventCard
 
+type EventCardEvent = {
+  id?: string
+  title?: string
+  schedule?: TrainingSchedule
+  location?: string
+  capacity?: number
+  registered?: number
+  isFull?: boolean
+  active?: boolean
+  registrationClosed?: boolean
+}
+
 type EventCardProps = {
-  event?: {
-    id?: string
-    title?: string
-    schedule?: TrainingSchedule
-    location?: string
-    capacity?: number
-    registered?: number
-    isFull?: boolean
-    active?: boolean
-    registrationClosed?: boolean
-  }
+  event?: EventCardEvent
   program: TrainingProgramId
 }
 
-function eventBadgeLabel(event: EventCardProps['event']) {
+function canJoinWaitlist(event: EventCardEvent | undefined) {
+  return Boolean(event?.isFull && event?.active !== false && !event?.registrationClosed)
+}
+
+function eventBadgeLabel(event: EventCardEvent | undefined) {
   if (event?.registrationClosed) return card.badgeRegistrationClosed
+  if (canJoinWaitlist(event)) return card.badgeWaitlist
   if (event?.isFull) return card.badgeFull
   return card.badgeOpen
 }
 
-function eventBadgeClass(event: EventCardProps['event']) {
+function eventBadgeClass(event: EventCardEvent | undefined) {
   if (event?.registrationClosed) return 'badge-registration-closed'
+  if (canJoinWaitlist(event)) return 'badge-waitlist'
   if (event?.isFull) return 'badge-full'
   return 'badge-open'
 }
 
 export default function EventCard({ event, program }: EventCardProps) {
-  const schedule = formatTrainingSchedule(event?.startDate, event?.endDate)
-  const canWaitlist = Boolean(event?.isFull && event?.active !== false)
-  const badgeLabel = canWaitlist
-    ? card.badgeWaitlist
-    : event?.isFull
-      ? card.badgeFull
-      : card.badgeOpen
-  const badgeClass = canWaitlist
-    ? 'badge-waitlist'
-    : event?.isFull
-      ? 'badge-full'
-      : 'badge-open'
+  const waitlistOpen = canJoinWaitlist(event)
+  const signupBlocked = Boolean(event?.registrationClosed || (event?.isFull && !waitlistOpen))
+  const blockedLabel = event?.registrationClosed ? card.badgeRegistrationClosed : card.badgeFull
 
   return (
     <article className="event-card">
@@ -62,18 +61,15 @@ export default function EventCard({ event, program }: EventCardProps) {
           capacity={event?.capacity}
           registered={event?.registered}
           registrationClosed={event?.registrationClosed}
-          isFull={event?.isFull}
         />
 
-        {canWaitlist ? (
+        {waitlistOpen ? (
           <Link href={`/${program}/events/${event?.id}`} className="btn-primary inline-flex justify-center mt-3">
             {card.joinWaitlist}
           </Link>
         ) : signupBlocked ? (
           <span className="btn-primary inline-flex justify-center mt-3 cursor-not-allowed opacity-60">
-            
             {blockedLabel}
-          
           </span>
         ) : (
           <Link href={`/${program}/events/${event?.id}`} className="btn-primary inline-flex justify-center mt-3">

@@ -140,23 +140,23 @@ h1, h2, h3 {
   width: fit-content;
 }
 
-.badge-open {
+.event-card .event-badge.badge-open,
+.event-details .event-badge.badge-open {
   background: rgba(235, 245, 224, 0.9);
   color: var(--accessible-green);
 }
 
-.badge-full {
+.event-card .event-badge.badge-full,
+.event-details .event-badge.badge-full {
   background: rgba(163, 11, 0, 0.09);
   color: var(--error-red);
 }
 
-.badge-registration-closed {
+.event-card .event-badge.badge-registration-closed,
+.event-details .event-badge.badge-registration-closed,
+.event-card .event-badge.badge-waitlist,
+.event-details .event-badge.badge-waitlist {
   background: rgba(44, 96, 164, 0.1);
-  color: var(--primary-blue);
-}
-
-.badge-waitlist {
-  background: rgba(44, 96, 164, 0.12);
   color: var(--primary-blue);
 }
 

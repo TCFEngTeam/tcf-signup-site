@@ -100,6 +100,7 @@ export default function EventSignupForm({
   }, [prefillData])
 
   const shouldRedirectOnSuccess = !submitUrl || submitUrl === '/api/signup'
+  const shouldUseProgramEvents = shouldRedirectOnSuccess && Boolean(programId)
   const composedPhone = composePhoneNumber(phoneCountryIso, phoneNationalDigits) ?? ''
 
   const missingFieldLabels = (() => {
@@ -228,7 +229,7 @@ export default function EventSignupForm({
               setSubmitting(false)
               return
             }
-            if (currentEvent?.isFull) {
+            if (currentEvent?.isFull && !waitlist) {
               setMessage(formMessages.eventFull)
               setSubmitting(false)
               return

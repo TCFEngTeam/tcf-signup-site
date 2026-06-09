@@ -6,12 +6,14 @@
   },
   "capacity": {
     "full": "Full",
+    "registrationClosed": "Registration closed",
     "oneSeatRemaining": "1 seat remaining",
     "seatsRemaining": "{count} seats remaining"
   },
   "eventCard": {
     "badgeFull": "Full",
     "badgeRegistrationClosed": "Registration Closed",
+    "badgeWaitlist": "Waitlist open",
     "badgeOpen": "Open",
     "signUp": "Sign up",
     "joinWaitlist": "Join Waitlist",
