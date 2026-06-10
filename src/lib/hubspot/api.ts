@@ -10,8 +10,9 @@ import type { TrainingSchedule } from '@/lib/dates/format-schedule'
 import { getTrainingCutoffPropertyKey, getTrainingSchedulePropertyKeys } from '@/lib/dates/format-schedule'
 import {
   contactHasRegistrantAssociation,
-  findCancelledAssociationsForTraining,
+  findNonRegistrantAssociationsForTraining,
   findRegistrantAssociationsForTraining,
+  hasActiveRegistrantAssociation,
   hasCancelledAssociation,
   isDuplicateAssociationResponse,
   mapSmsConsentToHubSpot,
@@ -156,15 +157,11 @@ export async function isContactRegisteredForTraining(
   trainingId: string
 ): Promise<boolean> {
   const associations = await getContactTrainingAssociations(contactId)
-  return (
-    findRegistrantAssociationsForTraining(
-      associations,
-      trainingId,
-      getRegistrantAssociationLabel(),
-      getRegistrantAssociationTypeId(),
-      getCancelledAssociationLabel(),
-      getCancelledAssociationTypeId()
-    ).length > 0
+  return hasActiveRegistrantAssociation(
+    associations,
+    trainingId,
+    getRegistrantAssociationLabel(),
+    getRegistrantAssociationTypeId()
   )
 }
 
@@ -661,13 +658,13 @@ export async function associateContactToTraining(contactId: string, trainingId: 
   }
 
   const associations = await getContactTrainingAssociations(contactId)
-  const cancelledRows = findCancelledAssociationsForTraining(
+  const replaceableRows = findNonRegistrantAssociationsForTraining(
     associations,
     trainingId,
-    getCancelledAssociationLabel(),
-    getCancelledAssociationTypeId()
+    getRegistrantAssociationLabel(),
+    getRegistrantAssociationTypeId()
   )
-  for (const row of cancelledRows) {
+  for (const row of replaceableRows) {
     await archiveContactTrainingAssociation(contactId, trainingId, row)
   }
 

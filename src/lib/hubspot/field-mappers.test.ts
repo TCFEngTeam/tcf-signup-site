@@ -3,7 +3,9 @@ import {
   contactHasRegistrantAssociation,
   contactHasTrainingAssociation,
   findCancelledAssociationsForTraining,
+  findNonRegistrantAssociationsForTraining,
   findRegistrantAssociationsForTraining,
+  hasActiveRegistrantAssociation,
   hasCancelledAssociation,
   isDuplicateAssociationResponse,
   mapSmsConsentToHubSpot,
@@ -93,7 +95,7 @@ describe('matchesAssociationLabel', () => {
 })
 
 describe('findRegistrantAssociationsForTraining', () => {
-  it('falls back to the only association for a training', () => {
+  it('falls back to the only legacy unlabeled association for a training', () => {
     const rows = [{ trainingId: '222', associationType: 'contact_to_training' }]
     expect(
       findRegistrantAssociationsForTraining(rows, '222', 'registrant')
@@ -112,6 +114,18 @@ describe('findRegistrantAssociationsForTraining', () => {
       )
     ).toEqual([])
   })
+
+  it('does not treat unregistered as registrant even when cancelled label env differs', () => {
+    const rows = [
+      {
+        trainingId: '222',
+        associationType: 'unregistered',
+        associationCategory: 'USER_DEFINED',
+        associationTypeId: 99,
+      },
+    ]
+    expect(findRegistrantAssociationsForTraining(rows, '222', 'registrant')).toEqual([])
+  })
 })
 
 describe('findCancelledAssociationsForTraining', () => {
@@ -123,6 +137,36 @@ describe('findCancelledAssociationsForTraining', () => {
     expect(
       findCancelledAssociationsForTraining(rows, '222', 'unregistered')
     ).toEqual([{ trainingId: '222', associationType: 'unregistered' }])
+  })
+})
+
+describe('hasActiveRegistrantAssociation', () => {
+  it('returns true only for explicit registrant labels', () => {
+    const rows = [
+      { trainingId: '222', associationType: 'unregistered' },
+      { trainingId: '222', associationType: 'registrant' },
+    ]
+    expect(hasActiveRegistrantAssociation(rows, '222', 'registrant')).toBe(true)
+
+    expect(
+      hasActiveRegistrantAssociation(
+        [{ trainingId: '222', associationType: 'unregistered' }],
+        '222',
+        'registrant'
+      )
+    ).toBe(false)
+  })
+})
+
+describe('findNonRegistrantAssociationsForTraining', () => {
+  it('returns every non-registrant association for a training', () => {
+    const rows = [
+      { trainingId: '222', associationType: 'registrant' },
+      { trainingId: '222', associationType: 'unregistered' },
+    ]
+    expect(findNonRegistrantAssociationsForTraining(rows, '222', 'registrant')).toEqual([
+      { trainingId: '222', associationType: 'unregistered' },
+    ])
   })
 })
 

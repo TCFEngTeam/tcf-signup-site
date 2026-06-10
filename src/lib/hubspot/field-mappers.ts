@@ -95,6 +95,54 @@ export function matchesAssociationLabel(
   return false
 }
 
+const GENERIC_ASSOCIATION_TYPES = new Set([
+  'contact_to_training',
+  'contact_to_custom_object',
+])
+
+/** True when the row carries a labeled association that is not the registrant label. */
+export function hasExplicitNonRegistrantLabel(
+  row: TrainingAssociationRow,
+  registrantLabel: string,
+  registrantTypeId?: string
+): boolean {
+  if (matchesAssociationLabel(row, registrantLabel, registrantTypeId)) return false
+
+  if (row.associationCategory === 'USER_DEFINED') return true
+  if (row.associationTypeId !== undefined) return true
+
+  const type = (row.associationType ?? '').trim().toLowerCase()
+  if (!type) return false
+
+  return !GENERIC_ASSOCIATION_TYPES.has(type)
+}
+
+export function hasActiveRegistrantAssociation(
+  rows: TrainingAssociationRow[],
+  trainingId: string,
+  registrantLabel: string,
+  registrantTypeId?: string
+): boolean {
+  return rows.some(
+    (row) =>
+      row.trainingId === String(trainingId) &&
+      matchesAssociationLabel(row, registrantLabel, registrantTypeId)
+  )
+}
+
+export function findNonRegistrantAssociationsForTraining(
+  rows: TrainingAssociationRow[],
+  trainingId: string,
+  registrantLabel: string,
+  registrantTypeId?: string
+): TrainingAssociationRow[] {
+  return rows.filter(
+    (row) =>
+      row.trainingId === String(trainingId) &&
+      !matchesAssociationLabel(row, registrantLabel, registrantTypeId)
+  )
+}
+
 export function contactHasTrainingAssociation(
   associations: Array<{ id?: string; type?: string }> | undefined,
   trainingId: string,
@@ -148,11 +196,14 @@ export function findRegistrantAssociationsForTraining(
 
   if (matches.length > 0) return matches
 
-  // Single non-cancelled association — treat as registrant when label matching fails.
-  const forTraining = rows.filter(
-    (row) => row.trainingId === String(trainingId) && !isCancelled(row)
+  // Legacy unlabeled associations only — never treat waitlist/unregistered/etc. as registrant.
+  const legacyCandidates = rows.filter(
+    (row) =>
+      row.trainingId === String(trainingId) &&
+      !isCancelled(row) &&
+      !hasExplicitNonRegistrantLabel(row, registrantLabel, registrantTypeId)
   )
-  if (forTraining.length === 1) return forTraining
+  if (legacyCandidates.length === 1) return legacyCandidates
 
   return []
 }
