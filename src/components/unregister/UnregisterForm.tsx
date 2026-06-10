@@ -1,12 +1,14 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { formatContent, pagesContent } from '@/lib/content'
+import { pagesContent } from '@/lib/content'
 import { TRAINING_PROGRAM_LIST, type TrainingProgramId } from '@/lib/programs/config'
 import { formatEmail } from '@/lib/signup/format-fields'
 import { UNREGISTER_ACK_MESSAGE, type RegistrationOption } from '@/lib/unregister/service'
 
 const request = pagesContent.unregister.request
+
+type FormPhase = 'enter_email' | 'select_session' | 'sent'
 
 type UnregisterFormProps = {
   initialProgram?: TrainingProgramId
@@ -17,7 +19,9 @@ export default function UnregisterForm({
   initialProgram,
   initialTrainingId,
 }: UnregisterFormProps) {
+  const [phase, setPhase] = useState<FormPhase>('enter_email')
   const [email, setEmail] = useState('')
+  const [checkedEmail, setCheckedEmail] = useState('')
   const [program, setProgram] = useState<TrainingProgramId>(
     initialProgram ?? 'mhfa'
   )
@@ -27,13 +31,18 @@ export default function UnregisterForm({
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  const needsSessionPick = sessionOptions.length > 0
   const programOptions = useMemo(() => TRAINING_PROGRAM_LIST, [])
-  const linkExpiryHint = formatContent(request.linkExpiryHint, {
-    hours: process.env.NEXT_PUBLIC_UNREGISTER_TOKEN_TTL_HOURS ?? '48',
-  })
 
-  async function handleSubmit(event: React.FormEvent) {
+  function resetToEmailStep() {
+    setPhase('enter_email')
+    setCheckedEmail('')
+    setSessionOptions([])
+    setTrainingId('')
+    setMessage(null)
+    setError(null)
+  }
+
+  async function handleCheckRegistrations(event: React.FormEvent) {
     event.preventDefault()
     setMessage(null)
     setError(null)
@@ -46,13 +55,12 @@ export default function UnregisterForm({
 
     setSubmitting(true)
     try {
-      const res = await fetch('/api/unregister/request', {
+      const res = await fetch('/api/unregister/lookup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: normalizedEmail,
           program,
-          trainingId: trainingId.trim() || undefined,
         }),
       })
 
@@ -63,13 +71,64 @@ export default function UnregisterForm({
         return
       }
 
-      if (payload.status === 'select_training' && Array.isArray(payload.options)) {
+      if (payload.status === 'found' && Array.isArray(payload.options)) {
+        setCheckedEmail(normalizedEmail)
         setSessionOptions(payload.options)
-        setMessage(payload.message ?? request.selectSession)
+
+        const preferredId =
+          initialTrainingId &&
+          payload.options.some(
+            (option: RegistrationOption) => option.trainingId === initialTrainingId
+          )
+            ? initialTrainingId
+            : payload.options.length === 1
+              ? payload.options[0].trainingId
+              : ''
+
+        setTrainingId(preferredId)
+        setPhase('select_session')
+        setMessage(request.selectSession)
         return
       }
 
-      setSessionOptions([])
+      setMessage(payload.message ?? request.noRegistrations)
+    } catch {
+      setError(request.networkError)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleSendConfirmation(event: React.FormEvent) {
+    event.preventDefault()
+    setMessage(null)
+    setError(null)
+
+    if (!trainingId) {
+      setError(request.sessionRequired)
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/unregister/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: checkedEmail,
+          program,
+          trainingId,
+        }),
+      })
+
+      const payload = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        setError(payload?.error ?? request.requestFailed)
+        return
+      }
+
+      setPhase('sent')
       setMessage(payload.message ?? UNREGISTER_ACK_MESSAGE)
     } catch {
       setError(request.networkError)
@@ -78,8 +137,14 @@ export default function UnregisterForm({
     }
   }
 
+  const isSelectingSession = phase === 'select_session'
+  const isSent = phase === 'sent'
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form
+      onSubmit={isSelectingSession ? handleSendConfirmation : handleCheckRegistrations}
+      className="space-y-5"
+    >
       <div>
         <label htmlFor="unregister-program" className="block text-sm font-medium">
           {request.programLabel}
@@ -89,11 +154,10 @@ export default function UnregisterForm({
           value={program}
           onChange={(e) => {
             setProgram(e.target.value as TrainingProgramId)
-            setSessionOptions([])
-            setTrainingId('')
+            resetToEmailStep()
           }}
           className="mt-1 w-full"
-          disabled={Boolean(initialProgram) || needsSessionPick}
+          disabled={Boolean(initialProgram) || isSelectingSession || isSent}
         >
           {programOptions.map((entry) => (
             <option key={entry.id} value={entry.id}>
@@ -103,45 +167,62 @@ export default function UnregisterForm({
         </select>
       </div>
 
-      {needsSessionPick ? (
+      {isSelectingSession || isSent ? (
+        <>
+          <div>
+            <div className="text-sm font-medium">{request.checkedEmailLabel}</div>
+            <p className="mt-1 text-sm text-slate-800">{checkedEmail}</p>
+            {!isSent ? (
+              <button
+                type="button"
+                className="mt-2 text-sm underline text-slate-700"
+                onClick={resetToEmailStep}
+              >
+                {request.changeEmail}
+              </button>
+            ) : null}
+          </div>
+
+          {!isSent ? (
+            <div>
+              <label htmlFor="unregister-session" className="block text-sm font-medium">
+                {request.sessionLabel}
+              </label>
+              <select
+                id="unregister-session"
+                value={trainingId}
+                onChange={(e) => setTrainingId(e.target.value)}
+                className="mt-1 w-full"
+                required
+              >
+                <option value="">{request.sessionPlaceholder}</option>
+                {sessionOptions.map((option) => (
+                  <option key={option.trainingId} value={option.trainingId}>
+                    {option.title}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-sm helper-text">{request.linkExpiryHint}</p>
+            </div>
+          ) : null}
+        </>
+      ) : (
         <div>
-          <label htmlFor="unregister-session" className="block text-sm font-medium">
-            {request.sessionLabel}
+          <label htmlFor="unregister-email" className="block text-sm font-medium">
+            {request.emailLabel}
           </label>
-          <select
-            id="unregister-session"
-            value={trainingId}
-            onChange={(e) => setTrainingId(e.target.value)}
+          <input
+            id="unregister-email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="mt-1 w-full"
             required
-          >
-            <option value="">{request.sessionPlaceholder}</option>
-            {sessionOptions.map((option) => (
-              <option key={option.trainingId} value={option.trainingId}>
-                {option.title}
-              </option>
-            ))}
-          </select>
+          />
         </div>
-      ) : null}
-
-      <div>
-        <label htmlFor="unregister-email" className="block text-sm font-medium">
-          {request.emailLabel}
-        </label>
-        <input
-          id="unregister-email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 w-full"
-          required
-          disabled={needsSessionPick && !trainingId}
-        />
-        <p className="mt-2 text-sm helper-text">{linkExpiryHint}</p>
-      </div>
+      )}
 
       {error ? (
         <p className="text-sm" style={{ color: 'var(--error-red)' }} role="alert">
@@ -154,13 +235,21 @@ export default function UnregisterForm({
         </p>
       ) : null}
 
-      <button type="submit" className="btn-primary" disabled={submitting}>
-        {submitting
-          ? request.submitSending
-          : needsSessionPick
-            ? request.submitSelectSession
-            : request.submitDefault}
-      </button>
+      {isSent ? (
+        <button type="button" className="btn-primary" onClick={resetToEmailStep}>
+          {request.startOver}
+        </button>
+      ) : (
+        <button type="submit" className="btn-primary" disabled={submitting}>
+          {submitting
+            ? isSelectingSession
+              ? request.submitSending
+              : request.submitChecking
+            : isSelectingSession
+              ? request.submitSendEmail
+              : request.submitCheck}
+        </button>
+      )}
     </form>
   )
 }

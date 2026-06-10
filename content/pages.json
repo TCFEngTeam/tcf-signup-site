@@ -45,21 +45,28 @@
     "page": {
       "eyebrow": "Registration",
       "title": "Cancel your registration",
-      "intro": "Enter the email you used to sign up. We will send a confirmation link; your registration is not cancelled until you confirm below."
+      "intro": "Enter the email you used to sign up and we'll show any active registrations for that program. You can then choose a session and we'll email you a link to confirm cancellation."
     },
     "request": {
       "programLabel": "Program",
       "sessionLabel": "Session",
       "sessionPlaceholder": "Select a session…",
       "emailLabel": "Email address",
-      "linkExpiryHint": "We will email you a secure link to confirm cancellation. The link expires after {hours} hours.",
+      "checkedEmailLabel": "Email",
+      "changeEmail": "Use a different email",
+      "linkExpiryHint": "We will email you a secure link to confirm cancellation. The link is valid until the end of your training session.",
       "invalidEmail": "Enter a valid email address.",
       "networkError": "Network error. Please try again.",
       "requestFailed": "Something went wrong. Please try again.",
-      "selectSession": "Select the session you want to cancel.",
+      "noRegistrations": "We didn't find any active registrations for this email and program.",
+      "notRegisteredForSession": "No active registration was found for that session.",
+      "selectSession": "Select the session you want to cancel, then we'll email you a confirmation link.",
+      "sessionRequired": "Select the session you want to cancel.",
+      "submitChecking": "Checking…",
+      "submitCheck": "Check for Registrations",
       "submitSending": "Sending…",
-      "submitSelectSession": "Send confirmation email",
-      "submitDefault": "Email me a confirmation link"
+      "submitSendEmail": "Email me a confirmation link",
+      "startOver": "Cancel another registration"
     },
     "confirm": {
       "invalidLinkTitle": "Invalid link",

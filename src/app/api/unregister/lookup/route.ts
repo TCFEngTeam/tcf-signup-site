@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
+import { pagesContent } from '@/lib/content'
 import { isTrainingProgramId } from '@/lib/programs/config'
-import { requestUnregisterEmail } from '@/lib/unregister/service'
+import { lookupUnregisterRegistrations } from '@/lib/unregister/service'
 import { checkRateLimit, getClientIp } from '@/lib/unregister/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
-const RATE_LIMIT_MAX = 8
+const RATE_LIMIT_MAX = 12
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000
 
 export async function POST(req: Request) {
@@ -13,15 +14,9 @@ export async function POST(req: Request) {
     const body = await req.json()
     const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : ''
     const program = typeof body?.program === 'string' ? body.program : ''
-    const trainingId =
-      typeof body?.trainingId === 'string' ? body.trainingId.trim() : ''
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
-    }
-
-    if (!trainingId) {
-      return NextResponse.json({ error: 'Session is required' }, { status: 400 })
     }
 
     if (!program || !isTrainingProgramId(program)) {
@@ -31,7 +26,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const rateKey = `${getClientIp(req)}:${program}:${email}`
+    const rateKey = `${getClientIp(req)}:lookup:${program}:${email}`
     if (!checkRateLimit(rateKey, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)) {
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.' },
@@ -39,12 +34,19 @@ export async function POST(req: Request) {
       )
     }
 
-    const result = await requestUnregisterEmail({ email, program, trainingId })
+    const result = await lookupUnregisterRegistrations({ email, program })
+
+    if (result.status === 'none') {
+      return NextResponse.json({
+        status: 'none',
+        message: pagesContent.unregister.request.noRegistrations,
+      })
+    }
 
     return NextResponse.json(result)
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Request failed'
-    console.error('[api/unregister/request]', error)
+    const message = error instanceof Error ? error.message : 'Lookup failed'
+    console.error('[api/unregister/lookup]', error)
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

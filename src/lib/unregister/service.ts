@@ -34,9 +34,11 @@ export type RegistrationOption = {
   title: string
 }
 
-export type RequestUnregisterResult =
-  | { status: 'sent'; message: string }
-  | { status: 'select_training'; options: RegistrationOption[]; message: string }
+export type LookupUnregisterResult =
+  | { status: 'found'; options: RegistrationOption[] }
+  | { status: 'none' }
+
+export type RequestUnregisterResult = { status: 'sent'; message: string }
 
 /** Same message whether or not the email exists (avoid account enumeration). */
 export const UNREGISTER_ACK_MESSAGE =
@@ -95,11 +97,10 @@ export async function listRegistrationsForProgram(
   return options.sort((a, b) => a.title.localeCompare(b.title))
 }
 
-export async function requestUnregisterEmail(input: {
+export async function lookupUnregisterRegistrations(input: {
   email: string
   program: string
-  trainingId?: string
-}): Promise<RequestUnregisterResult> {
+}): Promise<LookupUnregisterResult> {
   if (!isTrainingProgramId(input.program)) {
     throw new Error('Invalid program')
   }
@@ -116,32 +117,48 @@ export async function requestUnregisterEmail(input: {
 
   const contact = await getContactByEmail(email)
   if (!contact?.id) {
-    return { status: 'sent', message: UNREGISTER_ACK_MESSAGE }
+    return { status: 'none' }
   }
 
-  let trainingId = input.trainingId?.trim()
+  const options = await listRegistrationsForProgram(contact.id, programId)
+  if (options.length === 0) {
+    return { status: 'none' }
+  }
+
+  return { status: 'found', options }
+}
+
+export async function requestUnregisterEmail(input: {
+  email: string
+  program: string
+  trainingId: string
+}): Promise<RequestUnregisterResult> {
+  if (!isTrainingProgramId(input.program)) {
+    throw new Error('Invalid program')
+  }
+
+  const programId = input.program
+  if (!getTrainingProgram(programId)) {
+    throw new Error('Unknown program')
+  }
+
+  const email = formatEmail(input.email)
+  if (!email) {
+    throw new Error('Enter a valid email address')
+  }
+
+  const trainingId = input.trainingId?.trim()
+  if (!trainingId) {
+    throw new Error('Select a session to cancel')
+  }
+
+  const contact = await getContactByEmail(email)
+  if (!contact?.id || !(await isContactRegisteredForTraining(contact.id, trainingId))) {
+    throw new Error(pagesContent.unregister.request.notRegisteredForSession)
+  }
+
   let trainingTitle = eventLabels.untitledEvent
   let eventSchedule: TrainingSchedule | undefined
-
-  if (!trainingId) {
-    const options = await listRegistrationsForProgram(contact.id, programId)
-    if (options.length === 0) {
-      return { status: 'sent', message: UNREGISTER_ACK_MESSAGE }
-    }
-    if (options.length > 1) {
-      return {
-        status: 'select_training',
-        options,
-        message: pagesContent.unregister.request.selectSession,
-      }
-    }
-    trainingId = options[0].trainingId
-    trainingTitle = options[0].title
-  } else {
-    if (!(await isContactRegisteredForTraining(contact.id, trainingId))) {
-      return { status: 'sent', message: UNREGISTER_ACK_MESSAGE }
-    }
-  }
 
   const { event } = await loadProgramEventById(programId, trainingId)
   if (event) {

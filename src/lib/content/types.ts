@@ -143,14 +143,21 @@ export type PagesContent = {
       sessionLabel: string
       sessionPlaceholder: string
       emailLabel: string
+      checkedEmailLabel: string
+      changeEmail: string
       linkExpiryHint: string
       invalidEmail: string
       networkError: string
       requestFailed: string
+      noRegistrations: string
+      notRegisteredForSession: string
       selectSession: string
+      sessionRequired: string
+      submitChecking: string
+      submitCheck: string
       submitSending: string
-      submitSelectSession: string
-      submitDefault: string
+      submitSendEmail: string
+      startOver: string
     }
     confirm: {
       invalidLinkTitle: string
