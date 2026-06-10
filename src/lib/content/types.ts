@@ -151,6 +151,7 @@ export type PagesContent = {
       requestFailed: string
       noRegistrations: string
       notRegisteredForSession: string
+      sessionEnded: string
       selectSession: string
       sessionRequired: string
       submitChecking: string

@@ -50,6 +50,16 @@ export function getTrainingEventEndUnix(schedule: TrainingSchedule): number | nu
   return end ? Math.floor(end.getTime() / 1000) : null
 }
 
+/** True when the training session end datetime is in the past. */
+export function isTrainingEventEnded(
+  schedule: TrainingSchedule,
+  now: Date = new Date()
+): boolean {
+  const end = getTrainingEventEndDate(schedule)
+  if (!end) return false
+  return now.getTime() > end.getTime()
+}
+
 export function parseScheduleDateTime(value?: string): Date | null {
   if (!value?.trim()) return null
 

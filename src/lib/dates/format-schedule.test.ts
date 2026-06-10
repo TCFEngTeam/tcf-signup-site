@@ -6,6 +6,7 @@ import {
   getTrainingEventEndDate,
   getTrainingEventEndUnix,
   hasSecondTrainingSession,
+  isTrainingEventEnded,
 } from '@/lib/dates/format-schedule'
 
 const eastern = { timeZone: DEFAULT_SCHEDULE_TIME_ZONE }
@@ -119,6 +120,31 @@ describe('getTrainingEventEndDate', () => {
       session1End: '2026-06-03T22:00:00.000Z',
     }
     expect(getTrainingEventEndDate(schedule)?.toISOString()).toBe('2026-06-03T22:00:00.000Z')
+  })
+})
+
+describe('isTrainingEventEnded', () => {
+  it('returns true after the session end datetime', () => {
+    const schedule = { session1End: '2026-06-03T22:00:00.000Z' }
+    const beforeEnd = new Date('2026-06-03T21:00:00.000Z')
+    const afterEnd = new Date('2026-06-03T23:00:00.000Z')
+    expect(isTrainingEventEnded(schedule, beforeEnd)).toBe(false)
+    expect(isTrainingEventEnded(schedule, afterEnd)).toBe(true)
+  })
+
+  it('uses the second session end when present', () => {
+    const schedule = {
+      session1End: '2026-06-03T22:00:00.000Z',
+      session2End: '2026-06-04T22:00:00.000Z',
+    }
+    const afterDayOne = new Date('2026-06-03T23:00:00.000Z')
+    const afterDayTwo = new Date('2026-06-04T23:00:00.000Z')
+    expect(isTrainingEventEnded(schedule, afterDayOne)).toBe(false)
+    expect(isTrainingEventEnded(schedule, afterDayTwo)).toBe(true)
+  })
+
+  it('returns false when no end date is available', () => {
+    expect(isTrainingEventEnded({}, new Date('2030-01-01T00:00:00.000Z'))).toBe(false)
   })
 })
 

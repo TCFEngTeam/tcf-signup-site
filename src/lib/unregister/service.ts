@@ -5,10 +5,14 @@ import {
   getRegistrantAssociationLabel,
   getTrainingById,
   isContactRegisteredForTraining,
+  mapTrainingToEvent,
   unregisterContactFromTraining,
 } from '@/lib/hubspot/api'
 import { pagesContent } from '@/lib/content'
-import type { TrainingSchedule } from '@/lib/dates/format-schedule'
+import {
+  isTrainingEventEnded,
+  type TrainingSchedule,
+} from '@/lib/dates/format-schedule'
 import { formatEmail } from '@/lib/signup/format-fields'
 import {
   getProgramPipelineConfig,
@@ -61,6 +65,24 @@ function trainingMatchesProgram(
   return (training.properties.hs_pipeline ?? '').trim() === pipelineType.trim()
 }
 
+async function getTrainingScheduleForUnregister(
+  programId: TrainingProgramId,
+  trainingId: string
+): Promise<TrainingSchedule | undefined> {
+  const { event } = await loadProgramEventById(programId, trainingId)
+  if (event) return event.schedule
+
+  const training = await getTrainingById(trainingId)
+  if (training) return mapTrainingToEvent(training).schedule
+
+  return undefined
+}
+
+function isUnregisterableTraining(schedule?: TrainingSchedule): boolean {
+  if (!schedule) return true
+  return !isTrainingEventEnded(schedule)
+}
+
 export async function listRegistrationsForProgram(
   contactId: string,
   programId: TrainingProgramId
@@ -88,6 +110,10 @@ export async function listRegistrationsForProgram(
   for (const trainingId of uniqueIds) {
     const training = await getTrainingById(trainingId)
     if (!training || !trainingMatchesProgram(training, programId)) continue
+
+    const schedule = mapTrainingToEvent(training).schedule
+    if (!isUnregisterableTraining(schedule)) continue
+
     options.push({
       trainingId,
       title: readTrainingTitle(training),
@@ -157,13 +183,16 @@ export async function requestUnregisterEmail(input: {
     throw new Error(pagesContent.unregister.request.notRegisteredForSession)
   }
 
+  const eventSchedule = await getTrainingScheduleForUnregister(programId, trainingId)
+  if (!isUnregisterableTraining(eventSchedule)) {
+    throw new Error(pagesContent.unregister.request.sessionEnded)
+  }
+
   let trainingTitle = eventLabels.untitledEvent
-  let eventSchedule: TrainingSchedule | undefined
 
   const { event } = await loadProgramEventById(programId, trainingId)
   if (event) {
     trainingTitle = event.title
-    eventSchedule = event.schedule
   } else {
     const training = await getTrainingById(trainingId)
     if (training) {
@@ -194,6 +223,14 @@ export async function requestUnregisterEmail(input: {
 
 export async function confirmUnregister(token: string) {
   const payload = verifyUnregisterToken(token)
+
+  const eventSchedule = await getTrainingScheduleForUnregister(
+    payload.program,
+    payload.trainingId
+  )
+  if (!isUnregisterableTraining(eventSchedule)) {
+    throw new Error(pagesContent.unregister.request.sessionEnded)
+  }
 
   const contact = await getContactByEmail(payload.email)
   if (!contact?.id) {

@@ -60,6 +60,7 @@
       "requestFailed": "Something went wrong. Please try again.",
       "noRegistrations": "We didn't find any active registrations for this email and program.",
       "notRegisteredForSession": "No active registration was found for that session.",
+      "sessionEnded": "This session has already ended and can no longer be cancelled online.",
       "selectSession": "Select the session you want to cancel, then we'll email you a confirmation link.",
       "sessionRequired": "Select the session you want to cancel.",
       "submitChecking": "Checking…",
