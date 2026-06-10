@@ -37,6 +37,19 @@ export function getTrainingSchedulePropertyKeys() {
   }
 }
 
+/** End of the training session — prefers day 2 end when present. */
+export function getTrainingEventEndDate(schedule: TrainingSchedule): Date | null {
+  return (
+    parseScheduleDateTime(schedule.session2End) ??
+    parseScheduleDateTime(schedule.session1End)
+  )
+}
+
+export function getTrainingEventEndUnix(schedule: TrainingSchedule): number | null {
+  const end = getTrainingEventEndDate(schedule)
+  return end ? Math.floor(end.getTime() / 1000) : null
+}
+
 export function parseScheduleDateTime(value?: string): Date | null {
   if (!value?.trim()) return null
 

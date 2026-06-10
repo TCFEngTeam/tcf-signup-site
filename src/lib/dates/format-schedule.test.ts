@@ -3,6 +3,8 @@ import {
   DEFAULT_SCHEDULE_TIME_ZONE,
   formatTrainingScheduleLines,
   getScheduleSortDate,
+  getTrainingEventEndDate,
+  getTrainingEventEndUnix,
   hasSecondTrainingSession,
 } from '@/lib/dates/format-schedule'
 
@@ -97,6 +99,26 @@ describe('hasSecondTrainingSession', () => {
         session2End: '',
       })
     ).toBe(false)
+  })
+})
+
+describe('getTrainingEventEndDate', () => {
+  it('prefers the second session end when present', () => {
+    const schedule = {
+      session1End: '2026-06-03T22:00:00.000Z',
+      session2End: '2026-06-04T22:00:00.000Z',
+    }
+    expect(getTrainingEventEndDate(schedule)?.toISOString()).toBe('2026-06-04T22:00:00.000Z')
+    expect(getTrainingEventEndUnix(schedule)).toBe(
+      Math.floor(new Date('2026-06-04T22:00:00.000Z').getTime() / 1000)
+    )
+  })
+
+  it('falls back to the first session end', () => {
+    const schedule = {
+      session1End: '2026-06-03T22:00:00.000Z',
+    }
+    expect(getTrainingEventEndDate(schedule)?.toISOString()).toBe('2026-06-03T22:00:00.000Z')
   })
 })
 

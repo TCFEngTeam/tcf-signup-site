@@ -24,7 +24,7 @@
     "locationHeading": "Location",
     "nextStepsHeading": "What's next",
     "viewEventLink": "View event details",
-    "cancelRegistrationIntro": "Need to cancel? Request a cancellation here:",
+    "cancelRegistrationIntro": "Need to cancel? Use this link (valid until {cancelLinkExpiry}):",
     "cancelRegistrationLink": "Cancel your registration",
     "closing": "We look forward to seeing you."
   },

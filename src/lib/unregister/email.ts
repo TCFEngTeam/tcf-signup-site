@@ -8,6 +8,7 @@ type SendUnregisterEmailInput = {
   token: string
   program: TrainingProgramId
   trainingTitle: string
+  linkExpiresAt: string
 }
 
 export async function sendUnregisterConfirmationEmail(input: SendUnregisterEmailInput) {
@@ -21,7 +22,7 @@ export async function sendUnregisterConfirmationEmail(input: SendUnregisterEmail
     ``,
     `${input.trainingTitle} (${programLabel})`,
     ``,
-    `Confirm cancellation (link expires in ${process.env.UNREGISTER_TOKEN_TTL_HOURS ?? '48'} hours):`,
+    `Confirm cancellation (link valid until ${input.linkExpiresAt}):`,
     confirmUrl,
     ``,
     `If you did not request this, you can ignore this email.`,
@@ -30,6 +31,7 @@ export async function sendUnregisterConfirmationEmail(input: SendUnregisterEmail
   const html = `
     <p>You asked to cancel your registration for:</p>
     <p><strong>${escapeHtml(input.trainingTitle)}</strong> (${escapeHtml(programLabel)})</p>
+    <p>This link is valid until ${escapeHtml(input.linkExpiresAt)}.</p>
     <p><a href="${escapeHtml(confirmUrl)}">Confirm cancellation</a></p>
     <p>If you did not request this, you can ignore this email.</p>
   `.trim()

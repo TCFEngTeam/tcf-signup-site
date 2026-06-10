@@ -10,6 +10,7 @@ import type { TrainingSchedule } from '@/lib/dates/format-schedule'
 import { getTrainingCutoffPropertyKey, getTrainingSchedulePropertyKeys } from '@/lib/dates/format-schedule'
 import {
   contactHasRegistrantAssociation,
+  findCancelledAssociationsForTraining,
   findRegistrantAssociationsForTraining,
   hasCancelledAssociation,
   isDuplicateAssociationResponse,
@@ -160,7 +161,9 @@ export async function isContactRegisteredForTraining(
       associations,
       trainingId,
       getRegistrantAssociationLabel(),
-      getRegistrantAssociationTypeId()
+      getRegistrantAssociationTypeId(),
+      getCancelledAssociationLabel(),
+      getCancelledAssociationTypeId()
     ).length > 0
   )
 }
@@ -387,7 +390,9 @@ export async function unregisterContactFromTraining(
     associations,
     trainingId,
     registrantLabel,
-    getRegistrantAssociationTypeId()
+    getRegistrantAssociationTypeId(),
+    cancelledLabel,
+    getCancelledAssociationTypeId()
   )
 
   if (registrantRows.length === 0) {
@@ -653,6 +658,17 @@ export async function associateContactToTraining(contactId: string, trainingId: 
 
   if (await isContactRegisteredForTraining(contactId, trainingId)) {
     throw new AlreadyRegisteredError()
+  }
+
+  const associations = await getContactTrainingAssociations(contactId)
+  const cancelledRows = findCancelledAssociationsForTraining(
+    associations,
+    trainingId,
+    getCancelledAssociationLabel(),
+    getCancelledAssociationTypeId()
+  )
+  for (const row of cancelledRows) {
+    await archiveContactTrainingAssociation(contactId, trainingId, row)
   }
 
   const trainingObjectType = getTrainingObjectType()

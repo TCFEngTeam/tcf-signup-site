@@ -1,4 +1,9 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
+import {
+  DEFAULT_SCHEDULE_TIME_ZONE,
+  getTrainingEventEndUnix,
+  type TrainingSchedule,
+} from '@/lib/dates/format-schedule'
 import { isTrainingProgramId, type TrainingProgramId } from '@/lib/programs/config'
 import { getUnregisterTokenSecret, getUnregisterTokenTtlHours } from '@/lib/unregister/config'
 
@@ -29,10 +34,29 @@ function sign(encodedPayload: string) {
     .digest('base64url')
 }
 
+export function resolveUnregisterTokenExpiry(schedule?: TrainingSchedule): number {
+  const now = Math.floor(Date.now() / 1000)
+  const eventEnd = schedule ? getTrainingEventEndUnix(schedule) : null
+  if (eventEnd && eventEnd > now) return eventEnd
+  return now + getUnregisterTokenTtlHours() * 60 * 60
+}
+
+export function formatUnregisterTokenExpiry(
+  exp: number,
+  timeZone: string = DEFAULT_SCHEDULE_TIME_ZONE
+): string {
+  return new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'long',
+    timeStyle: 'short',
+    timeZone,
+  }).format(new Date(exp * 1000))
+}
+
 export function createUnregisterToken(
-  payload: Omit<UnregisterTokenPayload, 'exp' | 'jti'>
+  payload: Omit<UnregisterTokenPayload, 'exp' | 'jti'>,
+  options?: { expiresAt?: number }
 ) {
-  const exp = Math.floor(Date.now() / 1000) + getUnregisterTokenTtlHours() * 60 * 60
+  const exp = options?.expiresAt ?? resolveUnregisterTokenExpiry()
   const body: UnregisterTokenPayload = {
     ...payload,
     jti: createTokenJti(),

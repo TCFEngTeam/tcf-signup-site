@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import {
   contactHasRegistrantAssociation,
   contactHasTrainingAssociation,
+  findCancelledAssociationsForTraining,
   findRegistrantAssociationsForTraining,
   hasCancelledAssociation,
   isDuplicateAssociationResponse,
@@ -97,6 +98,31 @@ describe('findRegistrantAssociationsForTraining', () => {
     expect(
       findRegistrantAssociationsForTraining(rows, '222', 'registrant')
     ).toEqual(rows)
+  })
+
+  it('does not treat a cancelled-only association as registrant', () => {
+    const rows = [{ trainingId: '222', associationType: 'unregistered' }]
+    expect(
+      findRegistrantAssociationsForTraining(
+        rows,
+        '222',
+        'registrant',
+        undefined,
+        'unregistered'
+      )
+    ).toEqual([])
+  })
+})
+
+describe('findCancelledAssociationsForTraining', () => {
+  it('returns cancelled label rows for a training', () => {
+    const rows = [
+      { trainingId: '222', associationType: 'registrant' },
+      { trainingId: '222', associationType: 'unregistered' },
+    ]
+    expect(
+      findCancelledAssociationsForTraining(rows, '222', 'unregistered')
+    ).toEqual([{ trainingId: '222', associationType: 'unregistered' }])
   })
 })
 

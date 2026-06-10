@@ -115,12 +115,31 @@ export function contactHasRegistrantAssociation(
   return contactHasTrainingAssociation(associations, trainingId, registrantLabel)
 }
 
+export function findCancelledAssociationsForTraining(
+  rows: TrainingAssociationRow[],
+  trainingId: string,
+  cancelledLabel: string,
+  cancelledTypeId?: string
+): TrainingAssociationRow[] {
+  return rows.filter(
+    (row) =>
+      row.trainingId === String(trainingId) &&
+      matchesAssociationLabel(row, cancelledLabel, cancelledTypeId)
+  )
+}
+
 export function findRegistrantAssociationsForTraining(
   rows: TrainingAssociationRow[],
   trainingId: string,
   registrantLabel: string,
-  registrantTypeId?: string
+  registrantTypeId?: string,
+  cancelledLabel?: string,
+  cancelledTypeId?: string
 ): TrainingAssociationRow[] {
+  const isCancelled = (row: TrainingAssociationRow) =>
+    cancelledLabel !== undefined &&
+    matchesAssociationLabel(row, cancelledLabel, cancelledTypeId)
+
   const matches = rows.filter(
     (row) =>
       row.trainingId === String(trainingId) &&
@@ -129,8 +148,10 @@ export function findRegistrantAssociationsForTraining(
 
   if (matches.length > 0) return matches
 
-  // Single association to this training — treat as registrant when label matching fails.
-  const forTraining = rows.filter((row) => row.trainingId === String(trainingId))
+  // Single non-cancelled association — treat as registrant when label matching fails.
+  const forTraining = rows.filter(
+    (row) => row.trainingId === String(trainingId) && !isCancelled(row)
+  )
   if (forTraining.length === 1) return forTraining
 
   return []

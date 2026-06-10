@@ -1,6 +1,10 @@
 import { createHmac } from 'crypto'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { createUnregisterToken, verifyUnregisterToken } from '@/lib/unregister/token'
+import {
+  createUnregisterToken,
+  resolveUnregisterTokenExpiry,
+  verifyUnregisterToken,
+} from '@/lib/unregister/token'
 
 describe('unregister token', () => {
   beforeEach(() => {
@@ -35,6 +39,29 @@ describe('unregister token', () => {
     const b = createUnregisterToken(input)
     expect(a).not.toBe(b)
     expect(verifyUnregisterToken(a).jti).not.toBe(verifyUnregisterToken(b).jti)
+  })
+
+  it('uses event end time when provided', () => {
+    const eventEnd = Math.floor(new Date('2030-06-04T22:00:00.000Z').getTime() / 1000)
+    const token = createUnregisterToken(
+      {
+        email: 'user@example.com',
+        program: 'mhfa',
+        trainingId: '999',
+      },
+      { expiresAt: eventEnd }
+    )
+    expect(verifyUnregisterToken(token).exp).toBe(eventEnd)
+  })
+
+  it('resolveUnregisterTokenExpiry prefers second session end', () => {
+    const eventEnd = Math.floor(new Date('2030-06-04T22:00:00.000Z').getTime() / 1000)
+    expect(
+      resolveUnregisterTokenExpiry({
+        session1End: '2030-06-03T22:00:00.000Z',
+        session2End: '2030-06-04T22:00:00.000Z',
+      })
+    ).toBe(eventEnd)
   })
 
   it('rejects tampered tokens', () => {
