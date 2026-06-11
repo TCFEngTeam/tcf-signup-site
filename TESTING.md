@@ -17,12 +17,15 @@ npm run test:watch
 ### What is covered
 
 | Area | Test file |
-|---|---|
+|------|-----------|
 | Form normalization (names, email, phone, HubSpot yes/no) | `src/lib/signup/format-fields.test.ts` |
 | Event list sorting | `src/lib/programs/sort.test.ts` |
-| HubSpot field mappers (SMS consent IDs, duplicate association detection) | `src/lib/hubspot/field-mappers.test.ts` |
+| HubSpot field mappers (SMS consent IDs, association parsing) | `src/lib/hubspot/field-mappers.test.ts` |
+| HubSpot config (`config/hubspot.json` loads correctly) | `src/lib/hubspot/config.test.ts` |
 | Training object → app event mapping | `src/lib/programs/events.test.ts` |
-| Program config (MHFA/QPR, pipeline env) | `src/lib/programs/config.test.ts` |
+| Program config (MHFA/QPR pipelines from config) | `src/lib/programs/config.test.ts` |
+| Schedule / event end date helpers | `src/lib/dates/format-schedule.test.ts` |
+| Unregister token signing | `src/lib/unregister/token.test.ts` |
 | Signup API validation and error paths (mocked HubSpot) | `src/app/api/signup/route.test.ts` |
 
 Shared signup payloads live in `src/test/fixtures/signup.ts`.
@@ -33,21 +36,47 @@ Shared signup payloads live in `src/test/fixtures/signup.ts`.
 - For API routes, **mock** `@/lib/hubspot/api` and `@/lib/programs/events` (see `route.test.ts`).
 - Do not call the real HubSpot API in CI or local `npm test`.
 
+---
+
 ## Manual / integration testing (HubSpot)
 
-Requires `.env.local` with a valid `HUBSPOT_API_KEY` and pipeline variables.
+Requires `.env.local` with at least:
+
+```env
+HUBSPOT_API_KEY=...
+UNREGISTER_TOKEN_SECRET=...
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+Optional for real emails: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`.
+
+Pipeline and property wiring comes from **`config/hubspot.json`** (not env vars).
+
+### Signup
 
 1. `npm run dev`
 2. Open `/mhfa` or `/qpr` (root `/` redirects to the marketing site)
-3. Confirm events load from HubSpot (not empty unless pipeline stage is wrong)
+3. Confirm events load from HubSpot (not empty unless pipeline stage in `config/hubspot.json` is wrong)
 4. Open an event → submit the form with a **new** email
 5. Confirm redirect to `/{program}/events/{id}/success`
-6. Submit again with the **same** email → should show “already registered” (409)
-7. In HubSpot, verify contact properties and training association
+6. Check confirmation email (or server console log in dev)
+7. Submit again with the **same** email → should show “already registered” (409)
+8. In HubSpot, verify contact properties and `registrant` training association
+
+### Unregister
+
+1. Open `/unregister?program=mhfa`
+2. Enter email with an active registration → **Check for Registrations** → session appears
+3. **Email me a confirmation link** → open link → **Yes, cancel my registration**
+4. In HubSpot: `registrant` removed (or `unregistered` label if `relabel` mode)
+5. Sign up again with same email → should succeed (no duplicate-label issue)
+6. Past trainings should **not** appear in unregister lookup
 
 ### Pipeline troubleshooting
 
-If no events appear, the training records may be in a different `hs_pipeline_stage` than your env vars. Use HubSpot to compare stage IDs with `HUBSPOT_*_PIPELINE_STAGE` in `.env.local`.
+If no events appear, compare HubSpot training `hs_pipeline_stage` IDs with `programs.mhfa` / `programs.qpr` in **`config/hubspot.json`**.
+
+---
 
 ## Removed dev-only surfaces
 

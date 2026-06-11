@@ -1,6 +1,6 @@
 # TCF Event Signup Site — Planning & Context
 
-Last updated: **2026-06-02** — verified against codebase; maintainability priority added.
+Last updated: **2026-06-03** — HubSpot wiring moved to `config/hubspot.json`; unregister + Resend emails documented.
 
 This document captures product decisions, known gaps, security notes, and a prioritized roadmap. Use it alongside `REQUIREMENTS.md` (original spec) when picking up future work.
 
@@ -18,7 +18,10 @@ This document captures product decisions, known gaps, security notes, and a prio
 | `profile-store` autofill (load on mount, save after success) | Confirmed |
 | `CapacityIndicator` on cards + detail | Confirmed |
 | Event-specific success page | Confirmed |
-| SMS consent → HubSpot (`HUBSPOT_SMS_CONSENT_*`) | Confirmed |
+| SMS consent → HubSpot (`config/hubspot.json` → `smsConsent`) | Confirmed |
+| Unregister flow (`/unregister`, token confirm, relabel mode) | Confirmed |
+| Signup + unregister emails via Resend | Confirmed |
+| HubSpot portal wiring in `config/hubspot.json` (not env vars) | Confirmed |
 | Vitest + `TESTING.md`; no `/preview` or mock signup routes | Confirmed |
 | Listing sort | **Soonest upcoming first** (see [Sort order](#sort-order)) |
 | Branding, SMS policy URLs, rate limiting, search/filters | Still open |
@@ -39,7 +42,8 @@ The site is a **Next.js 16** public signup app. Events and registrations flow th
 - Form validation, phone formatting (+1 US-style), country code picker
 - Success page after signup (`/[program]/events/[id]/success`) with event title/schedule
 - Browser autofill via `src/lib/signup/profile-store.ts`
-- Env vars configured locally and on Vercel
+- HubSpot portal config in `config/hubspot.json`; secrets in `.env.local` / Vercel
+- Unregister at `/unregister` + `/unregister/confirm`; signup/cancel emails via Resend
 
 **Root `/`:** redirects to the TCF youth mental health program page on the main marketing site. HubSpot/marketing pages should link directly to `/mhfa` or `/qpr`.
 
@@ -51,7 +55,7 @@ The site is a **Next.js 16** public signup app. Events and registrations flow th
 
 | Topic | Decision |
 |---|---|
-| HubSpot env vars | Set in local `.env` and Vercel |
+| HubSpot portal wiring | `config/hubspot.json` (committed); only `HUBSPOT_API_KEY` in env |
 | Event visibility | Filter by HubSpot pipeline stage/type — current approach is acceptable |
 | Capacity | HubSpot calculates availability via contact ↔ training associations (specific label); site reads `available_capacity` |
 | HubSpot sync failure | **User must see an error** (not silent success) |
@@ -66,8 +70,9 @@ The site is a **Next.js 16** public signup app. Events and registrations flow th
 | Mobile layout | Form fields should **stack on mobile** (email/phone, name, etc.) |
 | Phone / international | Mostly US audience; +1-only display on closed country picker is fine |
 | Admin | **HubSpot only** — no admin UI on this site |
-| Confirmation emails | TBD — investigate HubSpot workflows |
-| Multi-program split | **Done:** `/mhfa` and `/qpr`, separate pipeline env vars per program |
+| Confirmation emails | **Done:** Resend on signup; copy in `content/signup-form.json` |
+| Cancel registration | **Done:** `/unregister` + signed confirm links; see `UNREGISTER.md` |
+| Multi-program split | **Done:** `/mhfa` and `/qpr`, separate pipeline blocks in `config/hubspot.json` |
 | Preview / mock routes | **Removed** — use `npm test` and manual HubSpot checks (`TESTING.md`) |
 | Branding | Placeholders compiled below — team to supply real assets/links |
 
@@ -193,26 +198,31 @@ Team action needed — replace placeholders with real assets/links.
 
 ---
 
-## HubSpot environment variables (reference)
+## HubSpot configuration (reference)
 
-Configured locally + Vercel. Do not commit values to git.
+### Secrets & deployment (`.env.local` / Vercel)
+
+See `.env.template`. Do not commit real values.
 
 | Variable | Purpose |
 |---|---|
 | `HUBSPOT_API_KEY` | Private app token for CRM API |
-| `HUBSPOT_MHFA_PIPELINE_STAGE` | MHFA training visibility filter |
-| `HUBSPOT_MHFA_PIPELINE_TYPE` | MHFA pipeline (`hs_pipeline`) filter |
-| `HUBSPOT_QPR_PIPELINE_STAGE` | QPR training visibility filter |
-| `HUBSPOT_QPR_PIPELINE_TYPE` | QPR pipeline (`hs_pipeline`) filter |
-| `HUBSPOT_TRAINING_OBJECT_ID` | Custom training object type (default `0-410`) |
-| `HUBSPOT_TRAINING_PROPERTIES` | Comma-separated properties to fetch |
-| `HUBSPOT_TRAINING_ASSOCIATION_LABEL` | Contact → training association type (default `registrant`) |
-| `HUBSPOT_*_PROPERTY` | Contact field mappings (firstname, email, phone, etc.) |
+| `UNREGISTER_TOKEN_SECRET` | HMAC secret for cancel-registration links |
+| `RESEND_API_KEY` / `RESEND_FROM_EMAIL` | Signup and unregister transactional email |
+| `NEXT_PUBLIC_APP_URL` | Base URL in email links |
 
-**Legacy (MHFA fallback only):** `HUBSPOT_TRAINING_PIPELINE_STAGE` / `HUBSPOT_TRAINING_PIPELINE_TYPE` are used if the MHFA-specific vars are unset.
+### Portal wiring (`config/hubspot.json`)
 
-**Not yet mapped to HubSpot (collected in form):**
-- ~~`smsConsent`~~ — mapped via `src/lib/hubspot/field-mappers.ts` (see `HUBSPOT_SMS_CONSENT_*` env vars)
+Committed to git. Loaded by `src/lib/hubspot/config.ts`. See `config/README.md`.
+
+| Section | Purpose |
+|---|---|
+| `training` | Object ID, fetched properties, schedule/cutoff field names |
+| `programs.mhfa` / `programs.qpr` | Pipeline type, open stage, closed stage |
+| `associations` | `registrant`, `cancelled`, optional type IDs |
+| `contactProperties` | Form field → HubSpot contact property internal names |
+| `smsConsent` | SMS consent property + yes/no option values |
+| `unregister.mode` | `remove` or `relabel` after cancellation |
 
 **Removed from form but still in API types:**
 - `trainingDates` — in `ContactData`; not on form
@@ -243,7 +253,7 @@ Configured locally + Vercel. Do not commit values to git.
 
 ### Later / optional
 13. Search/filters — only if event volume grows.
-14. Confirmation emails — HubSpot workflow research (team).
+14. ~~Confirmation emails~~ — Resend (signup + unregister); optional duplicate HubSpot workflows (team).
 15. Duplicate signup policy across events — team confirmation pending.
 
 ### Code quality
@@ -265,7 +275,7 @@ Configured locally + Vercel. Do not commit values to git.
 - Strip/gate mock & preview for production → **Vitest** (`npm test`) + `TESTING.md`
 
 ### Phase 2 — Multi-program (MHFA / QPR) ✅
-- Program config (pipeline env vars per program)
+- Program config (pipeline blocks in `config/hubspot.json`)
 - `/mhfa` and `/qpr` listing routes
 - Program-specific page copy and metadata
 - Event detail/signup scoped to program (pipeline filter on fetch)
@@ -275,7 +285,7 @@ Configured locally + Vercel. Do not commit values to git.
 ### Phase 3 — UX polish (mostly done)
 - ~~Mobile stacking layout~~ (`grid-cols-1 sm:grid-cols-2` on form rows)
 - ~~Event-specific success confirmation~~
-- ~~SMS consent → HubSpot property~~ (`HUBSPOT_SMS_CONSENT_PROPERTY`, default `sms_consent`)
+- ~~SMS consent → HubSpot property~~ (`config/hubspot.json` → `smsConsent`)
 - Branding placeholders → real links/assets (**remaining**)
 
 ### Phase 4 — Maintainability, hardening & optional features
@@ -293,7 +303,7 @@ When new fields are needed:
 1. Add to `SignupFormData` in `src/lib/signup/format-fields.ts`
 2. Add UI + validation in `src/components/signup/EventSignupForm.tsx`
 3. Add server validation in `src/app/api/signup/route.ts`
-4. Map property in `mapContactProperties()` in `src/lib/hubspot/api.ts` + env var for HubSpot property name
+4. Add HubSpot internal name under `contactProperties` in `config/hubspot.json`; wire in `mapContactProperties()` if needed
 5. Include in `src/lib/signup/profile-store.ts` save/load if it should autofill
 6. Update test fixtures in `src/test/fixtures/` when form fields change
 
@@ -304,8 +314,8 @@ Keep field labels, validation rules, and HubSpot mapping colocated or documented
 ## Open items for team
 
 - [ ] Confirm duplicate signups (same email, multiple events) policy
-- [ ] HubSpot workflow for confirmation emails
-- [x] QPR route naming and pipeline env var strategy — `/mhfa`, `/qpr`, separate env vars per program
+- [ ] Optional HubSpot workflow for duplicate confirmation notifications
+- [x] QPR route naming and pipeline config — `/mhfa`, `/qpr`, `config/hubspot.json`
 - [ ] Provide SMS Terms + Privacy Policy URLs
 - [ ] Provide logo, favicon, nav structure, footer content
 - [ ] Decide bot/spam protection for public signup endpoint
@@ -318,15 +328,20 @@ Keep field labels, validation rules, and HubSpot mapping colocated or documented
 | File | Role |
 |---|---|
 | `content/` | Editable copy: `site.json`, `signup-form.json`, `pages.json`, `programs/*.json` |
+| `config/hubspot.json` | HubSpot portal wiring (pipelines, properties, associations) |
+| `config/README.md` | How to edit HubSpot config |
 | `content/README.md` | How to edit copy without code |
 | `MAINTENANCE.md` | Plain-language ops runbook |
+| `UNREGISTER.md` | Cancel registration flow |
 | `REQUIREMENTS.md` | Original spec, wireframes, open questions |
 | `src/lib/content/` | Loads `content/*.json` for the app |
 | `src/lib/hubspot/api.ts` | HubSpot CRM integration |
 | `src/lib/hubspot/field-mappers.ts` | HubSpot option IDs, association helpers |
 | `src/lib/signup/format-fields.ts` | Form normalization + phone formatting |
 | `src/lib/signup/profile-store.ts` | Browser autofill (localStorage) |
-| `src/lib/programs/config.ts` | MHFA/QPR program config and pipeline env |
+| `src/lib/hubspot/config.ts` | Loads `config/hubspot.json` |
+| `src/lib/programs/config.ts` | MHFA/QPR program config and pipeline from HubSpot config |
+| `src/lib/unregister/` | Cancel registration service, tokens, email |
 | `src/lib/programs/events.ts` | Fetch and map trainings to app events |
 | `src/lib/phone/country-codes.ts` | Country dial codes |
 | `src/components/signup/EventSignupForm.tsx` | Signup form UI |
