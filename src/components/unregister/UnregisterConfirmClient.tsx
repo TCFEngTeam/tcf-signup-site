@@ -83,9 +83,6 @@ export default function UnregisterConfirmClient({
 
   return (
     <div>
-      <h2 className="text-xl font-semibold" style={{ color: 'var(--dark-green)' }}>
-        {confirm.previewTitle}
-      </h2>
       <p className="mt-3">
         {confirm.previewIntro}{' '}
         <strong>{trainingTitle}</strong>
