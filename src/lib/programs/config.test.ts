@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
+import { hubspotConfig } from '@/lib/hubspot/config'
 import {
   getProgramPipelineConfig,
   getTrainingProgram,
@@ -6,17 +7,6 @@ import {
 } from '@/lib/programs/config'
 
 describe('trainingPrograms', () => {
-  afterEach(() => {
-    delete process.env.HUBSPOT_MHFA_PIPELINE_STAGE
-    delete process.env.HUBSPOT_MHFA_PIPELINE_TYPE
-    delete process.env.HUBSPOT_MHFA_CLOSED_PIPELINE_STAGE
-    delete process.env.HUBSPOT_QPR_PIPELINE_STAGE
-    delete process.env.HUBSPOT_QPR_PIPELINE_TYPE
-    delete process.env.HUBSPOT_QPR_CLOSED_PIPELINE_STAGE
-    delete process.env.HUBSPOT_TRAINING_PIPELINE_STAGE
-    delete process.env.HUBSPOT_TRAINING_PIPELINE_TYPE
-  })
-
   it('recognizes program ids', () => {
     expect(isTrainingProgramId('mhfa')).toBe(true)
     expect(isTrainingProgramId('qpr')).toBe(true)
@@ -30,26 +20,8 @@ describe('trainingPrograms', () => {
     expect(qpr?.successNextSteps.some((step) => step.includes('1-hour'))).toBe(true)
   })
 
-  it('uses MHFA-specific pipeline env vars with legacy fallback', () => {
-    process.env.HUBSPOT_MHFA_PIPELINE_STAGE = 'mhfa-stage'
-    process.env.HUBSPOT_MHFA_PIPELINE_TYPE = 'mhfa-type'
-
-    process.env.HUBSPOT_MHFA_CLOSED_PIPELINE_STAGE = 'mhfa-closed'
-
-    expect(getProgramPipelineConfig('mhfa')).toEqual({
-      pipelineStage: 'mhfa-stage',
-      pipelineType: 'mhfa-type',
-      closedPipelineStage: 'mhfa-closed',
-    })
-  })
-
-  it('uses QPR pipeline env vars only', () => {
-    process.env.HUBSPOT_QPR_PIPELINE_STAGE = 'qpr-stage'
-    process.env.HUBSPOT_QPR_PIPELINE_TYPE = 'qpr-type'
-
-    expect(getProgramPipelineConfig('qpr')).toEqual({
-      pipelineStage: 'qpr-stage',
-      pipelineType: 'qpr-type',
-    })
+  it('reads pipeline settings from config/hubspot.json', () => {
+    expect(getProgramPipelineConfig('mhfa')).toEqual(hubspotConfig.programs.mhfa)
+    expect(getProgramPipelineConfig('qpr')).toEqual(hubspotConfig.programs.qpr)
   })
 })

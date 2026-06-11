@@ -1,5 +1,6 @@
 import { getProgramContent, type ProgramContentId } from '@/lib/content'
 import type { ProgramContent } from '@/lib/content/types'
+import { getProgramPipelineConfigFromHubSpot } from '@/lib/hubspot/config'
 
 export type TrainingProgramId = ProgramContentId
 
@@ -38,21 +39,5 @@ export function getTrainingProgram(programId: string): TrainingProgram | null {
 }
 
 export function getProgramPipelineConfig(programId: TrainingProgramId): ProgramPipelineConfig {
-  if (programId === 'mhfa') {
-    return {
-      pipelineStage:
-        process.env.HUBSPOT_MHFA_PIPELINE_STAGE ??
-        process.env.HUBSPOT_TRAINING_PIPELINE_STAGE,
-      pipelineType:
-        process.env.HUBSPOT_MHFA_PIPELINE_TYPE ??
-        process.env.HUBSPOT_TRAINING_PIPELINE_TYPE,
-      closedPipelineStage: process.env.HUBSPOT_MHFA_CLOSED_PIPELINE_STAGE,
-    }
-  }
-
-  return {
-    pipelineStage: process.env.HUBSPOT_QPR_PIPELINE_STAGE,
-    pipelineType: process.env.HUBSPOT_QPR_PIPELINE_TYPE,
-    closedPipelineStage: process.env.HUBSPOT_QPR_CLOSED_PIPELINE_STAGE,
-  }
+  return getProgramPipelineConfigFromHubSpot(programId)
 }

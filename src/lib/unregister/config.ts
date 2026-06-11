@@ -1,8 +1,9 @@
+import { getUnregisterHubSpotModeFromConfig } from '@/lib/hubspot/config'
+
 export type UnregisterHubSpotMode = 'remove' | 'relabel'
 
 export function getUnregisterHubSpotMode(): UnregisterHubSpotMode {
-  const mode = process.env.UNREGISTER_HUBSPOT_MODE?.trim().toLowerCase()
-  return mode === 'relabel' ? 'relabel' : 'remove'
+  return getUnregisterHubSpotModeFromConfig()
 }
 
 export function getUnregisterTokenSecret(): string {

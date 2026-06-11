@@ -1,5 +1,9 @@
 import {
   getCancelledAssociationLabel,
+  getCancelledAssociationTypeId,
+  getRegistrantAssociationTypeId,
+} from '@/lib/hubspot/config'
+import {
   getContactByEmail,
   getContactTrainingAssociations,
   getRegistrantAssociationLabel,
@@ -88,7 +92,7 @@ export async function listRegistrationsForProgram(
   programId: TrainingProgramId
 ): Promise<RegistrationOption[]> {
   const registrantLabel = getRegistrantAssociationLabel()
-  const registrantTypeId = process.env.HUBSPOT_TRAINING_ASSOCIATION_TYPE_ID?.trim()
+  const registrantTypeId = getRegistrantAssociationTypeId()
   const associations = await getContactTrainingAssociations(contactId)
 
   const uniqueIds = [
@@ -101,7 +105,7 @@ export async function listRegistrationsForProgram(
         registrantLabel,
         registrantTypeId,
         getCancelledAssociationLabel(),
-        process.env.HUBSPOT_TRAINING_CANCELLED_ASSOCIATION_TYPE_ID?.trim()
+        getCancelledAssociationTypeId()
       ).length > 0
   )
 

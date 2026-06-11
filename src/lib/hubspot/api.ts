@@ -1,15 +1,24 @@
 /**
  * HubSpot API utilities for contact creation and association.
- * This is a framework implementation - property names and association details
- * should be configured in .env.local
+ * Portal wiring lives in config/hubspot.json; only HUBSPOT_API_KEY stays in .env.
  */
 
 import pagesJson from '../../../content/pages.json'
 import type { PagesContent } from '@/lib/content/types'
 import type { TrainingSchedule } from '@/lib/dates/format-schedule'
-import { getTrainingCutoffPropertyKey, getTrainingSchedulePropertyKeys } from '@/lib/dates/format-schedule'
+import { getTrainingCutoffPropertyKey, getTrainingSchedulePropertyKeys } from '@/lib/hubspot/config'
 import {
-  contactHasRegistrantAssociation,
+  getCancelledAssociationTypeId,
+  getContactPropertyKeys,
+  getHubSpotApiKey,
+  getRegistrantAssociationLabel,
+  getRegistrantAssociationTypeId,
+  getCancelledAssociationLabel,
+  getSmsConsentConfig,
+  getTrainingObjectId,
+  getTrainingProperties,
+} from '@/lib/hubspot/config'
+import {
   findNonRegistrantAssociationsForTraining,
   findRegistrantAssociationsForTraining,
   hasActiveRegistrantAssociation,
@@ -19,6 +28,11 @@ import {
   parseTrainingAssociationRows,
   type TrainingAssociationRow,
 } from '@/lib/hubspot/field-mappers'
+
+export {
+  getCancelledAssociationLabel,
+  getRegistrantAssociationLabel,
+} from '@/lib/hubspot/config'
 
 const eventLabels = (pagesJson as PagesContent).events
 
@@ -37,30 +51,11 @@ export class AlreadyRegisteredError extends Error {
 }
 
 function getTrainingObjectType() {
-  return process.env.HUBSPOT_TRAINING_OBJECT_ID || '0-410'
+  return getTrainingObjectId()
 }
 
 function getApiKey() {
-  return process.env.HUBSPOT_API_KEY
-}
-
-export function getRegistrantAssociationLabel() {
-  return process.env.HUBSPOT_TRAINING_ASSOCIATION_LABEL || 'registrant'
-}
-
-export function getCancelledAssociationLabel() {
-  return (
-    process.env.HUBSPOT_TRAINING_CANCELLED_ASSOCIATION_LABEL ||
-    'cancelled_registration'
-  )
-}
-
-function getRegistrantAssociationTypeId() {
-  return process.env.HUBSPOT_TRAINING_ASSOCIATION_TYPE_ID?.trim()
-}
-
-function getCancelledAssociationTypeId() {
-  return process.env.HUBSPOT_TRAINING_CANCELLED_ASSOCIATION_TYPE_ID?.trim()
+  return getHubSpotApiKey()
 }
 
 export interface ContactData {
@@ -124,26 +119,25 @@ function parseDateProperty(value?: string) {
 export { formatTrainingSchedule } from '@/lib/dates/format-schedule'
 
 /**
- * Maps form data to HubSpot contact properties using environment variables
+ * Maps form data to HubSpot contact properties from config/hubspot.json
  */
 function mapContactProperties(data: ContactData): { [key: string]: string } {
+  const keys = getContactPropertyKeys()
   const properties: { [key: string]: string } = {
-    [process.env.HUBSPOT_FIRST_NAME_PROPERTY || 'firstname']: data.firstName,
-    [process.env.HUBSPOT_LAST_NAME_PROPERTY || 'lastname']: data.lastName,
-    [process.env.HUBSPOT_EMAIL_PROPERTY || 'email']: data.email,
-    [process.env.HUBSPOT_PHONE_PROPERTY || 'phone']: data.phone,
-    [process.env.HUBSPOT_HOMETOWN_CITY_PROPERTY || 'hometown_city']: data.hometownCity,
-    [process.env.HUBSPOT_HOMETOWN_STATE_PROPERTY || 'hometown_state']: data.hometownState,
-    // University website is now stored as a company object (see getOrCreateCompanyByWebsite)
-    [process.env.HUBSPOT_CURRENT_YEAR_PROPERTY || 'current_year_in_school']: data.currentYear,
-    [process.env.HUBSPOT_VIRGINIA_RESIDENT_PROPERTY || 'virginia_resident']: data.isVirginiaResident,
-    [process.env.HUBSPOT_INTEREST_REASON_PROPERTY || 'interest_reason']: data.interestReason,
-    [process.env.HUBSPOT_COMMUNITY_SUPPORT_PROPERTY || 'community_support_plan']: data.communitySupport,
+    [keys.firstName]: data.firstName,
+    [keys.lastName]: data.lastName,
+    [keys.email]: data.email,
+    [keys.phone]: data.phone,
+    [keys.hometownCity]: data.hometownCity,
+    [keys.hometownState]: data.hometownState,
+    [keys.currentYear]: data.currentYear,
+    [keys.virginiaResident]: data.isVirginiaResident,
+    [keys.interestReason]: data.interestReason,
+    [keys.communitySupport]: data.communitySupport,
   }
 
   if (data.smsConsent) {
-    properties[process.env.HUBSPOT_SMS_CONSENT_PROPERTY || 'sms_consent'] =
-      mapSmsConsentToHubSpot(data.smsConsent)
+    properties[getSmsConsentConfig().property] = mapSmsConsentToHubSpot(data.smsConsent)
   }
 
   return properties
@@ -425,13 +419,7 @@ export async function getTrainingById(trainingId: string): Promise<HubSpotTraini
   }
 
   const objectType = getTrainingObjectType()
-  const properties = (
-    process.env.HUBSPOT_TRAINING_PROPERTIES ||
-    'hs_pipeline,hs_pipeline_stage,training_1st_day_start_datetime,training_1st_day_end_datetime,training_2nd_day_start_datetime,training_2nd_day_end_datetime,hs_course_name,hs_enrollment_capacity,available_capacity,name,location'
-  )
-    .split(',')
-    .map((value) => value.trim())
-    .filter(Boolean)
+  const properties = getTrainingProperties()
 
   const url = new URL(`${HUBSPOT_API_BASE}/crm/v3/objects/${objectType}/${trainingId}`)
   url.searchParams.set('properties', properties.join(','))
@@ -772,16 +760,10 @@ export async function getTrainingObjects(
   const limit = 100
   let allResults: HubSpotTraining[] = []
   let after: string | null = null
-  const requestedProperties = (
-    process.env.HUBSPOT_TRAINING_PROPERTIES ||
-    'hs_pipeline,hs_pipeline_stage,training_1st_day_start_datetime,training_1st_day_end_datetime,training_2nd_day_start_datetime,training_2nd_day_end_datetime,available_capacity,name,location,capacity,description,cutoff_time'
-  )
-    .split(',')
-    .map((value) => value.trim())
-    .filter(Boolean)
+  const requestedProperties = getTrainingProperties()
 
   try {
-    const objectType = process.env.HUBSPOT_TRAINING_OBJECT_ID || '0-410'
+    const objectType = getTrainingObjectType()
 
     do {
       const url = new URL(`${HUBSPOT_API_BASE}/crm/v3/objects/${objectType}`)

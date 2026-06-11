@@ -1,16 +1,15 @@
 /** Pure HubSpot field/value helpers (unit-tested, no API calls). */
 
+import { getSmsConsentConfig } from '@/lib/hubspot/config'
+
 export function mapSmsConsentToHubSpot(value: string) {
   const normalized = value.trim().toLowerCase()
+  const { yesValue, noValue } = getSmsConsentConfig()
   if (normalized === 'yes') {
-    return (
-      process.env.HUBSPOT_SMS_CONSENT_YES_VALUE ?? 'nABLB1wXwnWES39Rff7ZO'
-    )
+    return yesValue
   }
   if (normalized === 'no') {
-    return (
-      process.env.HUBSPOT_SMS_CONSENT_NO_VALUE ?? 'MTlPSCzKCtIey_DQUT4aW'
-    )
+    return noValue
   }
   return value.trim()
 }

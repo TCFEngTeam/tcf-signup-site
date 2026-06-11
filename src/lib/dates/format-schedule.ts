@@ -18,24 +18,10 @@ export type TrainingSchedule = {
   session2End?: string
 }
 
-export function getTrainingCutoffPropertyKey() {
-  return process.env.HUBSPOT_TRAINING_CUTOFF_PROPERTY ?? 'cutoff_time'
-}
-
-export function getTrainingSchedulePropertyKeys() {
-  return {
-    session1Start:
-      process.env.HUBSPOT_TRAINING_1ST_DAY_START_PROPERTY ??
-      'training_1st_day_start_datetime',
-    session1End:
-      process.env.HUBSPOT_TRAINING_1ST_DAY_END_PROPERTY ?? 'training_1st_day_end_datetime',
-    session2Start:
-      process.env.HUBSPOT_TRAINING_2ND_DAY_START_PROPERTY ??
-      'training_2nd_day_start_datetime',
-    session2End:
-      process.env.HUBSPOT_TRAINING_2ND_DAY_END_PROPERTY ?? 'training_2nd_day_end_datetime',
-  }
-}
+export {
+  getTrainingCutoffPropertyKey,
+  getTrainingSchedulePropertyKeys,
+} from '@/lib/hubspot/config'
 
 /** End of the training session — prefers day 2 end when present. */
 export function getTrainingEventEndDate(schedule: TrainingSchedule): Date | null {

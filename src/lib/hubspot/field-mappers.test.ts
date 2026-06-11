@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
+import { getSmsConsentConfig } from '@/lib/hubspot/config'
 import {
   contactHasRegistrantAssociation,
   contactHasTrainingAssociation,
@@ -14,17 +15,11 @@ import {
 } from '@/lib/hubspot/field-mappers'
 
 describe('mapSmsConsentToHubSpot', () => {
-  afterEach(() => {
-    delete process.env.HUBSPOT_SMS_CONSENT_YES_VALUE
-    delete process.env.HUBSPOT_SMS_CONSENT_NO_VALUE
-  })
+  it('maps yes/no to HubSpot option values from config', () => {
+    const { yesValue, noValue } = getSmsConsentConfig()
 
-  it('maps yes/no to HubSpot option values', () => {
-    process.env.HUBSPOT_SMS_CONSENT_YES_VALUE = 'yes-id'
-    process.env.HUBSPOT_SMS_CONSENT_NO_VALUE = 'no-id'
-
-    expect(mapSmsConsentToHubSpot('yes')).toBe('yes-id')
-    expect(mapSmsConsentToHubSpot('No')).toBe('no-id')
+    expect(mapSmsConsentToHubSpot('yes')).toBe(yesValue)
+    expect(mapSmsConsentToHubSpot('No')).toBe(noValue)
   })
 })
 
