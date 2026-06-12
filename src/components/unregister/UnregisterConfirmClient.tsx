@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { pagesContent } from '@/lib/content'
+import type { UnregisterKind } from '@/lib/unregister/token'
 
 const confirm = pagesContent.unregister.confirm
 
@@ -11,6 +12,7 @@ type UnregisterConfirmClientProps = {
   trainingTitle: string
   programSlug: string
   programLabel: string
+  kind: UnregisterKind
 }
 
 export default function UnregisterConfirmClient({
@@ -18,12 +20,15 @@ export default function UnregisterConfirmClient({
   trainingTitle,
   programSlug,
   programLabel,
+  kind,
 }: UnregisterConfirmClientProps) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const [alreadyCancelled, setAlreadyCancelled] = useState(false)
   const [mode, setMode] = useState<'remove' | 'relabel' | null>(null)
+
+  const isWaitlist = kind === 'waitlist'
 
   async function handleConfirm() {
     setSubmitting(true)
@@ -38,7 +43,10 @@ export default function UnregisterConfirmClient({
       const payload = await res.json().catch(() => ({}))
 
       if (!res.ok) {
-        setError(payload?.error ?? confirm.errorFallback)
+        setError(
+          payload?.error ??
+            (isWaitlist ? confirm.waitlistErrorFallback : confirm.errorFallback)
+        )
         return
       }
 
@@ -46,7 +54,7 @@ export default function UnregisterConfirmClient({
       setAlreadyCancelled(Boolean(payload.alreadyCancelled))
       setMode(payload.mode === 'relabel' ? 'relabel' : 'remove')
     } catch {
-      setError(confirm.errorFallback)
+      setError(isWaitlist ? confirm.waitlistErrorFallback : confirm.errorFallback)
     } finally {
       setSubmitting(false)
     }
@@ -56,21 +64,29 @@ export default function UnregisterConfirmClient({
     return (
       <div>
         <h2 className="text-xl font-semibold" style={{ color: 'var(--dark-green)' }}>
-          {alreadyCancelled ? confirm.alreadyCancelledTitle : confirm.successTitle}
+          {alreadyCancelled
+            ? isWaitlist
+              ? confirm.waitlistAlreadyLeftTitle
+              : confirm.alreadyCancelledTitle
+            : isWaitlist
+              ? confirm.waitlistSuccessTitle
+              : confirm.successTitle}
         </h2>
         <p className="mt-3">
           {alreadyCancelled ? (
-            confirm.alreadyCancelledBody
+            isWaitlist ? confirm.waitlistAlreadyLeftBody : confirm.alreadyCancelledBody
           ) : (
             <>
-              {confirm.successIntro}{' '}
+              {isWaitlist ? confirm.waitlistSuccessIntro : confirm.successIntro}{' '}
               <strong>{trainingTitle}</strong>
               {programLabel ? ` (${programLabel})` : ''}.
             </>
           )}
         </p>
         {mode === 'relabel' && !alreadyCancelled ? (
-          <p className="mt-3 text-sm helper-text">{confirm.relabelNote}</p>
+          <p className="mt-3 text-sm helper-text">
+            {isWaitlist ? confirm.waitlistRelabelNote : confirm.relabelNote}
+          </p>
         ) : null}
         <p className="mt-6">
           <Link href={`/${programSlug}`} className="underline">
@@ -84,7 +100,7 @@ export default function UnregisterConfirmClient({
   return (
     <div>
       <p className="mt-3">
-        {confirm.previewIntro}{' '}
+        {isWaitlist ? confirm.waitlistPreviewIntro : confirm.previewIntro}{' '}
         <strong>{trainingTitle}</strong>
         {programLabel ? ` (${programLabel})` : ''}.
       </p>
@@ -101,7 +117,13 @@ export default function UnregisterConfirmClient({
         onClick={handleConfirm}
         disabled={submitting}
       >
-        {submitting ? confirm.confirming : confirm.confirmButton}
+        {submitting
+          ? isWaitlist
+            ? confirm.waitlistConfirming
+            : confirm.confirming
+          : isWaitlist
+            ? confirm.waitlistConfirmButton
+            : confirm.confirmButton}
       </button>
     </div>
   )

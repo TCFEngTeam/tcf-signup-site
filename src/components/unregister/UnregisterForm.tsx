@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { pagesContent } from '@/lib/content'
 import { TRAINING_PROGRAM_LIST, type TrainingProgramId } from '@/lib/programs/config'
 import { formatEmail } from '@/lib/signup/format-fields'
-import { UNREGISTER_ACK_MESSAGE, type RegistrationOption } from '@/lib/unregister/service'
+import { UNREGISTER_ACK_MESSAGE, type UnregisterOption } from '@/lib/unregister/service'
 
 const request = pagesContent.unregister.request
 
@@ -26,12 +26,18 @@ export default function UnregisterForm({
     initialProgram ?? 'mhfa'
   )
   const [trainingId, setTrainingId] = useState(initialTrainingId ?? '')
-  const [sessionOptions, setSessionOptions] = useState<RegistrationOption[]>([])
+  const [sessionOptions, setSessionOptions] = useState<UnregisterOption[]>([])
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   const programOptions = useMemo(() => TRAINING_PROGRAM_LIST, [])
+
+  const selectedOption = useMemo(
+    () => sessionOptions.find((option) => option.trainingId === trainingId),
+    [sessionOptions, trainingId]
+  )
+  const isWaitlistSelection = selectedOption?.kind === 'waitlist'
 
   function resetToEmailStep() {
     setPhase('enter_email')
@@ -78,7 +84,7 @@ export default function UnregisterForm({
         const preferredId =
           initialTrainingId &&
           payload.options.some(
-            (option: RegistrationOption) => option.trainingId === initialTrainingId
+            (option: UnregisterOption) => option.trainingId === initialTrainingId
           )
             ? initialTrainingId
             : payload.options.length === 1
@@ -87,7 +93,11 @@ export default function UnregisterForm({
 
         setTrainingId(preferredId)
         setPhase('select_session')
-        setMessage(request.selectSession)
+
+        const onlyWaitlist =
+          payload.options.length > 0 &&
+          payload.options.every((option: UnregisterOption) => option.kind === 'waitlist')
+        setMessage(onlyWaitlist ? request.selectSessionWaitlist : request.selectSession)
         return
       }
 
@@ -191,18 +201,32 @@ export default function UnregisterForm({
               <select
                 id="unregister-session"
                 value={trainingId}
-                onChange={(e) => setTrainingId(e.target.value)}
+                onChange={(e) => {
+                  const nextId = e.target.value
+                  setTrainingId(nextId)
+                  const nextOption = sessionOptions.find(
+                    (option) => option.trainingId === nextId
+                  )
+                  setMessage(
+                    nextOption?.kind === 'waitlist'
+                      ? request.selectSessionWaitlist
+                      : request.selectSession
+                  )
+                }}
                 className="mt-1 w-full"
                 required
               >
                 <option value="">{request.sessionPlaceholder}</option>
                 {sessionOptions.map((option) => (
-                  <option key={option.trainingId} value={option.trainingId}>
+                  <option key={`${option.trainingId}-${option.kind}`} value={option.trainingId}>
                     {option.title}
+                    {option.kind === 'waitlist' ? request.waitlistSessionSuffix : ''}
                   </option>
                 ))}
               </select>
-              <p className="mt-2 text-sm helper-text">{request.linkExpiryHint}</p>
+              <p className="mt-2 text-sm helper-text">
+                {isWaitlistSelection ? request.linkExpiryHintWaitlist : request.linkExpiryHint}
+              </p>
             </div>
           ) : null}
         </>

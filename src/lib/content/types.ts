@@ -80,6 +80,19 @@ export type SignupFormContent = {
     cancelRegistrationLink: string
     closing: string
   }
+  waitlistConfirmationEmail: {
+    subject: string
+    greeting: string
+    intro: string
+    scheduleHeading: string
+    locationHeading: string
+    nextStepsHeading: string
+    nextStepsBody: string
+    viewEventLink: string
+    leaveWaitlistIntro: string
+    leaveWaitlistLink: string
+    closing: string
+  }
   fields: Record<SignupFormFieldKey, string>
   placeholders: {
     hometownState: string
@@ -154,6 +167,7 @@ export type PagesContent = {
       checkedEmailLabel: string
       changeEmail: string
       linkExpiryHint: string
+      linkExpiryHintWaitlist: string
       invalidEmail: string
       networkError: string
       requestFailed: string
@@ -161,7 +175,9 @@ export type PagesContent = {
       notRegisteredForSession: string
       sessionEnded: string
       selectSession: string
+      selectSessionWaitlist: string
       sessionRequired: string
+      waitlistSessionSuffix: string
       submitChecking: string
       submitCheck: string
       submitSending: string
@@ -173,17 +189,27 @@ export type PagesContent = {
       invalidLinkBody: string
       previewTitle: string
       previewIntro: string
+      waitlistPreviewTitle: string
+      waitlistPreviewIntro: string
       confirmButton: string
+      waitlistConfirmButton: string
       confirming: string
+      waitlistConfirming: string
       successTitle: string
       successIntro: string
+      waitlistSuccessTitle: string
+      waitlistSuccessIntro: string
       alreadyCancelledTitle: string
       alreadyCancelledBody: string
+      waitlistAlreadyLeftTitle: string
+      waitlistAlreadyLeftBody: string
       relabelNote: string
+      waitlistRelabelNote: string
       viewOtherSessions: string
       requestNewLink: string
       errorTitle: string
       errorFallback: string
+      waitlistErrorFallback: string
       fallbackSessionTitle: string
     }
   }

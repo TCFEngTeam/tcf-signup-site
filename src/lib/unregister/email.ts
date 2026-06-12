@@ -2,6 +2,7 @@ import { getAppBaseUrl } from '@/lib/app-url'
 import { escapeHtml, sendResendEmail } from '@/lib/email/resend'
 import type { TrainingProgramId } from '@/lib/programs/config'
 import { getTrainingProgram } from '@/lib/programs/config'
+import type { UnregisterKind } from '@/lib/unregister/token'
 
 type SendUnregisterEmailInput = {
   to: string
@@ -9,30 +10,41 @@ type SendUnregisterEmailInput = {
   program: TrainingProgramId
   trainingTitle: string
   linkExpiresAt: string
+  kind: UnregisterKind
 }
 
 export async function sendUnregisterConfirmationEmail(input: SendUnregisterEmailInput) {
   const confirmUrl = `${getAppBaseUrl()}/unregister/confirm?token=${encodeURIComponent(input.token)}`
   const program = getTrainingProgram(input.program)
   const programLabel = program?.shortLabel ?? input.program.toUpperCase()
+  const isWaitlist = input.kind === 'waitlist'
 
-  const subject = `Confirm cancellation — ${programLabel} training`
+  const subject = isWaitlist
+    ? `Confirm leaving the waitlist — ${programLabel} training`
+    : `Confirm cancellation — ${programLabel} training`
+
+  const intro = isWaitlist
+    ? 'You asked to leave the waitlist for:'
+    : 'You asked to cancel your registration for:'
+
+  const confirmLabel = isWaitlist ? 'Confirm leaving the waitlist' : 'Confirm cancellation'
+
   const text = [
-    `You asked to cancel your registration for:`,
+    intro,
     ``,
     `${input.trainingTitle} (${programLabel})`,
     ``,
-    `Confirm cancellation (link valid until ${input.linkExpiresAt}):`,
+    `${confirmLabel} (link valid until ${input.linkExpiresAt}):`,
     confirmUrl,
     ``,
     `If you did not request this, you can ignore this email.`,
   ].join('\n')
 
   const html = `
-    <p>You asked to cancel your registration for:</p>
+    <p>${escapeHtml(intro)}</p>
     <p><strong>${escapeHtml(input.trainingTitle)}</strong> (${escapeHtml(programLabel)})</p>
     <p>This link is valid until ${escapeHtml(input.linkExpiresAt)}.</p>
-    <p><a href="${escapeHtml(confirmUrl)}">Confirm cancellation</a></p>
+    <p><a href="${escapeHtml(confirmUrl)}">${escapeHtml(confirmLabel)}</a></p>
     <p>If you did not request this, you can ignore this email.</p>
   `.trim()
 
@@ -41,6 +53,6 @@ export async function sendUnregisterConfirmationEmail(input: SendUnregisterEmail
     subject,
     text,
     html,
-    logLabel: 'unregister',
+    logLabel: isWaitlist ? 'unwaitlist' : 'unregister',
   })
 }

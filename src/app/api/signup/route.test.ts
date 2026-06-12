@@ -11,6 +11,7 @@ const {
   associateContactToCompany,
   associateContactToTraining,
   sendRegistrationConfirmationEmail,
+  sendWaitlistConfirmationEmail,
 } = vi.hoisted(() => ({
   loadProgramEventById: vi.fn(),
   getContactByEmail: vi.fn(),
@@ -21,6 +22,7 @@ const {
   associateContactToCompany: vi.fn(),
   associateContactToTraining: vi.fn(),
   sendRegistrationConfirmationEmail: vi.fn(),
+  sendWaitlistConfirmationEmail: vi.fn(),
 }))
 
 vi.mock('@/lib/programs/events', async () => {
@@ -35,6 +37,7 @@ vi.mock('@/lib/programs/events', async () => {
 
 vi.mock('@/lib/signup/email', () => ({
   sendRegistrationConfirmationEmail,
+  sendWaitlistConfirmationEmail,
 }))
 
 vi.mock('@/lib/hubspot/api', async () => {
@@ -87,6 +90,7 @@ describe('POST /api/signup', () => {
     associateContactToCompany.mockResolvedValue(undefined)
     associateContactToTraining.mockResolvedValue(undefined)
     sendRegistrationConfirmationEmail.mockResolvedValue({ delivered: true, devLogged: false })
+    sendWaitlistConfirmationEmail.mockResolvedValue({ delivered: true, devLogged: false })
   })
 
   it('returns 400 when required fields are missing', async () => {
@@ -123,6 +127,15 @@ describe('POST /api/signup', () => {
       waitlisted: true,
     })
     expect(associateContactToTraining).toHaveBeenCalledWith('contact-1', 'event-123', 'waitlist')
+    expect(sendWaitlistConfirmationEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'jane.doe@example.edu',
+        firstName: 'Jane',
+        program: 'mhfa',
+        event: expect.objectContaining({ id: 'event-123' }),
+      })
+    )
+    expect(sendRegistrationConfirmationEmail).not.toHaveBeenCalled()
   })
 
   it('returns 409 when the event is inactive', async () => {

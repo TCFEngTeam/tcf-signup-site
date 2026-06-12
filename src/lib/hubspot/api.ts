@@ -17,6 +17,8 @@ import {
   getSmsConsentConfig,
   getTrainingObjectId,
   getTrainingProperties,
+  getUnwaitlistedAssociationLabel,
+  getUnwaitlistedAssociationTypeId,
   getWaitlistAssociationLabel,
   getWaitlistAssociationTypeId,
 } from '@/lib/hubspot/config'
@@ -24,8 +26,10 @@ import {
   contactHasAssociationForTraining,
   findNonRegistrantAssociationsForTraining,
   findRegistrantAssociationsForTraining,
+  findWaitlistAssociationsForTraining,
   hasActiveRegistrantAssociation,
   hasCancelledAssociation,
+  hasUnwaitlistedAssociation,
   isDuplicateAssociationResponse,
   mapSmsConsentToHubSpot,
   parseTrainingAssociationRows,
@@ -430,6 +434,66 @@ export async function unregisterContactFromTraining(
   }
 
   return { alreadyCancelled: false }
+}
+
+/**
+ * Remove a contact from a training waitlist.
+ * - mode `remove`: archive the waitlist association only.
+ * - mode `relabel`: archive waitlist, then associate with unwaitlisted label (audit trail).
+ * Idempotent when already unwaitlisted.
+ */
+export async function unwaitlistContactFromTraining(
+  contactId: string,
+  trainingId: string,
+  mode: 'remove' | 'relabel' = 'remove'
+): Promise<{ alreadyLeft: boolean }> {
+  const waitlistLabel = getWaitlistAssociationLabel()
+  const unwaitlistedLabel = getUnwaitlistedAssociationLabel()
+  const associations = await getContactTrainingAssociations(contactId)
+
+  if (
+    hasUnwaitlistedAssociation(
+      associations,
+      trainingId,
+      unwaitlistedLabel,
+      getUnwaitlistedAssociationTypeId()
+    )
+  ) {
+    return { alreadyLeft: true }
+  }
+
+  const waitlistRows = findWaitlistAssociationsForTraining(
+    associations,
+    trainingId,
+    waitlistLabel,
+    getWaitlistAssociationTypeId()
+  )
+
+  if (waitlistRows.length === 0) {
+    throw new Error('Contact is not on the waitlist for this training')
+  }
+
+  for (const row of waitlistRows) {
+    await archiveContactTrainingAssociation(contactId, trainingId, row)
+  }
+
+  if (mode === 'relabel') {
+    try {
+      await createContactTrainingAssociation(
+        contactId,
+        trainingId,
+        unwaitlistedLabel,
+        getUnwaitlistedAssociationTypeId()
+      )
+    } catch (error: unknown) {
+      console.error('Unwaitlisted association label create failed:', error)
+      throw new Error(
+        `Waitlist spot removed, but could not apply unwaitlisted label "${unwaitlistedLabel}". Check HubSpot association settings.`
+      )
+    }
+  }
+
+  return { alreadyLeft: false }
 }
 
 export async function getTrainingById(trainingId: string): Promise<HubSpotTraining | null> {

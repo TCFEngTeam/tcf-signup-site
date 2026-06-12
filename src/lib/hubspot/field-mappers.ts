@@ -175,6 +175,19 @@ export function contactHasAssociationForTraining(
   )
 }
 
+export function findWaitlistAssociationsForTraining(
+  rows: TrainingAssociationRow[],
+  trainingId: string,
+  waitlistLabel: string,
+  waitlistTypeId?: string
+): TrainingAssociationRow[] {
+  return rows.filter(
+    (row) =>
+      row.trainingId === String(trainingId) &&
+      matchesAssociationLabel(row, waitlistLabel, waitlistTypeId)
+  )
+}
+
 export function findCancelledAssociationsForTraining(
   rows: TrainingAssociationRow[],
   trainingId: string,
@@ -230,5 +243,18 @@ export function hasCancelledAssociation(
     (row) =>
       row.trainingId === String(trainingId) &&
       matchesAssociationLabel(row, cancelledLabel, cancelledTypeId)
+  )
+}
+
+export function hasUnwaitlistedAssociation(
+  rows: TrainingAssociationRow[],
+  trainingId: string,
+  unwaitlistedLabel: string,
+  unwaitlistedTypeId?: string
+): boolean {
+  return rows.some(
+    (row) =>
+      row.trainingId === String(trainingId) &&
+      matchesAssociationLabel(row, unwaitlistedLabel, unwaitlistedTypeId)
   )
 }

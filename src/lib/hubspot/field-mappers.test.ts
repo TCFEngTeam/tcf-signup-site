@@ -7,8 +7,10 @@ import {
   findCancelledAssociationsForTraining,
   findNonRegistrantAssociationsForTraining,
   findRegistrantAssociationsForTraining,
+  findWaitlistAssociationsForTraining,
   hasActiveRegistrantAssociation,
   hasCancelledAssociation,
+  hasUnwaitlistedAssociation,
   isDuplicateAssociationResponse,
   mapSmsConsentToHubSpot,
   matchesAssociationLabel,
@@ -138,6 +140,30 @@ describe('findRegistrantAssociationsForTraining', () => {
       },
     ]
     expect(findRegistrantAssociationsForTraining(rows, '222', 'registrant')).toEqual([])
+  })
+})
+
+describe('findWaitlistAssociationsForTraining', () => {
+  it('returns waitlist label rows for a training', () => {
+    const rows = [
+      { trainingId: '222', associationType: 'registrant' },
+      { trainingId: '222', associationType: 'waitlisted' },
+    ]
+    expect(findWaitlistAssociationsForTraining(rows, '222', 'waitlisted')).toEqual([
+      { trainingId: '222', associationType: 'waitlisted' },
+    ])
+  })
+})
+
+describe('hasUnwaitlistedAssociation', () => {
+  it('detects unwaitlisted label associations', () => {
+    expect(
+      hasUnwaitlistedAssociation(
+        [{ trainingId: '1', associationType: 'unwaitlisted' }],
+        '1',
+        'unwaitlisted'
+      )
+    ).toBe(true)
   })
 })
 

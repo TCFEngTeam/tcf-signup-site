@@ -31,6 +31,19 @@
     "cancelRegistrationLink": "Cancel your registration",
     "closing": "We look forward to seeing you."
   },
+  "waitlistConfirmationEmail": {
+    "subject": "Waitlist confirmed — {program} training",
+    "greeting": "Hi {firstName},",
+    "intro": "You're on the waitlist for:",
+    "scheduleHeading": "Session date(s)",
+    "locationHeading": "Location",
+    "nextStepsHeading": "What happens next",
+    "nextStepsBody": "We'll email you if a seat opens for this session. You don't need to do anything else right now.",
+    "viewEventLink": "View event details",
+    "leaveWaitlistIntro": "Changed your mind? Leave the waitlist with this link (valid until {cancelLinkExpiry}):",
+    "leaveWaitlistLink": "Leave the waitlist",
+    "closing": "Thank you for your interest in this training."
+  },
   "fields": {
     "firstName": "First Name",
     "lastName": "Last Name",

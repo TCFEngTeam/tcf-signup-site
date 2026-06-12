@@ -7,13 +7,21 @@ import {
 import { isTrainingProgramId, type TrainingProgramId } from '@/lib/programs/config'
 import { getUnregisterTokenSecret, getUnregisterTokenTtlHours } from '@/lib/unregister/config'
 
+export type UnregisterKind = 'registration' | 'waitlist'
+
 export type UnregisterTokenPayload = {
   /** Random id — new value per email so links are not guessable or repeatable. */
   jti: string
   email: string
   program: TrainingProgramId
   trainingId: string
+  /** Omit or `registration` for signup/cancel flows; `waitlist` for leaving the waitlist. */
+  kind?: UnregisterKind
   exp: number
+}
+
+export function resolveUnregisterKind(payload: UnregisterTokenPayload): UnregisterKind {
+  return payload.kind === 'waitlist' ? 'waitlist' : 'registration'
 }
 
 function createTokenJti() {
@@ -100,6 +108,10 @@ export function verifyUnregisterToken(token: string): UnregisterTokenPayload {
   }
 
   if (!isTrainingProgramId(payload.program)) {
+    throw new Error('Invalid confirmation link')
+  }
+
+  if (payload.kind !== undefined && payload.kind !== 'registration' && payload.kind !== 'waitlist') {
     throw new Error('Invalid confirmation link')
   }
 

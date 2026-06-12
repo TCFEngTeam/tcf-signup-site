@@ -23,9 +23,11 @@ export type HubSpotConfig = {
     registrant: string
     cancelled: string
     waitlist?: string
+    unwaitlisted?: string
     registrantTypeId?: string
     cancelledTypeId?: string
     waitlistTypeId?: string
+    unwaitlistedTypeId?: string
   }
   programs: Record<TrainingProgramId, HubSpotProgramPipelineConfig>
   contactProperties: {
@@ -94,6 +96,14 @@ export function getCancelledAssociationTypeId() {
 
 export function getWaitlistAssociationTypeId() {
   return hubspotConfig.associations.waitlistTypeId?.trim()
+}
+
+export function getUnwaitlistedAssociationLabel() {
+  return hubspotConfig.associations.unwaitlisted ?? 'unwaitlisted'
+}
+
+export function getUnwaitlistedAssociationTypeId() {
+  return hubspotConfig.associations.unwaitlistedTypeId?.trim()
 }
 
 export function getProgramPipelineConfigFromHubSpot(programId: TrainingProgramId) {

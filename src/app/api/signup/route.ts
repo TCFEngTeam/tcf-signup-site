@@ -14,7 +14,10 @@ import { signupFormContent } from '@/lib/content'
 import { formatSignupFormData, isSignupFormatError } from '@/lib/signup/format-fields'
 import { canAcceptRegistration, canAcceptWaitlist, loadProgramEventById } from '@/lib/programs/events'
 import { isTrainingProgramId } from '@/lib/programs/config'
-import { sendRegistrationConfirmationEmail } from '@/lib/signup/email'
+import {
+  sendRegistrationConfirmationEmail,
+  sendWaitlistConfirmationEmail,
+} from '@/lib/signup/email'
 
 export const dynamic = 'force-dynamic'
 
@@ -143,12 +146,17 @@ export async function POST(req: Request) {
     }
 
     try {
-      await sendRegistrationConfirmationEmail({
+      const emailInput = {
         to: formatted.email,
         firstName: formatted.firstName,
         program,
         event: ev,
-      })
+      }
+      if (waitlisted) {
+        await sendWaitlistConfirmationEmail(emailInput)
+      } else {
+        await sendRegistrationConfirmationEmail(emailInput)
+      }
     } catch (emailError) {
       console.error('Registration confirmation email failed:', emailError)
     }

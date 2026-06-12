@@ -5,7 +5,7 @@ import Header from '@/components/layout/Header'
 import UnregisterConfirmClient from '@/components/unregister/UnregisterConfirmClient'
 import { pagesContent } from '@/lib/content'
 import { getTrainingProgram } from '@/lib/programs/config'
-import { peekUnregisterToken } from '@/lib/unregister/token'
+import { peekUnregisterToken, resolveUnregisterKind } from '@/lib/unregister/token'
 import { loadProgramEventById } from '@/lib/programs/events'
 import { getTrainingById } from '@/lib/hubspot/api'
 
@@ -47,13 +47,18 @@ export default async function UnregisterConfirmPage({ searchParams }: ConfirmPag
         pagesContent.unregister.confirm.fallbackSessionTitle
     }
 
+    const kind = resolveUnregisterKind(payload)
+    const previewTitle =
+      kind === 'waitlist' ? confirm.waitlistPreviewTitle : confirm.previewTitle
+
     return (
-      <ConfirmShell title={confirm.previewTitle}>
+      <ConfirmShell title={previewTitle}>
         <UnregisterConfirmClient
           token={token}
           trainingTitle={trainingTitle}
           programSlug={payload.program}
           programLabel={program?.shortLabel ?? payload.program.toUpperCase()}
+          kind={kind}
         />
       </ConfirmShell>
     )

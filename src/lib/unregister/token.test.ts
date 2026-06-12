@@ -29,6 +29,16 @@ describe('unregister token', () => {
     expect(payload.trainingId).toBe('999')
   })
 
+  it('round-trips a waitlist token', () => {
+    const token = createUnregisterToken({
+      email: 'user@example.com',
+      program: 'mhfa',
+      trainingId: '999',
+      kind: 'waitlist',
+    })
+    expect(verifyUnregisterToken(token).kind).toBe('waitlist')
+  })
+
   it('issues a unique random jti per token', () => {
     const input = {
       email: 'user@example.com',

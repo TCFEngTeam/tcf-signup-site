@@ -27,7 +27,8 @@
   "associations": {
     "registrant": "registrant",
     "cancelled": "unregistered",
-    "waitlist": "waitlisted"
+    "waitlist": "waitlisted",
+    "unwaitlisted": "unwaitlisted"
   },
   "programs": {
     "mhfa": {
