@@ -8,15 +8,23 @@
 |------|---------------------|
 | `site.json` | Site name, logo (text or image), footer, main site links, page title/description, SMS legal URLs, submit button labels |
 | `signup-form.json` | All signup field labels, validation messages, server signup error messages, state list, “year in school” options, Yes/No labels |
-| `pages.json` | Event cards, capacity labels, schedule fallbacks, listing empty/error states, event detail page, success page, “back to main site” link text |
+| `pages.json` | Event cards, capacity labels, schedule fallbacks, listing empty/error states, event detail page, success page, unregister/cancel flow, “back to main site” link text |
 | `programs/mhfa.json` | MHFA listing intro, signup notice, success-page next steps |
 | `programs/qpr.json` | QPR listing intro, signup notice, success-page next steps |
 
-## What does **not** live here (HubSpot instead)
+## What does **not** live here
 
 - **Event titles, dates, locations, capacity** — managed in HubSpot training records. The site reads them automatically.
-- **Who receives confirmation emails** — HubSpot workflows (see `MAINTENANCE.md`).
+- **Pipeline stages, property internal names, association labels** — `config/hubspot.json` (see [`config/README.md`](../config/README.md)).
 - **Whether someone is registered** — HubSpot contact ↔ training association.
+
+## Emails (signup confirmation & cancel links)
+
+Copy for the **signup confirmation email** is in `signup-form.json` → `confirmationEmail`.
+
+The app sends email via **Resend** (not HubSpot workflows). Requires `RESEND_API_KEY` and `RESEND_FROM_EMAIL` in Vercel. Unregister page copy is in `pages.json` → `unregister`.
+
+See `MAINTENANCE.md` → “Confirmation & cancellation emails”.
 
 ## Logo image (optional)
 
@@ -99,4 +107,4 @@ You can repeat blocks in any order (e.g. paragraph → list → paragraph). `suc
 
 ## Need a new program page?
 
-That requires developer setup (new route + HubSpot pipeline env vars). See `MAINTENANCE.md` → “Adding a new training program.”
+That requires developer setup (new route + `programs.{id}` in `config/hubspot.json`). See `MAINTENANCE.md` → “Adding a new training program.”

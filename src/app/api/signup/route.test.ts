@@ -10,6 +10,7 @@ const {
   getOrCreateCompanyByWebsite,
   associateContactToCompany,
   associateContactToTraining,
+  sendRegistrationConfirmationEmail,
 } = vi.hoisted(() => ({
   loadProgramEventById: vi.fn(),
   getContactByEmail: vi.fn(),
@@ -19,6 +20,7 @@ const {
   getOrCreateCompanyByWebsite: vi.fn(),
   associateContactToCompany: vi.fn(),
   associateContactToTraining: vi.fn(),
+  sendRegistrationConfirmationEmail: vi.fn(),
 }))
 
 vi.mock('@/lib/programs/events', async () => {
@@ -30,6 +32,10 @@ vi.mock('@/lib/programs/events', async () => {
     loadProgramEventById,
   }
 })
+
+vi.mock('@/lib/signup/email', () => ({
+  sendRegistrationConfirmationEmail,
+}))
 
 vi.mock('@/lib/hubspot/api', async () => {
   const actual = await vi.importActual<typeof import('@/lib/hubspot/api')>('@/lib/hubspot/api')
@@ -64,6 +70,9 @@ describe('POST /api/signup', () => {
     loadProgramEventById.mockResolvedValue({
       event: {
         id: 'event-123',
+        title: 'MHFA Session A',
+        schedule: { session1Start: '2026-06-10T15:00:00.000Z', session1End: '2026-06-10T21:00:00.000Z' },
+        location: 'Virtual',
         isFull: false,
         active: true,
         availableCapacity: 5,
@@ -77,6 +86,7 @@ describe('POST /api/signup', () => {
     getOrCreateCompanyByWebsite.mockResolvedValue({ id: 'company-1' })
     associateContactToCompany.mockResolvedValue(undefined)
     associateContactToTraining.mockResolvedValue(undefined)
+    sendRegistrationConfirmationEmail.mockResolvedValue({ delivered: true, devLogged: false })
   })
 
   it('returns 400 when required fields are missing', async () => {
@@ -160,5 +170,13 @@ describe('POST /api/signup', () => {
       hubspotContactId: 'contact-1',
     })
     expect(associateContactToTraining).toHaveBeenCalledWith('contact-1', 'event-123', 'registrant')
+    expect(sendRegistrationConfirmationEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'jane.doe@example.edu',
+        firstName: 'Jane',
+        program: 'mhfa',
+        event: expect.objectContaining({ id: 'event-123' }),
+      })
+    )
   })
 })

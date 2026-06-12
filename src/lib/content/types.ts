@@ -68,6 +68,18 @@ export type SignupFormContent = {
     trainingUnavailable: string
     alreadyOnWaitlist: string
   }
+  confirmationEmail: {
+    subject: string
+    greeting: string
+    intro: string
+    scheduleHeading: string
+    locationHeading: string
+    nextStepsHeading: string
+    viewEventLink: string
+    cancelRegistrationIntro: string
+    cancelRegistrationLink: string
+    closing: string
+  }
   fields: Record<SignupFormFieldKey, string>
   placeholders: {
     hometownState: string
@@ -127,6 +139,53 @@ export type PagesContent = {
     eventNotFoundTry: string
     eventNotFoundLink: string
     eventNotFoundAfterLink: string
+  }
+  unregister: {
+    page: {
+      eyebrow: string
+      title: string
+      intro: string
+    }
+    request: {
+      programLabel: string
+      sessionLabel: string
+      sessionPlaceholder: string
+      emailLabel: string
+      checkedEmailLabel: string
+      changeEmail: string
+      linkExpiryHint: string
+      invalidEmail: string
+      networkError: string
+      requestFailed: string
+      noRegistrations: string
+      notRegisteredForSession: string
+      sessionEnded: string
+      selectSession: string
+      sessionRequired: string
+      submitChecking: string
+      submitCheck: string
+      submitSending: string
+      submitSendEmail: string
+      startOver: string
+    }
+    confirm: {
+      invalidLinkTitle: string
+      invalidLinkBody: string
+      previewTitle: string
+      previewIntro: string
+      confirmButton: string
+      confirming: string
+      successTitle: string
+      successIntro: string
+      alreadyCancelledTitle: string
+      alreadyCancelledBody: string
+      relabelNote: string
+      viewOtherSessions: string
+      requestNewLink: string
+      errorTitle: string
+      errorFallback: string
+      fallbackSessionTitle: string
+    }
   }
   success: {
     metadataTitle: string

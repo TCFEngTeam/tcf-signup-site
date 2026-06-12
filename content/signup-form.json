@@ -19,6 +19,18 @@
     "alreadyOnWaitlist": "You are already on the waitlist for this event.",
     "signupUnavailable": "Unable to complete signup. Please try again or contact support."
   },
+  "confirmationEmail": {
+    "subject": "Registration confirmed — {program} training",
+    "greeting": "Hi {firstName},",
+    "intro": "Thank you for registering. You're signed up for:",
+    "scheduleHeading": "Session date(s)",
+    "locationHeading": "Location",
+    "nextStepsHeading": "What's next",
+    "viewEventLink": "View event details",
+    "cancelRegistrationIntro": "Need to cancel? Use this link (valid until {cancelLinkExpiry}):",
+    "cancelRegistrationLink": "Cancel your registration",
+    "closing": "We look forward to seeing you."
+  },
   "fields": {
     "firstName": "First Name",
     "lastName": "Last Name",

@@ -1,16 +1,15 @@
 /** Pure HubSpot field/value helpers (unit-tested, no API calls). */
 
+import { getSmsConsentConfig } from '@/lib/hubspot/config'
+
 export function mapSmsConsentToHubSpot(value: string) {
   const normalized = value.trim().toLowerCase()
+  const { yesValue, noValue } = getSmsConsentConfig()
   if (normalized === 'yes') {
-    return (
-      process.env.HUBSPOT_SMS_CONSENT_YES_VALUE ?? 'nABLB1wXwnWES39Rff7ZO'
-    )
+    return yesValue
   }
   if (normalized === 'no') {
-    return (
-      process.env.HUBSPOT_SMS_CONSENT_NO_VALUE ?? 'MTlPSCzKCtIey_DQUT4aW'
-    )
+    return noValue
   }
   return value.trim()
 }
@@ -95,6 +94,54 @@ export function matchesAssociationLabel(
   return false
 }
 
+const GENERIC_ASSOCIATION_TYPES = new Set([
+  'contact_to_training',
+  'contact_to_custom_object',
+])
+
+/** True when the row carries a labeled association that is not the registrant label. */
+export function hasExplicitNonRegistrantLabel(
+  row: TrainingAssociationRow,
+  registrantLabel: string,
+  registrantTypeId?: string
+): boolean {
+  if (matchesAssociationLabel(row, registrantLabel, registrantTypeId)) return false
+
+  if (row.associationCategory === 'USER_DEFINED') return true
+  if (row.associationTypeId !== undefined) return true
+
+  const type = (row.associationType ?? '').trim().toLowerCase()
+  if (!type) return false
+
+  return !GENERIC_ASSOCIATION_TYPES.has(type)
+}
+
+export function hasActiveRegistrantAssociation(
+  rows: TrainingAssociationRow[],
+  trainingId: string,
+  registrantLabel: string,
+  registrantTypeId?: string
+): boolean {
+  return rows.some(
+    (row) =>
+      row.trainingId === String(trainingId) &&
+      matchesAssociationLabel(row, registrantLabel, registrantTypeId)
+  )
+}
+
+export function findNonRegistrantAssociationsForTraining(
+  rows: TrainingAssociationRow[],
+  trainingId: string,
+  registrantLabel: string,
+  registrantTypeId?: string
+): TrainingAssociationRow[] {
+  return rows.filter(
+    (row) =>
+      row.trainingId === String(trainingId) &&
+      !matchesAssociationLabel(row, registrantLabel, registrantTypeId)
+  )
+}
+
 export function contactHasTrainingAssociation(
   associations: Array<{ id?: string; type?: string }> | undefined,
   trainingId: string,
@@ -103,8 +150,16 @@ export function contactHasTrainingAssociation(
   return (associations ?? []).some((row) => {
     if (String(row.id) !== String(trainingId)) return false
     if (associationType === undefined) return true
-    return (row.type ?? '').trim().toLowerCase() === associationType.trim().toLowerCase()
+    return (row.type ?? '').trim() === associationType.trim()
   })
+}
+
+export function contactHasRegistrantAssociation(
+  associations: Array<{ id?: string; type?: string }> | undefined,
+  trainingId: string,
+  registrantLabel: string
+) {
+  return contactHasTrainingAssociation(associations, trainingId, registrantLabel)
 }
 
 export function contactHasAssociationForTraining(
@@ -117,5 +172,63 @@ export function contactHasAssociationForTraining(
     (row) =>
       row.trainingId === String(trainingId) &&
       matchesAssociationLabel(row, label, configuredTypeId)
+  )
+}
+
+export function findCancelledAssociationsForTraining(
+  rows: TrainingAssociationRow[],
+  trainingId: string,
+  cancelledLabel: string,
+  cancelledTypeId?: string
+): TrainingAssociationRow[] {
+  return rows.filter(
+    (row) =>
+      row.trainingId === String(trainingId) &&
+      matchesAssociationLabel(row, cancelledLabel, cancelledTypeId)
+  )
+}
+
+export function findRegistrantAssociationsForTraining(
+  rows: TrainingAssociationRow[],
+  trainingId: string,
+  registrantLabel: string,
+  registrantTypeId?: string,
+  cancelledLabel?: string,
+  cancelledTypeId?: string
+): TrainingAssociationRow[] {
+  const isCancelled = (row: TrainingAssociationRow) =>
+    cancelledLabel !== undefined &&
+    matchesAssociationLabel(row, cancelledLabel, cancelledTypeId)
+
+  const matches = rows.filter(
+    (row) =>
+      row.trainingId === String(trainingId) &&
+      matchesAssociationLabel(row, registrantLabel, registrantTypeId)
+  )
+
+  if (matches.length > 0) return matches
+
+  // Legacy unlabeled associations only — never treat waitlist/unregistered/etc. as registrant.
+  const legacyCandidates = rows.filter(
+    (row) =>
+      row.trainingId === String(trainingId) &&
+      !isCancelled(row) &&
+      !hasExplicitNonRegistrantLabel(row, registrantLabel, registrantTypeId)
+  )
+  if (legacyCandidates.length === 1) return legacyCandidates
+
+  return []
+}
+
+export function hasCancelledAssociation(
+  rows: TrainingAssociationRow[],
+  trainingId: string,
+  cancelledLabel: string,
+  cancelledTypeId?: string
+): boolean {
+  return rows.some(
+    (row) =>
+      row.trainingId === String(trainingId) &&
+      matchesAssociationLabel(row, cancelledLabel, cancelledTypeId)
   )
 }

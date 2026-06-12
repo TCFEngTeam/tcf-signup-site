@@ -1,20 +1,41 @@
 /**
  * HubSpot API utilities for contact creation and association.
- * This is a framework implementation - property names and association details
- * should be configured in .env.local
+ * Portal wiring lives in config/hubspot.json; only HUBSPOT_API_KEY stays in .env.
  */
 
 import pagesJson from '../../../content/pages.json'
 import type { PagesContent } from '@/lib/content/types'
+import type { TrainingSchedule } from '@/lib/dates/format-schedule'
+import { getTrainingCutoffPropertyKey, getTrainingSchedulePropertyKeys } from '@/lib/hubspot/config'
+import {
+  getCancelledAssociationTypeId,
+  getContactPropertyKeys,
+  getHubSpotApiKey,
+  getRegistrantAssociationLabel,
+  getRegistrantAssociationTypeId,
+  getCancelledAssociationLabel,
+  getSmsConsentConfig,
+  getTrainingObjectId,
+  getTrainingProperties,
+  getWaitlistAssociationLabel,
+  getWaitlistAssociationTypeId,
+} from '@/lib/hubspot/config'
 import {
   contactHasAssociationForTraining,
+  findNonRegistrantAssociationsForTraining,
+  findRegistrantAssociationsForTraining,
+  hasActiveRegistrantAssociation,
+  hasCancelledAssociation,
   isDuplicateAssociationResponse,
   mapSmsConsentToHubSpot,
   parseTrainingAssociationRows,
   type TrainingAssociationRow,
 } from '@/lib/hubspot/field-mappers'
-import type { TrainingSchedule } from '@/lib/dates/format-schedule'
-import { getTrainingCutoffPropertyKey, getTrainingSchedulePropertyKeys } from '@/lib/dates/format-schedule'
+
+export {
+  getCancelledAssociationLabel,
+  getRegistrantAssociationLabel,
+} from '@/lib/hubspot/config'
 
 const eventLabels = (pagesJson as PagesContent).events
 
@@ -33,72 +54,14 @@ export class AlreadyRegisteredError extends Error {
 }
 
 function getTrainingObjectType() {
-  return process.env.HUBSPOT_TRAINING_OBJECT_ID || '0-410'
+  return getTrainingObjectId()
 }
 
 function getApiKey() {
-  return process.env.HUBSPOT_API_KEY
+  return getHubSpotApiKey()
 }
 
 export type TrainingAssociationRole = 'registrant' | 'waitlist'
-
-export function getRegistrantAssociationLabel() {
-  return process.env.HUBSPOT_TRAINING_ASSOCIATION_LABEL || 'registrant'
-}
-
-export function getWaitlistAssociationLabel() {
-  return process.env.HUBSPOT_TRAINING_WAITLIST_ASSOCIATION_LABEL || 'waitlist'
-}
-
-function getRegistrantAssociationTypeId() {
-  return process.env.HUBSPOT_TRAINING_ASSOCIATION_TYPE_ID
-}
-
-function getWaitlistAssociationTypeId() {
-  return process.env.HUBSPOT_TRAINING_WAITLIST_ASSOCIATION_TYPE_ID
-}
-
-async function getContactTrainingAssociations(
-  contactId: string
-): Promise<TrainingAssociationRow[]> {
-  if (!getApiKey()) {
-    throw new Error('HUBSPOT_API_KEY is not configured')
-  }
-
-  const trainingObjectType = getTrainingObjectType()
-  const headers = {
-    Authorization: `Bearer ${getApiKey()}`,
-    'Content-Type': 'application/json',
-  }
-
-  const v4Url = `${HUBSPOT_API_BASE}/crm/v4/objects/contacts/${contactId}/associations/${trainingObjectType}`
-  const v4Response = await hubspotFetch(v4Url, { method: 'GET', headers })
-
-  if (v4Response.status !== 404) {
-    const v4Parsed = await safeParseResponse(v4Response)
-    if (v4Response.ok) {
-      const rows = parseTrainingAssociationRows(v4Parsed?.results)
-      if (rows.length > 0) return rows
-    }
-  }
-
-  const v3Url = `${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${contactId}/associations/${trainingObjectType}`
-  const v3Response = await hubspotFetch(v3Url, { method: 'GET', headers })
-
-  if (v3Response.status === 404) {
-    return []
-  }
-
-  const v3Parsed = await safeParseResponse(v3Response)
-  if (!v3Response.ok) {
-    const msg =
-      (v3Parsed && (v3Parsed.message || v3Parsed.error || v3Parsed.text)) ||
-      v3Response.statusText
-    throw new Error(`Failed to check training registration: ${msg}`)
-  }
-
-  return parseTrainingAssociationRows(v3Parsed?.results)
-}
 
 export interface ContactData {
   firstName: string
@@ -158,41 +121,42 @@ function parseDateProperty(value?: string) {
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
+export { formatTrainingSchedule } from '@/lib/dates/format-schedule'
+
 /**
- * Maps form data to HubSpot contact properties using environment variables
+ * Maps form data to HubSpot contact properties from config/hubspot.json
  */
 function mapContactProperties(data: ContactData): { [key: string]: string } {
+  const keys = getContactPropertyKeys()
   const properties: { [key: string]: string } = {
-    [process.env.HUBSPOT_FIRST_NAME_PROPERTY || 'firstname']: data.firstName,
-    [process.env.HUBSPOT_LAST_NAME_PROPERTY || 'lastname']: data.lastName,
-    [process.env.HUBSPOT_EMAIL_PROPERTY || 'email']: data.email,
-    [process.env.HUBSPOT_PHONE_PROPERTY || 'phone']: data.phone,
-    [process.env.HUBSPOT_HOMETOWN_CITY_PROPERTY || 'hometown_city']: data.hometownCity,
-    [process.env.HUBSPOT_HOMETOWN_STATE_PROPERTY || 'hometown_state']: data.hometownState,
-    // University website is now stored as a company object (see getOrCreateCompanyByWebsite)
-    [process.env.HUBSPOT_CURRENT_YEAR_PROPERTY || 'current_year_in_school']: data.currentYear,
-    [process.env.HUBSPOT_VIRGINIA_RESIDENT_PROPERTY || 'virginia_resident']: data.isVirginiaResident,
-    [process.env.HUBSPOT_INTEREST_REASON_PROPERTY || 'interest_reason']: data.interestReason,
-    [process.env.HUBSPOT_COMMUNITY_SUPPORT_PROPERTY || 'community_support_plan']: data.communitySupport,
+    [keys.firstName]: data.firstName,
+    [keys.lastName]: data.lastName,
+    [keys.email]: data.email,
+    [keys.phone]: data.phone,
+    [keys.hometownCity]: data.hometownCity,
+    [keys.hometownState]: data.hometownState,
+    [keys.currentYear]: data.currentYear,
+    [keys.virginiaResident]: data.isVirginiaResident,
+    [keys.interestReason]: data.interestReason,
+    [keys.communitySupport]: data.communitySupport,
   }
 
   if (data.smsConsent) {
-    properties[process.env.HUBSPOT_SMS_CONSENT_PROPERTY || 'sms_consent'] =
-      mapSmsConsentToHubSpot(data.smsConsent)
+    properties[getSmsConsentConfig().property] = mapSmsConsentToHubSpot(data.smsConsent)
   }
 
   return properties
 }
 
 /**
- * Returns true if the contact has a registrant association to this training.
+ * Returns true if the contact is already linked to this training in HubSpot.
  */
 export async function isContactRegisteredForTraining(
   contactId: string,
   trainingId: string
 ): Promise<boolean> {
   const associations = await getContactTrainingAssociations(contactId)
-  return contactHasAssociationForTraining(
+  return hasActiveRegistrantAssociation(
     associations,
     trainingId,
     getRegistrantAssociationLabel(),
@@ -212,6 +176,293 @@ export async function isContactOnWaitlistForTraining(
     getWaitlistAssociationLabel(),
     getWaitlistAssociationTypeId()
   )
+}
+
+export async function getContactTrainingAssociations(
+  contactId: string
+): Promise<TrainingAssociationRow[]> {
+  if (!getApiKey()) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  const trainingObjectType = getTrainingObjectType()
+  const headers = {
+    Authorization: `Bearer ${getApiKey()}`,
+    'Content-Type': 'application/json',
+  }
+
+  const v4Url = `${HUBSPOT_API_BASE}/crm/v4/objects/contacts/${contactId}/associations/${trainingObjectType}`
+  const v4Response = await hubspotFetch(v4Url, { method: 'GET', headers })
+
+  if (v4Response.status !== 404) {
+    const v4Parsed = await safeParseResponse(v4Response)
+    if (v4Response.ok) {
+      const rows = parseTrainingAssociationRows(v4Parsed?.results)
+      if (rows.length > 0) return rows
+    }
+  }
+
+  const v3Url = `${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${contactId}/associations/${trainingObjectType}`
+  const v3Response = await hubspotFetch(v3Url, { method: 'GET', headers })
+
+  if (v3Response.status === 404) {
+    return []
+  }
+
+  const v3Parsed = await safeParseResponse(v3Response)
+  if (!v3Response.ok) {
+    const msg =
+      (v3Parsed && (v3Parsed.message || v3Parsed.error || v3Parsed.text)) ||
+      v3Response.statusText
+    throw new Error(`Failed to list training associations: ${msg}`)
+  }
+
+  return parseTrainingAssociationRows(v3Parsed?.results)
+}
+
+async function archiveContactTrainingAssociation(
+  contactId: string,
+  trainingId: string,
+  row: TrainingAssociationRow
+): Promise<void> {
+  if (!getApiKey()) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  const trainingObjectType = getTrainingObjectType()
+  const headers = {
+    Authorization: `Bearer ${getApiKey()}`,
+    'Content-Type': 'application/json',
+  }
+
+  if (row.associationCategory && row.associationTypeId !== undefined) {
+    // Labeled associations: use labels/archive (single `to` object + `types`).
+    // Plain batch/archive expects `to` as an array and removes all labels between the pair.
+    const v4Url = `${HUBSPOT_API_BASE}/crm/v4/associations/contacts/${trainingObjectType}/batch/labels/archive`
+    const v4Response = await hubspotFetch(v4Url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        inputs: [
+          {
+            from: { id: contactId },
+            to: { id: trainingId },
+            types: [
+              {
+                associationCategory: row.associationCategory,
+                associationTypeId: row.associationTypeId,
+              },
+            ],
+          },
+        ],
+      }),
+    })
+
+    if (v4Response.status === 204 || v4Response.ok) {
+      return
+    }
+
+    const v4Parsed = await safeParseResponse(v4Response)
+    const msg =
+      (v4Parsed && (v4Parsed.message || v4Parsed.error || v4Parsed.text)) ||
+      v4Response.statusText
+    throw new Error(`Failed to remove training association: ${msg}`)
+  }
+
+  const associationType = row.associationType ?? getRegistrantAssociationLabel()
+  const v3Url = `${HUBSPOT_API_BASE}/crm/v3/associations/contacts/${trainingObjectType}/batch/archive`
+  const v3Response = await hubspotFetch(v3Url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      inputs: [
+        {
+          from: { id: contactId },
+          to: { id: trainingId },
+          type: associationType,
+        },
+      ],
+    }),
+  })
+
+  if (v3Response.status === 204 || v3Response.ok) {
+    return
+  }
+
+  const v3Parsed = await safeParseResponse(v3Response)
+  const msg =
+    (v3Parsed && (v3Parsed.message || v3Parsed.error || v3Parsed.text)) ||
+    v3Response.statusText
+  throw new Error(`Failed to remove training association: ${msg}`)
+}
+
+async function createContactTrainingAssociation(
+  contactId: string,
+  trainingId: string,
+  label: string,
+  typeId?: string
+): Promise<void> {
+  if (!getApiKey()) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  const trainingObjectType = getTrainingObjectType()
+  const headers = {
+    Authorization: `Bearer ${getApiKey()}`,
+    'Content-Type': 'application/json',
+  }
+
+  if (typeId) {
+    const v4Url = `${HUBSPOT_API_BASE}/crm/v4/associations/contacts/${trainingObjectType}/batch/create`
+    const v4Response = await hubspotFetch(v4Url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        inputs: [
+          {
+            from: { id: contactId },
+            to: { id: trainingId },
+            types: [
+              {
+                associationCategory: 'USER_DEFINED',
+                associationTypeId: Number.parseInt(typeId, 10),
+              },
+            ],
+          },
+        ],
+      }),
+    })
+
+    const v4Parsed = await safeParseResponse(v4Response)
+    if (v4Response.ok) return
+
+    if (!isDuplicateAssociationResponse(v4Parsed, v4Response.status)) {
+      const msg =
+        (v4Parsed && (v4Parsed.message || v4Parsed.error || v4Parsed.text)) ||
+        v4Response.statusText
+      throw new Error(`Failed to create training association: ${msg}`)
+    }
+    return
+  }
+
+  const v3Url = `${HUBSPOT_API_BASE}/crm/v3/associations/contacts/${trainingObjectType}/batch/create`
+  const v3Response = await hubspotFetch(v3Url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      inputs: [
+        {
+          from: { id: contactId },
+          to: { id: trainingId },
+          type: label,
+        },
+      ],
+    }),
+  })
+
+  const v3Parsed = await safeParseResponse(v3Response)
+  if (!v3Response.ok) {
+    if (isDuplicateAssociationResponse(v3Parsed, v3Response.status)) return
+    const msg =
+      (v3Parsed && (v3Parsed.message || v3Parsed.error || v3Parsed.text)) ||
+      v3Response.statusText
+    throw new Error(`Failed to create training association: ${msg}`)
+  }
+}
+
+/**
+ * Unregister a contact from a training.
+ * - mode `remove`: archive the registrant association only.
+ * - mode `relabel`: archive registrant, then associate with cancelled label (audit trail).
+ * Idempotent when already cancelled.
+ */
+export async function unregisterContactFromTraining(
+  contactId: string,
+  trainingId: string,
+  mode: 'remove' | 'relabel' = 'remove'
+): Promise<{ alreadyCancelled: boolean }> {
+  const registrantLabel = getRegistrantAssociationLabel()
+  const cancelledLabel = getCancelledAssociationLabel()
+  const associations = await getContactTrainingAssociations(contactId)
+
+  if (
+    hasCancelledAssociation(
+      associations,
+      trainingId,
+      cancelledLabel,
+      getCancelledAssociationTypeId()
+    )
+  ) {
+    return { alreadyCancelled: true }
+  }
+
+  const registrantRows = findRegistrantAssociationsForTraining(
+    associations,
+    trainingId,
+    registrantLabel,
+    getRegistrantAssociationTypeId(),
+    cancelledLabel,
+    getCancelledAssociationTypeId()
+  )
+
+  if (registrantRows.length === 0) {
+    throw new Error('Contact is not registered for this training')
+  }
+
+  for (const row of registrantRows) {
+    await archiveContactTrainingAssociation(contactId, trainingId, row)
+  }
+
+  if (mode === 'relabel') {
+    try {
+      await createContactTrainingAssociation(
+        contactId,
+        trainingId,
+        cancelledLabel,
+        getCancelledAssociationTypeId()
+      )
+    } catch (error: unknown) {
+      console.error('Cancelled association label create failed:', error)
+      throw new Error(
+        `Registration removed, but could not apply cancelled label "${cancelledLabel}". Check HUBSPOT_TRAINING_CANCELLED_ASSOCIATION_LABEL in HubSpot.`
+      )
+    }
+  }
+
+  return { alreadyCancelled: false }
+}
+
+export async function getTrainingById(trainingId: string): Promise<HubSpotTraining | null> {
+  if (!getApiKey()) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  const objectType = getTrainingObjectType()
+  const properties = getTrainingProperties()
+
+  const url = new URL(`${HUBSPOT_API_BASE}/crm/v3/objects/${objectType}/${trainingId}`)
+  url.searchParams.set('properties', properties.join(','))
+
+  const response = await hubspotFetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${getApiKey()}`,
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (response.status === 404) {
+    return null
+  }
+
+  const parsed = await safeParseResponse(response)
+  if (!response.ok) {
+    const msg =
+      (parsed && (parsed.message || parsed.error || parsed.text)) || response.statusText
+    throw new Error(`Failed to fetch training: ${msg}`)
+  }
+
+  return parsed ?? null
 }
 
 async function safeParseResponse(res: Response): Promise<any> {
@@ -421,6 +672,19 @@ export async function associateContactToTraining(
     throw new AlreadyRegisteredError('You are already on the waitlist for this event.')
   }
 
+  if (role === 'registrant') {
+    const associations = await getContactTrainingAssociations(contactId)
+    const replaceableRows = findNonRegistrantAssociationsForTraining(
+      associations,
+      trainingId,
+      getRegistrantAssociationLabel(),
+      getRegistrantAssociationTypeId()
+    )
+    for (const row of replaceableRows) {
+      await archiveContactTrainingAssociation(contactId, trainingId, row)
+    }
+  }
+
   const trainingObjectType = getTrainingObjectType()
 
   // Use the batch associations endpoint which is the supported pattern
@@ -530,16 +794,10 @@ export async function getTrainingObjects(
   const limit = 100
   let allResults: HubSpotTraining[] = []
   let after: string | null = null
-  const requestedProperties = (
-    process.env.HUBSPOT_TRAINING_PROPERTIES ||
-    'hs_pipeline,hs_pipeline_stage,training_1st_day_start_datetime,training_1st_day_end_datetime,training_2nd_day_start_datetime,training_2nd_day_end_datetime,available_capacity,name,location,capacity,description,cutoff_time'
-  )
-    .split(',')
-    .map((value) => value.trim())
-    .filter(Boolean)
+  const requestedProperties = getTrainingProperties()
 
   try {
-    const objectType = process.env.HUBSPOT_TRAINING_OBJECT_ID || '0-410'
+    const objectType = getTrainingObjectType()
 
     do {
       const url = new URL(`${HUBSPOT_API_BASE}/crm/v3/objects/${objectType}`)

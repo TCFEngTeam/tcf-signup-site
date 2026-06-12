@@ -44,6 +44,53 @@
     "eventNotFoundLink": "returning to the {program} event list",
     "eventNotFoundAfterLink": "and opening a known event."
   },
+  "unregister": {
+    "page": {
+      "eyebrow": "Registration",
+      "title": "Cancel your registration",
+      "intro": "Enter the email you used to sign up and we'll show any active registrations for that program. You can then choose a session and we'll email you a link to confirm cancellation."
+    },
+    "request": {
+      "programLabel": "Program",
+      "sessionLabel": "Session",
+      "sessionPlaceholder": "Select a session…",
+      "emailLabel": "Email address",
+      "checkedEmailLabel": "Email",
+      "changeEmail": "Use a different email",
+      "linkExpiryHint": "We will email you a secure link to confirm cancellation. The link is valid until the end of your training session.",
+      "invalidEmail": "Enter a valid email address.",
+      "networkError": "Network error. Please try again.",
+      "requestFailed": "Something went wrong. Please try again.",
+      "noRegistrations": "We didn't find any active registrations for this email and program.",
+      "notRegisteredForSession": "No active registration was found for that session.",
+      "sessionEnded": "This session has already ended and can no longer be cancelled online.",
+      "selectSession": "Select the session you want to cancel, then we'll email you a confirmation link.",
+      "sessionRequired": "Select the session you want to cancel.",
+      "submitChecking": "Checking…",
+      "submitCheck": "Check for Registrations",
+      "submitSending": "Sending…",
+      "submitSendEmail": "Email me a confirmation link",
+      "startOver": "Cancel another registration"
+    },
+    "confirm": {
+      "invalidLinkTitle": "Invalid link",
+      "invalidLinkBody": "This confirmation link is missing or invalid.",
+      "previewTitle": "Confirm cancellation",
+      "previewIntro": "You are about to cancel your registration for:",
+      "confirmButton": "Yes, cancel my registration",
+      "confirming": "Cancelling…",
+      "successTitle": "Registration cancelled",
+      "successIntro": "You are no longer registered for",
+      "alreadyCancelledTitle": "Already cancelled",
+      "alreadyCancelledBody": "This registration was already cancelled.",
+      "relabelNote": "Your registration was marked as cancelled in our system (audit record kept).",
+      "viewOtherSessions": "View other sessions",
+      "requestNewLink": "Request a new cancellation link",
+      "errorTitle": "Could not confirm",
+      "errorFallback": "Could not confirm cancellation.",
+      "fallbackSessionTitle": "your training session"
+    }
+  },
   "success": {
     "metadataTitle": "Signup Confirmed",
     "metadataDescription": "Your training signup has been submitted successfully.",

@@ -18,23 +18,32 @@ export type TrainingSchedule = {
   session2End?: string
 }
 
-export function getTrainingCutoffPropertyKey() {
-  return process.env.HUBSPOT_TRAINING_CUTOFF_PROPERTY ?? 'cutoff_time'
+export {
+  getTrainingCutoffPropertyKey,
+  getTrainingSchedulePropertyKeys,
+} from '@/lib/hubspot/config'
+
+/** End of the training session — prefers day 2 end when present. */
+export function getTrainingEventEndDate(schedule: TrainingSchedule): Date | null {
+  return (
+    parseScheduleDateTime(schedule.session2End) ??
+    parseScheduleDateTime(schedule.session1End)
+  )
 }
 
-export function getTrainingSchedulePropertyKeys() {
-  return {
-    session1Start:
-      process.env.HUBSPOT_TRAINING_1ST_DAY_START_PROPERTY ??
-      'training_1st_day_start_datetime',
-    session1End:
-      process.env.HUBSPOT_TRAINING_1ST_DAY_END_PROPERTY ?? 'training_1st_day_end_datetime',
-    session2Start:
-      process.env.HUBSPOT_TRAINING_2ND_DAY_START_PROPERTY ??
-      'training_2nd_day_start_datetime',
-    session2End:
-      process.env.HUBSPOT_TRAINING_2ND_DAY_END_PROPERTY ?? 'training_2nd_day_end_datetime',
-  }
+export function getTrainingEventEndUnix(schedule: TrainingSchedule): number | null {
+  const end = getTrainingEventEndDate(schedule)
+  return end ? Math.floor(end.getTime() / 1000) : null
+}
+
+/** True when the training session end datetime is in the past. */
+export function isTrainingEventEnded(
+  schedule: TrainingSchedule,
+  now: Date = new Date()
+): boolean {
+  const end = getTrainingEventEndDate(schedule)
+  if (!end) return false
+  return now.getTime() > end.getTime()
 }
 
 export function parseScheduleDateTime(value?: string): Date | null {

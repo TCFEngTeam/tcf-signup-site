@@ -1,0 +1,64 @@
+{
+  "training": {
+    "objectId": "0-410",
+    "properties": [
+      "hs_pipeline",
+      "hs_pipeline_stage",
+      "training_1st_day_start_datetime",
+      "training_1st_day_end_datetime",
+      "training_2nd_day_start_datetime",
+      "training_2nd_day_end_datetime",
+      "hs_course_name",
+      "hs_enrollment_capacity",
+      "available_capacity",
+      "cutoff_time",
+      "name",
+      "location",
+      "description"
+    ],
+    "scheduleProperties": {
+      "session1Start": "training_1st_day_start_datetime",
+      "session1End": "training_1st_day_end_datetime",
+      "session2Start": "training_2nd_day_start_datetime",
+      "session2End": "training_2nd_day_end_datetime",
+      "cutoffTime": "cutoff_time"
+    }
+  },
+  "associations": {
+    "registrant": "registrant",
+    "cancelled": "unregistered",
+    "waitlist": "waitlisted"
+  },
+  "programs": {
+    "mhfa": {
+      "pipelineType": "9dd7104c-1ae0-402b-a194-9cc567fd6a45",
+      "pipelineStage": "3e1a235d-1a64-4b7a-9ed5-7f0273ebd774",
+      "closedPipelineStage": "1372234401"
+    },
+    "qpr": {
+      "pipelineType": "905081238",
+      "pipelineStage": "1369953208",
+      "closedPipelineStage": "1372235091"
+    }
+  },
+  "contactProperties": {
+    "firstName": "firstname",
+    "lastName": "lastname",
+    "email": "email",
+    "phone": "phone",
+    "hometownCity": "hometown_city",
+    "hometownState": "hometown_state",
+    "currentYear": "current_year_in_school",
+    "virginiaResident": "are_you_currently_a_virginia_resident_or_attending_a_college_in_virginia_",
+    "interestReason": "why_are_you_interested_in_learning_question__persuade__and_refer_training_",
+    "communitySupport": "how_do_you_plan_to_use_this_training_to_support_others_in_your_community_or_on_your_campus_"
+  },
+  "smsConsent": {
+    "property": "span_style__font_style__inherit__font_weight__inherit__border__0px__color__black__font_size__12pt__",
+    "yesValue": "nABLB1wXwnWES39Rff7ZO",
+    "noValue": "MTlPSCzKCtIey_DQUT4aW"
+  },
+  "unregister": {
+    "mode": "relabel"
+  }
+}
