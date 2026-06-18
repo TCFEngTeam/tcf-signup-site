@@ -52,7 +52,6 @@
     "studentPhoneLabel": "Phone",
     "sessionHeading": "Session",
     "scheduleHeading": "Session date(s)",
-    "locationHeading": "Location",
     "viewEventLink": "View event in signup app"
   },
   "fields": {

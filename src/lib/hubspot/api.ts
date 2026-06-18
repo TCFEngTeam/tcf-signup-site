@@ -822,7 +822,10 @@ export async function getContactByEmail(email: string): Promise<HubSpotContact |
           ],
         },
       ],
-      properties: ['email'],
+      properties: (() => {
+        const keys = getContactPropertyKeys()
+        return [keys.email, keys.firstName, keys.lastName, keys.phone]
+      })(),
       limit: 1,
     }),
   })

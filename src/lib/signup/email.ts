@@ -227,8 +227,6 @@ export async function sendWaitlistStaffNotificationEmail(
     `  ${input.event.title} (${programLabel})`,
     copy.scheduleHeading,
     ...scheduleLines.map((line) => `  ${line}`),
-    copy.locationHeading,
-    `  ${input.event.location}`,
     '',
     `${copy.viewEventLink}: ${eventUrl}`,
   ].join('\n')
@@ -245,7 +243,6 @@ export async function sendWaitlistStaffNotificationEmail(
     <p><strong>${escapeHtml(copy.sessionHeading)}</strong><br>${escapeHtml(input.event.title)} (${escapeHtml(programLabel)})</p>
     <p><strong>${escapeHtml(copy.scheduleHeading)}</strong></p>
     <ul>${scheduleHtml}</ul>
-    <p><strong>${escapeHtml(copy.locationHeading)}</strong><br>${escapeHtml(input.event.location)}</p>
     <p><a href="${escapeHtml(eventUrl)}">${escapeHtml(copy.viewEventLink)}</a></p>
   `.trim()
 

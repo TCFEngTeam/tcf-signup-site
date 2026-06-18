@@ -1,6 +1,7 @@
 import {
   getCancelledAssociationLabel,
   getCancelledAssociationTypeId,
+  getContactPropertyKeys,
   getRegistrantAssociationTypeId,
   getWaitlistAssociationLabel,
   getWaitlistAssociationTypeId,
@@ -42,7 +43,7 @@ import {
   verifyUnregisterToken,
   type UnregisterKind,
 } from '@/lib/unregister/token'
-import { sendUnregisterConfirmationEmail } from '@/lib/unregister/email'
+import { sendUnregisterConfirmationEmail, sendUnregisterStaffNotificationEmail } from '@/lib/unregister/email'
 
 const eventLabels = pagesContent.events
 
@@ -64,6 +65,15 @@ export type RequestUnregisterResult = { status: 'sent'; message: string }
 /** Same message whether or not the email exists (avoid account enumeration). */
 export const UNREGISTER_ACK_MESSAGE =
   'If that email has an active registration or waitlist spot for the selected session, you will receive a confirmation link shortly.'
+
+function readContactNameAndPhone(contact: { properties: Record<string, string> }) {
+  const keys = getContactPropertyKeys()
+  return {
+    firstName: contact.properties[keys.firstName]?.trim() ?? '',
+    lastName: contact.properties[keys.lastName]?.trim() ?? '',
+    phone: contact.properties[keys.phone]?.trim() ?? '',
+  }
+}
 
 function readTrainingTitle(training: { properties: Record<string, string> }) {
   return (
@@ -317,6 +327,23 @@ export async function confirmUnregister(token: string) {
     const training = await getTrainingById(payload.trainingId)
     if (training) {
       trainingTitle = readTrainingTitle(training)
+    }
+  }
+
+  if (!alreadyCancelled && event) {
+    const { firstName, lastName, phone } = readContactNameAndPhone(contact)
+    try {
+      await sendUnregisterStaffNotificationEmail({
+        studentFirstName: firstName,
+        studentLastName: lastName,
+        studentEmail: payload.email,
+        studentPhone: phone,
+        program: payload.program,
+        event,
+        kind,
+      })
+    } catch (staffEmailError) {
+      console.error('Unregister staff notification email failed:', staffEmailError)
     }
   }
 
