@@ -17,6 +17,7 @@ import { isTrainingProgramId } from '@/lib/programs/config'
 import {
   sendRegistrationConfirmationEmail,
   sendWaitlistConfirmationEmail,
+  sendWaitlistStaffNotificationEmail,
 } from '@/lib/signup/email'
 
 export const dynamic = 'force-dynamic'
@@ -154,6 +155,18 @@ export async function POST(req: Request) {
       }
       if (waitlisted) {
         await sendWaitlistConfirmationEmail(emailInput)
+        try {
+          await sendWaitlistStaffNotificationEmail({
+            studentFirstName: formatted.firstName,
+            studentLastName: formatted.lastName,
+            studentEmail: formatted.email,
+            studentPhone: formatted.phone,
+            program,
+            event: ev,
+          })
+        } catch (staffEmailError) {
+          console.error('Waitlist staff notification email failed:', staffEmailError)
+        }
       } else {
         await sendRegistrationConfirmationEmail(emailInput)
       }

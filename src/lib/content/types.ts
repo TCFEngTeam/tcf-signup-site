@@ -93,6 +93,17 @@ export type SignupFormContent = {
     leaveWaitlistLink: string
     closing: string
   }
+  waitlistStaffNotificationEmail: {
+    subject: string
+    intro: string
+    studentNameLabel: string
+    studentEmailLabel: string
+    studentPhoneLabel: string
+    sessionHeading: string
+    scheduleHeading: string
+    locationHeading: string
+    viewEventLink: string
+  }
   fields: Record<SignupFormFieldKey, string>
   placeholders: {
     hometownState: string

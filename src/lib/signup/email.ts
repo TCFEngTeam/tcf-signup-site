@@ -6,6 +6,7 @@ import { escapeHtml, replaceTemplateTokens, sendResendEmail } from '@/lib/email/
 import type { TrainingProgramId } from '@/lib/programs/config'
 import { getTrainingProgram } from '@/lib/programs/config'
 import type { ProgramEvent } from '@/lib/programs/events'
+import { getWaitlistNotifyEmail } from '@/lib/signup/config'
 import {
   createUnregisterToken,
   formatUnregisterTokenExpiry,
@@ -170,5 +171,89 @@ export async function sendWaitlistConfirmationEmail(input: SendRegistrationConfi
     text,
     html,
     logLabel: 'waitlist-signup',
+  })
+}
+
+type SendWaitlistStaffNotificationInput = {
+  studentFirstName: string
+  studentLastName: string
+  studentEmail: string
+  studentPhone: string
+  program: TrainingProgramId
+  event: ProgramEvent
+}
+
+export async function sendWaitlistStaffNotificationEmail(
+  input: SendWaitlistStaffNotificationInput
+) {
+  const notifyTo = getWaitlistNotifyEmail()
+  if (!notifyTo) {
+    if (process.env.NODE_ENV === 'development') {
+      console.info(
+        '[waitlist-staff-notify] WAITLIST_NOTIFY_EMAIL is not set; skipping staff notification.'
+      )
+    }
+    return { delivered: false, skipped: true as const }
+  }
+
+  const copy = signupFormContent.waitlistStaffNotificationEmail
+  const program = getTrainingProgram(input.program)
+  const programLabel = program?.shortLabel ?? input.program.toUpperCase()
+  const scheduleLines = formatTrainingScheduleLines(input.event.schedule)
+  const eventUrl = `${getAppBaseUrl()}/${input.program}/events/${input.event.id}`
+  const studentName = `${input.studentFirstName} ${input.studentLastName}`.trim()
+  const tokens = {
+    program: programLabel,
+    trainingTitle: input.event.title,
+    studentName,
+    studentEmail: input.studentEmail,
+    studentPhone: input.studentPhone,
+  }
+
+  const subject = replaceTemplateTokens(copy.subject, tokens)
+  const intro = replaceTemplateTokens(copy.intro, tokens)
+
+  const text = [
+    intro,
+    '',
+    copy.studentNameLabel,
+    `  ${studentName}`,
+    copy.studentEmailLabel,
+    `  ${input.studentEmail}`,
+    copy.studentPhoneLabel,
+    `  ${input.studentPhone}`,
+    '',
+    copy.sessionHeading,
+    `  ${input.event.title} (${programLabel})`,
+    copy.scheduleHeading,
+    ...scheduleLines.map((line) => `  ${line}`),
+    copy.locationHeading,
+    `  ${input.event.location}`,
+    '',
+    `${copy.viewEventLink}: ${eventUrl}`,
+  ].join('\n')
+
+  const scheduleHtml = scheduleLines
+    .map((line) => `<li>${escapeHtml(line)}</li>`)
+    .join('')
+
+  const html = `
+    <p>${escapeHtml(intro)}</p>
+    <p><strong>${escapeHtml(copy.studentNameLabel)}</strong><br>${escapeHtml(studentName)}</p>
+    <p><strong>${escapeHtml(copy.studentEmailLabel)}</strong><br>${escapeHtml(input.studentEmail)}</p>
+    <p><strong>${escapeHtml(copy.studentPhoneLabel)}</strong><br>${escapeHtml(input.studentPhone)}</p>
+    <p><strong>${escapeHtml(copy.sessionHeading)}</strong><br>${escapeHtml(input.event.title)} (${escapeHtml(programLabel)})</p>
+    <p><strong>${escapeHtml(copy.scheduleHeading)}</strong></p>
+    <ul>${scheduleHtml}</ul>
+    <p><strong>${escapeHtml(copy.locationHeading)}</strong><br>${escapeHtml(input.event.location)}</p>
+    <p><a href="${escapeHtml(eventUrl)}">${escapeHtml(copy.viewEventLink)}</a></p>
+  `.trim()
+
+  return sendResendEmail({
+    to: notifyTo,
+    subject,
+    text,
+    html,
+    logLabel: 'waitlist-staff-notify',
   })
 }

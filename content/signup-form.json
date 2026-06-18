@@ -44,6 +44,17 @@
     "leaveWaitlistLink": "Leave the waitlist",
     "closing": "Thank you for your interest in this training."
   },
+  "waitlistStaffNotificationEmail": {
+    "subject": "Waitlist signup — {program}: {trainingTitle}",
+    "intro": "A student joined the waitlist for the session below.",
+    "studentNameLabel": "Name",
+    "studentEmailLabel": "Email",
+    "studentPhoneLabel": "Phone",
+    "sessionHeading": "Session",
+    "scheduleHeading": "Session date(s)",
+    "locationHeading": "Location",
+    "viewEventLink": "View event in signup app"
+  },
   "fields": {
     "firstName": "First Name",
     "lastName": "Last Name",
