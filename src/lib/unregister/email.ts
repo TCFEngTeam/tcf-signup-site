@@ -5,7 +5,7 @@ import { escapeHtml, replaceTemplateTokens, sendResendEmail } from '@/lib/email/
 import type { TrainingProgramId } from '@/lib/programs/config'
 import { getTrainingProgram } from '@/lib/programs/config'
 import type { ProgramEvent } from '@/lib/programs/events'
-import { getWaitlistNotifyEmail } from '@/lib/signup/config'
+import { getStaffNotifyEmail } from '@/lib/signup/config'
 import type { UnregisterKind } from '@/lib/unregister/token'
 
 type SendUnregisterEmailInput = {
@@ -74,11 +74,11 @@ type SendUnregisterStaffNotificationInput = {
 export async function sendUnregisterStaffNotificationEmail(
   input: SendUnregisterStaffNotificationInput
 ) {
-  const notifyTo = getWaitlistNotifyEmail()
+  const notifyTo = getStaffNotifyEmail()
   if (!notifyTo) {
     if (process.env.NODE_ENV === 'development') {
       console.info(
-        '[unregister-staff-notify] WAITLIST_NOTIFY_EMAIL is not set; skipping staff notification.'
+        '[unregister-staff-notify] STAFF_NOTIFY_EMAIL is not set; skipping staff notification.'
       )
     }
     return { delivered: false, skipped: true as const }

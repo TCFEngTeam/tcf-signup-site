@@ -31,11 +31,11 @@ const sampleEvent = {
 describe('sendUnregisterStaffNotificationEmail', () => {
   beforeEach(() => {
     sendResendEmail.mockResolvedValue({ delivered: true, devLogged: false })
-    process.env.WAITLIST_NOTIFY_EMAIL = 'staff@example.com'
+    process.env.STAFF_NOTIFY_EMAIL = 'staff@example.com'
   })
 
   afterEach(() => {
-    delete process.env.WAITLIST_NOTIFY_EMAIL
+    delete process.env.STAFF_NOTIFY_EMAIL
     vi.clearAllMocks()
   })
 
@@ -78,8 +78,8 @@ describe('sendUnregisterStaffNotificationEmail', () => {
     )
   })
 
-  it('skips when WAITLIST_NOTIFY_EMAIL is unset', async () => {
-    delete process.env.WAITLIST_NOTIFY_EMAIL
+  it('skips when STAFF_NOTIFY_EMAIL is unset', async () => {
+    delete process.env.STAFF_NOTIFY_EMAIL
 
     const result = await sendUnregisterStaffNotificationEmail({
       studentFirstName: 'Jane',
