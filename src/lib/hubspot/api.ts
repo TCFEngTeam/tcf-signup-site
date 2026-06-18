@@ -26,6 +26,7 @@ import {
   contactHasAssociationForTraining,
   findNonRegistrantAssociationsForTraining,
   findRegistrantAssociationsForTraining,
+  findUnwaitlistedAssociationsForTraining,
   findWaitlistAssociationsForTraining,
   hasActiveRegistrantAssociation,
   hasCancelledAssociation,
@@ -736,8 +737,9 @@ export async function associateContactToTraining(
     throw new AlreadyRegisteredError('You are already on the waitlist for this event.')
   }
 
+  const associations = await getContactTrainingAssociations(contactId)
+
   if (role === 'registrant') {
-    const associations = await getContactTrainingAssociations(contactId)
     const replaceableRows = findNonRegistrantAssociationsForTraining(
       associations,
       trainingId,
@@ -745,6 +747,18 @@ export async function associateContactToTraining(
       getRegistrantAssociationTypeId()
     )
     for (const row of replaceableRows) {
+      await archiveContactTrainingAssociation(contactId, trainingId, row)
+    }
+  }
+
+  if (role === 'waitlist') {
+    const unwaitlistedRows = findUnwaitlistedAssociationsForTraining(
+      associations,
+      trainingId,
+      getUnwaitlistedAssociationLabel(),
+      getUnwaitlistedAssociationTypeId()
+    )
+    for (const row of unwaitlistedRows) {
       await archiveContactTrainingAssociation(contactId, trainingId, row)
     }
   }

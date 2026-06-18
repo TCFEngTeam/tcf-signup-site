@@ -201,6 +201,19 @@ export function findCancelledAssociationsForTraining(
   )
 }
 
+export function findUnwaitlistedAssociationsForTraining(
+  rows: TrainingAssociationRow[],
+  trainingId: string,
+  unwaitlistedLabel: string,
+  unwaitlistedTypeId?: string
+): TrainingAssociationRow[] {
+  return rows.filter(
+    (row) =>
+      row.trainingId === String(trainingId) &&
+      matchesAssociationLabel(row, unwaitlistedLabel, unwaitlistedTypeId)
+  )
+}
+
 export function findRegistrantAssociationsForTraining(
   rows: TrainingAssociationRow[],
   trainingId: string,

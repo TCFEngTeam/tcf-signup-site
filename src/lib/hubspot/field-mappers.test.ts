@@ -7,6 +7,7 @@ import {
   findCancelledAssociationsForTraining,
   findNonRegistrantAssociationsForTraining,
   findRegistrantAssociationsForTraining,
+  findUnwaitlistedAssociationsForTraining,
   findWaitlistAssociationsForTraining,
   hasActiveRegistrantAssociation,
   hasCancelledAssociation,
@@ -176,6 +177,18 @@ describe('findCancelledAssociationsForTraining', () => {
     expect(
       findCancelledAssociationsForTraining(rows, '222', 'unregistered')
     ).toEqual([{ trainingId: '222', associationType: 'unregistered' }])
+  })
+})
+
+describe('findUnwaitlistedAssociationsForTraining', () => {
+  it('returns unwaitlisted label rows for a training', () => {
+    const rows = [
+      { trainingId: '222', associationType: 'waitlisted' },
+      { trainingId: '222', associationType: 'unwaitlisted' },
+    ]
+    expect(
+      findUnwaitlistedAssociationsForTraining(rows, '222', 'unwaitlisted')
+    ).toEqual([{ trainingId: '222', associationType: 'unwaitlisted' }])
   })
 })
 
