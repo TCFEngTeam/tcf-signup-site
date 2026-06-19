@@ -1,6 +1,9 @@
 /** Public URL paths under the trainings section. */
 export const TRAININGS_PATH = '/trainings'
 
+/** Public URL path for the opportunities section. */
+export const OPPORTUNITIES_PATH = '/opportunities'
+
 export function trainingsProgramPath(programSlug: string): string {
   return `${TRAININGS_PATH}/${programSlug}`
 }

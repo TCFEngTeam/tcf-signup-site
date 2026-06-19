@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  OPPORTUNITIES_PATH,
   trainingsEventPath,
   trainingsEventSuccessPath,
   trainingsProgramPath,
@@ -8,6 +9,10 @@ import {
 } from '@/lib/routes'
 
 describe('trainings routes', () => {
+  it('exposes opportunities path', () => {
+    expect(OPPORTUNITIES_PATH).toBe('/opportunities')
+  })
+
   it('builds program and event paths', () => {
     expect(trainingsProgramPath('mhfa')).toBe('/trainings/mhfa')
     expect(trainingsEventPath('qpr', '123')).toBe('/trainings/qpr/events/123')
