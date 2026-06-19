@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { trainingsEventSuccessPath } from '@/lib/routes'
 import {
   composePhoneNumber,
   formatCityName,
@@ -340,7 +341,7 @@ export default function EventSignupForm({
           setMessage(joinedWaitlist ? formMessages.waitlistSuccess : formMessages.signupSuccess)
           if (shouldRedirectOnSuccess && programId) {
             const query = joinedWaitlist ? '?waitlist=1' : ''
-            router.push(`/${programId}/events/${eventId}/success${query}`)
+            router.push(trainingsEventSuccessPath(programId, eventId, query))
           }
         }
       } catch (err: any) {

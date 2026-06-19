@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { trainingsEventPath } from '@/lib/routes'
 import type { TrainingSchedule } from '@/lib/dates/format-schedule'
 import { pagesContent } from '@/lib/content'
 import type { TrainingProgramId } from '@/lib/programs/config'
@@ -64,7 +65,7 @@ export default function EventCard({ event, program }: EventCardProps) {
         />
 
         {waitlistOpen ? (
-          <Link href={`/${program}/events/${event?.id}`} className="btn-primary inline-flex justify-center mt-3">
+          <Link href={trainingsEventPath(program, event?.id ?? '')} className="btn-primary inline-flex justify-center mt-3">
             {card.joinWaitlist}
           </Link>
         ) : signupBlocked ? (
@@ -72,7 +73,7 @@ export default function EventCard({ event, program }: EventCardProps) {
             {blockedLabel}
           </span>
         ) : (
-          <Link href={`/${program}/events/${event?.id}`} className="btn-primary inline-flex justify-center mt-3">
+          <Link href={trainingsEventPath(program, event?.id ?? '')} className="btn-primary inline-flex justify-center mt-3">
             {card.signUp}
           </Link>
         )}

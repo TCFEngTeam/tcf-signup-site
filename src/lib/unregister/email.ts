@@ -6,6 +6,7 @@ import type { TrainingProgramId } from '@/lib/programs/config'
 import { getTrainingProgram } from '@/lib/programs/config'
 import type { ProgramEvent } from '@/lib/programs/events'
 import { getStaffNotifyEmail } from '@/lib/signup/config'
+import { trainingsEventPath, trainingsUnregisterConfirmPath } from '@/lib/routes'
 import type { UnregisterKind } from '@/lib/unregister/token'
 
 type SendUnregisterEmailInput = {
@@ -18,7 +19,7 @@ type SendUnregisterEmailInput = {
 }
 
 export async function sendUnregisterConfirmationEmail(input: SendUnregisterEmailInput) {
-  const confirmUrl = `${getAppBaseUrl()}/unregister/confirm?token=${encodeURIComponent(input.token)}`
+  const confirmUrl = `${getAppBaseUrl()}${trainingsUnregisterConfirmPath(input.token)}`
   const program = getTrainingProgram(input.program)
   const programLabel = program?.shortLabel ?? input.program.toUpperCase()
   const isWaitlist = input.kind === 'waitlist'
@@ -89,7 +90,7 @@ export async function sendUnregisterStaffNotificationEmail(
   const program = getTrainingProgram(input.program)
   const programLabel = program?.shortLabel ?? input.program.toUpperCase()
   const scheduleLines = formatTrainingScheduleLines(input.event.schedule)
-  const eventUrl = `${getAppBaseUrl()}/${input.program}/events/${input.event.id}`
+  const eventUrl = `${getAppBaseUrl()}${trainingsEventPath(input.program, input.event.id)}`
   const studentName = `${input.studentFirstName} ${input.studentLastName}`.trim()
   const tokens = {
     program: programLabel,

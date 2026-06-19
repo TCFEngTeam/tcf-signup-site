@@ -8,6 +8,10 @@ import { getTrainingProgram } from '@/lib/programs/config'
 import type { ProgramEvent } from '@/lib/programs/events'
 import { getStaffNotifyEmail } from '@/lib/signup/config'
 import {
+  trainingsEventPath,
+  trainingsUnregisterConfirmPath,
+} from '@/lib/routes'
+import {
   createUnregisterToken,
   formatUnregisterTokenExpiry,
   resolveUnregisterTokenExpiry,
@@ -39,7 +43,7 @@ function buildConfirmationEmailContent(
   const program = getTrainingProgram(input.program)
   const programLabel = program?.shortLabel ?? input.program.toUpperCase()
   const scheduleLines = formatTrainingScheduleLines(input.event.schedule)
-  const eventUrl = `${getAppBaseUrl()}/${input.program}/events/${input.event.id}`
+  const eventUrl = `${getAppBaseUrl()}${trainingsEventPath(input.program, input.event.id)}`
   const tokens = {
     firstName: input.firstName,
     program: programLabel,
@@ -125,7 +129,7 @@ export async function sendRegistrationConfirmationEmail(
     { expiresAt: tokenExpiry }
   )
   const cancelLinkExpiry = formatUnregisterTokenExpiry(tokenExpiry)
-  const unregisterUrl = `${getAppBaseUrl()}/unregister/confirm?token=${encodeURIComponent(token)}`
+  const unregisterUrl = `${getAppBaseUrl()}${trainingsUnregisterConfirmPath(token)}`
   const { subject, text, html } = buildConfirmationEmailContent(copy, input, {
     unregisterUrl,
     cancelLinkExpiry,
@@ -156,7 +160,7 @@ export async function sendWaitlistConfirmationEmail(input: SendRegistrationConfi
     { expiresAt: tokenExpiry }
   )
   const cancelLinkExpiry = formatUnregisterTokenExpiry(tokenExpiry)
-  const unregisterUrl = `${getAppBaseUrl()}/unregister/confirm?token=${encodeURIComponent(token)}`
+  const unregisterUrl = `${getAppBaseUrl()}${trainingsUnregisterConfirmPath(token)}`
   const { subject, text, html } = buildConfirmationEmailContent(copy, input, {
     unregisterUrl,
     cancelLinkExpiry,
@@ -200,7 +204,7 @@ export async function sendWaitlistStaffNotificationEmail(
   const program = getTrainingProgram(input.program)
   const programLabel = program?.shortLabel ?? input.program.toUpperCase()
   const scheduleLines = formatTrainingScheduleLines(input.event.schedule)
-  const eventUrl = `${getAppBaseUrl()}/${input.program}/events/${input.event.id}`
+  const eventUrl = `${getAppBaseUrl()}${trainingsEventPath(input.program, input.event.id)}`
   const studentName = `${input.studentFirstName} ${input.studentLastName}`.trim()
   const tokens = {
     program: programLabel,

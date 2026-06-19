@@ -8,7 +8,7 @@
   },
   "footerText": "© TCF — Event Signup",
   "mainSiteUrl": "https://www.trustedcarefoundation.org/youth-mental-health-program",
-  "homeRedirectUrl": "https://www.trustedcarefoundation.org/youth-mental-health-program",
+  "homeRedirectUrl": "https://www.trustedcarefoundation.org",
   "metadata": {
     "defaultTitle": "TCF Event Signup",
     "titleTemplate": "%s | TCF Event Signup",

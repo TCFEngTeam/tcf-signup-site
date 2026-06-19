@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { pagesContent } from '@/lib/content'
+import { trainingsProgramPath } from '@/lib/routes'
 import type { UnregisterKind } from '@/lib/unregister/token'
 
 const confirm = pagesContent.unregister.confirm
@@ -89,7 +90,7 @@ export default function UnregisterConfirmClient({
           </p>
         ) : null}
         <p className="mt-6">
-          <Link href={`/${programSlug}`} className="underline">
+          <Link href={trainingsProgramPath(programSlug)} className="underline">
             {confirm.viewOtherSessions}
           </Link>
         </p>

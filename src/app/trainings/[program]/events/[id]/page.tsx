@@ -10,6 +10,7 @@ import Header from '@/components/layout/Header'
 import { formatContent, pagesContent } from '@/lib/content'
 import { canAcceptRegistration, canAcceptWaitlist, loadProgramEventById } from '@/lib/programs/events'
 import { getTrainingProgram } from '@/lib/programs/config'
+import { trainingsProgramPath } from '@/lib/routes'
 
 const detail = pagesContent.eventDetail
 
@@ -44,7 +45,7 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
           <p>{detail.eventNotFoundBody}</p>
           <p className="mt-4 text-sm text-zinc-600">
             {detail.eventNotFoundTry}{' '}
-            <Link className="underline" href={`/${program.slug}`}>
+            <Link className="underline" href={trainingsProgramPath(program.slug)}>
               {formatContent(detail.eventNotFoundLink, { program: programLabel })}
             </Link>{' '}
             {detail.eventNotFoundAfterLink}
@@ -64,7 +65,7 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
 
       <main className="container mx-auto px-6 py-10">
         <div className="mb-6">
-          <Link href={`/${program.slug}`} className="back-link">
+          <Link href={trainingsProgramPath(program.slug)} className="back-link">
             {formatContent(detail.backToEvents, { program: programLabel })}
           </Link>
         </div>
@@ -98,7 +99,7 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
           ) : (
             <p className="text-sm text-zinc-600">
               {detail.registrationClosed}{' '}
-              <Link className="underline" href={`/${program.slug}`}>
+              <Link className="underline" href={trainingsProgramPath(program.slug)}>
                 {formatContent(detail.browseOtherEvents, { program: programLabel })}
               </Link>
               .

@@ -7,6 +7,7 @@ import TrainingScheduleText from '@/components/events/TrainingScheduleText'
 import { formatContent, pagesContent } from '@/lib/content'
 import { loadProgramEventById } from '@/lib/programs/events'
 import { getTrainingProgram } from '@/lib/programs/config'
+import { trainingsEventPath, trainingsProgramPath } from '@/lib/routes'
 
 const success = pagesContent.success
 
@@ -47,8 +48,8 @@ export default async function ProgramEventSuccessPage({
   }
 
   const programLabel = program.shortLabel
-  const backHref = `/${program.slug}`
-  const eventHref = `/${program.slug}/events/${eventId}`
+  const backHref = trainingsProgramPath(program.slug)
+  const eventHref = trainingsEventPath(program.slug, eventId)
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 text-slate-900">

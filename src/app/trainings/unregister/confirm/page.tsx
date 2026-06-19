@@ -8,6 +8,7 @@ import { getTrainingProgram } from '@/lib/programs/config'
 import { peekUnregisterToken, resolveUnregisterKind } from '@/lib/unregister/token'
 import { loadProgramEventById } from '@/lib/programs/events'
 import { getTrainingById } from '@/lib/hubspot/api'
+import { trainingsUnregisterPath } from '@/lib/routes'
 
 const confirm = pagesContent.unregister.confirm
 
@@ -25,7 +26,7 @@ export default async function UnregisterConfirmPage({ searchParams }: ConfirmPag
       <ConfirmShell title={confirm.invalidLinkTitle}>
         <p>{confirm.invalidLinkBody}</p>
         <p className="mt-4">
-          <Link href="/unregister" className="underline">
+          <Link href={trainingsUnregisterPath()} className="underline">
             {confirm.requestNewLink}
           </Link>
         </p>
@@ -69,7 +70,7 @@ export default async function UnregisterConfirmPage({ searchParams }: ConfirmPag
       <ConfirmShell title={confirm.errorTitle}>
         <p>{message}</p>
         <p className="mt-4">
-          <Link href="/unregister" className="underline">
+          <Link href={trainingsUnregisterPath()} className="underline">
             {confirm.requestNewLink}
           </Link>
         </p>
