@@ -12,7 +12,7 @@ import {
 const eastern = { timeZone: DEFAULT_SCHEDULE_TIME_ZONE }
 
 describe('formatTrainingScheduleLines', () => {
-  it('formats a single-day session on one line', () => {
+  it('formats a single-day session with a placeholder second line', () => {
     expect(
       formatTrainingScheduleLines(
         {
@@ -21,7 +21,7 @@ describe('formatTrainingScheduleLines', () => {
         },
         eastern
       )
-    ).toEqual(['Jun 3, 2026, 3:00pm - 6:00pm EDT'])
+    ).toEqual(['Jun 3, 2026, 3:00pm - 6:00pm EDT', '---'])
   })
 
   it('formats multi-day trainings on separate lines', () => {
@@ -41,7 +41,7 @@ describe('formatTrainingScheduleLines', () => {
     ])
   })
 
-  it('shows one line when second day datetimes are empty', () => {
+  it('shows two lines when second day datetimes are empty', () => {
     expect(
       formatTrainingScheduleLines(
         {
@@ -52,10 +52,10 @@ describe('formatTrainingScheduleLines', () => {
         },
         eastern
       )
-    ).toEqual(['Jul 1, 2026, 1:00pm - 2:00pm EDT'])
+    ).toEqual(['Jul 1, 2026, 1:00pm - 2:00pm EDT', '---'])
   })
 
-  it('shows one line when only second day start is filled', () => {
+  it('shows a placeholder when only second day start is filled', () => {
     expect(
       formatTrainingScheduleLines(
         {
@@ -66,7 +66,7 @@ describe('formatTrainingScheduleLines', () => {
         },
         eastern
       )
-    ).toEqual(['Jul 1, 2026, 1:00pm - 2:00pm EDT'])
+    ).toEqual(['Jul 1, 2026, 1:00pm - 2:00pm EDT', '---'])
   })
 
   it('falls back when no schedule fields are set', () => {
@@ -82,7 +82,7 @@ describe('formatTrainingScheduleLines', () => {
         },
         { timeZone: 'America/Los_Angeles' }
       )
-    ).toEqual(['Jun 3, 2026, 12:00pm - 3:00pm PDT'])
+    ).toEqual(['Jun 3, 2026, 12:00pm - 3:00pm PDT', '---'])
   })
 })
 

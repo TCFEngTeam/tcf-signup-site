@@ -126,11 +126,17 @@ export function formatTrainingScheduleLines(
   const line1 = formatSessionLineFromRange(schedule.session1Start, schedule.session1End, options)
   const line2 = hasSecondTrainingSession(schedule)
     ? formatSessionLineFromRange(schedule.session2Start, schedule.session2End, options)
-    : null
+    : '---'
 
-  const lines = [line1, line2].filter((line): line is string => Boolean(line))
-  if (lines.length === 0) return [scheduleLabels.dateToBeAnnounced]
-  return lines
+  if (!line1) {
+    return [scheduleLabels.dateToBeAnnounced, '---']
+  }
+
+  if (hasSecondTrainingSession(schedule)) {
+    return line2 ? [line1, line2] : [line1]
+  }
+
+  return [line1, '---']
 }
 
 /** ISO date for sorting listings (first session start). */
