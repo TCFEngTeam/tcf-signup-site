@@ -65,15 +65,24 @@ export default function EventCard({ event, program }: EventCardProps) {
         />
 
         {waitlistOpen ? (
-          <Link href={trainingsEventPath(program, event?.id ?? '')} className="btn-primary inline-flex justify-center mt-3">
+          <Link
+            href={trainingsEventPath(program, event?.id ?? '')}
+            className="btn-primary inline-flex justify-center mt-3"
+          >
             {card.joinWaitlist}
           </Link>
         ) : signupBlocked ? (
-          <span className="btn-primary inline-flex justify-center mt-3 cursor-not-allowed opacity-60">
+          <span
+            className="btn-primary btn-primary--inactive inline-flex justify-center mt-3"
+            aria-disabled="true"
+          >
             {blockedLabel}
           </span>
         ) : (
-          <Link href={trainingsEventPath(program, event?.id ?? '')} className="btn-primary inline-flex justify-center mt-3">
+          <Link
+            href={trainingsEventPath(program, event?.id ?? '')}
+            className="btn-primary inline-flex justify-center mt-3"
+          >
             {card.signUp}
           </Link>
         )}
