@@ -993,3 +993,52 @@ export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
     cutoffTime: readTrainingProperty(props, cutoffKey),
   }
 }
+
+/**
+ * Associate a contact with an opportunity using the label Saved.
+ * @param contactId HubSpot contact ID
+ * @param opportunityId HubSpot deal ID
+ */
+export async function associateContactToOpportunity(
+  contactId: string,
+  opportunityId: string
+): Promise<void> {
+  if (!getApiKey()) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  const opportunityObjectType = 0-420;
+  const url = `${HUBSPOT_API_BASE}/crm/v4/associations/contacts/${opportunityObjectType}/batch/create`
+  const response = await hubspotFetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${getApiKey()}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      inputs: [
+        {
+          from: { id: contactId },
+          to: { id: opportunityId },
+          types: [
+            {
+              associationCategory: 'USER_DEFINED',
+              associationTypeId: 36
+            }
+          ]
+        }
+      ]
+    })
+  });
+
+  const parsed = await safeParseResponse(response)
+  if (!response.ok) {
+    throw new Error(`Failed to associate contact with opportunity: ${response.statusText}`)
+  }
+
+  console.debug('Associated contact to opportunity:', {
+    contactId,
+    opportunityId,
+    parsed,
+  })
+}
