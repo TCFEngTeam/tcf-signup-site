@@ -448,3 +448,29 @@ h1, h2, h3 {
   .site-header .container, .site-footer { padding-left: 12px; padding-right: 12px }
   .event-card .event-image { height: 120px }
 }
+
+/* Embeddable training card listing (no site chrome) */
+.embed-listing {
+  padding: 12px;
+  background: transparent;
+  color: #161c21;
+}
+
+.embed-listing-message {
+  margin-bottom: 12px;
+  font-size: 0.875rem;
+  color: rgba(22, 28, 33, 0.74);
+}
+
+.embed-listing-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (min-width: 640px) {
+  .embed-listing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

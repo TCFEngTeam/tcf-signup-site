@@ -26,6 +26,8 @@ type EventCardEvent = {
 type EventCardProps = {
   event?: EventCardEvent
   program: TrainingProgramId
+  /** Open signup / waitlist links in a new browser tab (embed listings). */
+  openSignupInNewTab?: boolean
 }
 
 function canJoinWaitlist(event: EventCardEvent | undefined) {
@@ -46,10 +48,13 @@ function eventBadgeClass(event: EventCardEvent | undefined) {
   return 'badge-open'
 }
 
-export default function EventCard({ event, program }: EventCardProps) {
+export default function EventCard({ event, program, openSignupInNewTab }: EventCardProps) {
   const waitlistOpen = canJoinWaitlist(event)
   const signupBlocked = Boolean(event?.registrationClosed || (event?.isFull && !waitlistOpen))
   const blockedLabel = event?.registrationClosed ? card.badgeRegistrationClosed : card.badgeFull
+  const signupLinkProps = openSignupInNewTab
+    ? { target: '_blank' as const, rel: 'noopener noreferrer' }
+    : {}
 
   return (
     <article className="event-card">
@@ -68,6 +73,7 @@ export default function EventCard({ event, program }: EventCardProps) {
           <Link
             href={trainingsEventPath(program, event?.id ?? '')}
             className="btn-primary inline-flex justify-center mt-3"
+            {...signupLinkProps}
           >
             {card.joinWaitlist}
           </Link>
@@ -82,6 +88,7 @@ export default function EventCard({ event, program }: EventCardProps) {
           <Link
             href={trainingsEventPath(program, event?.id ?? '')}
             className="btn-primary inline-flex justify-center mt-3"
+            {...signupLinkProps}
           >
             {card.signUp}
           </Link>

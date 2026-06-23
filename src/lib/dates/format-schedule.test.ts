@@ -70,7 +70,7 @@ describe('formatTrainingScheduleLines', () => {
   })
 
   it('falls back when no schedule fields are set', () => {
-    expect(formatTrainingScheduleLines({})).toEqual(['Date to be announced'])
+    expect(formatTrainingScheduleLines({})).toEqual(['Date to be announced', '---'])
   })
 
   it('formats in the requested IANA timezone', () => {
