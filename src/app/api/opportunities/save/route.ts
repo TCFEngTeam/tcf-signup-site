@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { associateContactToOpportunity } from '@/lib/hubspot/api'
+import { associateContactToOpportunity, getContactByEmail } from '@/lib/hubspot/api'
 
 const ALLOWED_ORIGINS = new Set([
   'https://www-trustedcarefoundation-org.sandbox.hs-sites.com',
