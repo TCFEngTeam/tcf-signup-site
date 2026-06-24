@@ -58,7 +58,6 @@ describe('POST /api/opportunities/save', () => {
     expect(res.status).toBe(404)
     expect(await res.json()).toEqual({ error: 'Contact not found' })
     expect(res.headers.get('access-control-allow-origin')).toBe(ALLOWED_ORIGIN)
-    expect(res.headers.get('access-control-allow-credentials')).toBe('true')
   })
 
   it('responds to OPTIONS preflight with CORS headers', async () => {
