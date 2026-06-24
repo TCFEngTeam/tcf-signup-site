@@ -1042,3 +1042,30 @@ export async function associateContactToOpportunity(
     parsed,
   })
 }
+
+export async function updateStudentProfile(
+  contactId: string, 
+  properties: Record<string, string>
+): Promise<HubSpotContact> {
+  if (!getApiKey()) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  const response = await hubspotFetch(`${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${contactId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${getApiKey()}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ properties }),
+  })
+
+  if (!response.ok) {
+    const error = await safeParseResponse(response)
+    const msg = (error && (error.message || error.error || error.text)) || response.statusText
+    throw new Error(`HubSpot API error: ${msg}`)
+  }
+
+  const parsed = await safeParseResponse(response)
+  return parsed;
+}
