@@ -9,6 +9,7 @@ const ALLOWED_ORIGINS = new Set([
 const BASE_CORS_HEADERS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Credentials': 'true',
 }
 
 export const dynamic = 'force-dynamic'
