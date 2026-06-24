@@ -1007,7 +1007,7 @@ export async function associateContactToOpportunity(
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
 
-  const opportunityObjectType = 0-420;
+  const opportunityObjectType = '0-420'
   const url = `${HUBSPOT_API_BASE}/crm/v4/associations/contacts/${opportunityObjectType}/batch/create`
   const response = await hubspotFetch(url, {
     method: 'POST',
@@ -1081,17 +1081,6 @@ export async function updateCompanyProperties(
   companyId: string,
   properties: Record<string, string>
 ): Promise<HubSpotCompany> {
-}
-
-/**
- * Disassociate a contact from an opportunity (remove the Saved label).
- * @param contactId HubSpot contact ID
- * @param opportunityId HubSpot deal ID
- */
-export async function disassociateContactFromOpportunity(
-  contactId: string,
-  opportunityId: string
-): Promise<void> {
   if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
@@ -1112,5 +1101,54 @@ export async function disassociateContactFromOpportunity(
   }
 
   const parsed = await safeParseResponse(response)
-  return parsed;
+  return parsed
+}
+
+/**
+ * Disassociate a contact from an opportunity (remove the Saved label).
+ * @param contactId HubSpot contact ID
+ * @param opportunityId HubSpot deal ID
+ */
+export async function disassociateContactFromOpportunity(
+  contactId: string,
+  opportunityId: string
+): Promise<void> {
+  if (!getApiKey()) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  const opportunityObjectType = '0-420'
+  const url = `${HUBSPOT_API_BASE}/crm/v4/associations/contacts/${opportunityObjectType}/batch/labels/archive`
+  const response = await hubspotFetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${getApiKey()}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      inputs: [
+        {
+          from: { id: contactId },
+          to: { id: opportunityId },
+          types: [
+            {
+              associationCategory: 'USER_DEFINED',
+              associationTypeId: 36,
+            },
+          ],
+        },
+      ],
+    }),
+  })
+
+  const parsed = await safeParseResponse(response)
+  if (!response.ok) {
+    throw new Error(`Failed to disassociate contact from opportunity: ${response.statusText}`)
+  }
+
+  console.debug('Disassociated contact from opportunity:', {
+    contactId,
+    opportunityId,
+    parsed,
+  })
 }

@@ -87,11 +87,7 @@ export async function POST(req: Request) {
     const properties = normalizeProperties(body?.properties)
 
     if (!contactId) {
-      return jsonWithCors(
-        { error: 'Missing contactId or email' },
-        req,
-        { status: 400 }
-      )
+      return jsonWithCors({ error: 'Missing contactId' }, req, { status: 400 })
     }
 
     if (!properties || Object.keys(properties).length === 0) {
@@ -102,7 +98,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const updatedStudent = await updateProfile(contactId, properties)
+    await updateProfile(contactId, properties)
     return jsonWithCors({ success: true }, req)
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error'

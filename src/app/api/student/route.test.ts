@@ -1,16 +1,14 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
-const { getContactByEmail, updateContactProperties } = vi.hoisted(() => ({
-  getContactByEmail: vi.fn(),
-  updateContactProperties: vi.fn(),
+const { updateProfile } = vi.hoisted(() => ({
+  updateProfile: vi.fn(),
 }))
 
 vi.mock('@/lib/hubspot/api', async () => {
   const actual = await vi.importActual<typeof import('@/lib/hubspot/api')>('@/lib/hubspot/api')
   return {
     ...actual,
-    getContactByEmail,
-    updateContactProperties,
+    updateProfile,
   }
 })
 
@@ -34,13 +32,13 @@ function postUpdate(body: unknown) {
 describe('POST /api/student', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    updateContactProperties.mockResolvedValue({ id: 'contact-1', properties: {} })
+    updateProfile.mockResolvedValue({ id: 'contact-1', properties: {} })
   })
 
-  it('returns 400 when contactId and email are both missing', async () => {
+  it('returns 400 when contactId is missing', async () => {
     const res = await postUpdate({ properties: { phone: '123-456-7890' } })
     expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'Missing contactId or email' })
+    expect(await res.json()).toEqual({ error: 'Missing contactId' })
     expect(res.headers.get('access-control-allow-origin')).toBe(ALLOWED_ORIGIN)
   })
 
@@ -52,8 +50,11 @@ describe('POST /api/student', () => {
   })
 
   it('returns 404 when the contact is not found', async () => {
-    updateContactProperties.mockRejectedValueOnce(new Error('Contact not found'))
-    const res = await postUpdate({ email: 'jane.doe@example.edu', properties: { phone: '123-456-7890' } })
+    updateProfile.mockRejectedValueOnce(new Error('Contact not found'))
+    const res = await postUpdate({
+      contactId: 'contact-1',
+      properties: { phone: '123-456-7890' },
+    })
     expect(res.status).toBe(404)
     expect(await res.json()).toEqual({ error: 'Contact not found' })
     expect(res.headers.get('access-control-allow-origin')).toBe(ALLOWED_ORIGIN)
@@ -84,12 +85,8 @@ describe('POST /api/student', () => {
   it('updates the contact by contactId', async () => {
     const res = await postUpdate({ contactId: 'contact-1', properties: { phone: '123-456-7890' } })
     expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({ success: true, contactId: 'contact-1' })
+    expect(await res.json()).toEqual({ success: true })
     expect(res.headers.get('access-control-allow-origin')).toBe(ALLOWED_ORIGIN)
-    expect(updateContactProperties).toHaveBeenCalledWith({
-      contactId: 'contact-1',
-      email: undefined,
-      properties: { phone: '123-456-7890' },
-    })
+    expect(updateProfile).toHaveBeenCalledWith('contact-1', { phone: '123-456-7890' })
   })
 })
