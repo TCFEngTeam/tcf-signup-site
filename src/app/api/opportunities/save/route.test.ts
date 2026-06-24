@@ -70,6 +70,7 @@ describe('POST /api/opportunities/save', () => {
     expect(res.status).toBe(204)
     expect(res.headers.get('access-control-allow-origin')).toBe(ALLOWED_ORIGIN)
     expect(res.headers.get('access-control-allow-methods')).toBe('POST, OPTIONS')
+    expect(res.headers.get('access-control-allow-credentials')).toBe('true')
   })
 
   it('associates the contact to the opportunity with the Saved label', async () => {
