@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   getCancelledAssociationLabel,
   getContactPropertyKeys,
+  getRegistrationCloseHoursBeforeStart,
   getRegistrantAssociationLabel,
   getSmsConsentConfig,
   getTrainingProperties,
@@ -17,5 +18,11 @@ describe('hubspot config', () => {
     expect(getCancelledAssociationLabel()).toBe('unregistered')
     expect(getContactPropertyKeys().email).toBe('email')
     expect(getSmsConsentConfig().yesValue).toBeTruthy()
+  })
+
+  it('reads per-program registration close hours from config', () => {
+    expect(getRegistrationCloseHoursBeforeStart('mhfa')).toBe(48)
+    expect(getRegistrationCloseHoursBeforeStart('qpr')).toBe(24)
+    expect(hubspotConfig.training.defaultRegistrationCloseHoursBeforeStart).toBe(48)
   })
 })

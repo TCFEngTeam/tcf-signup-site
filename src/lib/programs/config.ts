@@ -1,6 +1,6 @@
 import { getProgramContent, type ProgramContentId } from '@/lib/content'
 import type { ProgramContent } from '@/lib/content/types'
-import { getProgramPipelineConfigFromHubSpot } from '@/lib/hubspot/config'
+import { getProgramPipelineConfigFromHubSpot, getRegistrationCloseHoursBeforeStart } from '@/lib/hubspot/config'
 
 export type TrainingProgramId = ProgramContentId
 
@@ -40,4 +40,8 @@ export function getTrainingProgram(programId: string): TrainingProgram | null {
 
 export function getProgramPipelineConfig(programId: TrainingProgramId): ProgramPipelineConfig {
   return getProgramPipelineConfigFromHubSpot(programId)
+}
+
+export function getProgramRegistrationCloseHours(programId: TrainingProgramId): number {
+  return getRegistrationCloseHoursBeforeStart(programId)
 }

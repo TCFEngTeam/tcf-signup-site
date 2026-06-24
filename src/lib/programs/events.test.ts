@@ -86,14 +86,42 @@ describe('toProgramEvent', () => {
 
     const moreThan48HoursBefore = toProgramEvent(mapped, undefined, {
       now: new Date('2030-06-08T18:59:59.000Z'),
+      registrationCloseHoursBeforeStart: 48,
     })
     const exactly48HoursBefore = toProgramEvent(mapped, undefined, {
       now: new Date('2030-06-08T19:00:00.000Z'),
+      registrationCloseHoursBeforeStart: 48,
     })
 
     expect(moreThan48HoursBefore.registrationClosed).toBe(false)
     expect(exactly48HoursBefore.registrationClosed).toBe(true)
     expect(canAcceptRegistration(exactly48HoursBefore)).toBe(false)
+  })
+
+  it('marks registration closed within 24 hours of first session start for QPR', () => {
+    const sessionStart = '2030-06-10T19:00:00.000Z'
+    const mapped = mapTrainingToEvent({
+      id: 'qpr-time-close',
+      properties: {
+        name: 'QPR Session',
+        training_1st_day_start_datetime: sessionStart,
+        training_1st_day_end_datetime: '2030-06-10T20:00:00.000Z',
+        available_capacity: '5',
+        capacity: '10',
+      },
+    })
+
+    const moreThan24HoursBefore = toProgramEvent(mapped, undefined, {
+      now: new Date('2030-06-09T18:59:59.000Z'),
+      registrationCloseHoursBeforeStart: 24,
+    })
+    const exactly24HoursBefore = toProgramEvent(mapped, undefined, {
+      now: new Date('2030-06-09T19:00:00.000Z'),
+      registrationCloseHoursBeforeStart: 24,
+    })
+
+    expect(moreThan24HoursBefore.registrationClosed).toBe(false)
+    expect(exactly24HoursBefore.registrationClosed).toBe(true)
   })
 
   it('marks registration closed when HubSpot stage matches config', () => {
@@ -164,13 +192,27 @@ describe('isRegistrationClosedByTime', () => {
   })
 
   it('is false more than 48 hours before start', () => {
-    expect(isRegistrationClosedByTime(schedule, new Date('2030-06-08T18:00:00.000Z'))).toBe(
+    expect(isRegistrationClosedByTime(schedule, new Date('2030-06-08T18:00:00.000Z'), undefined, 48)).toBe(
       false
     )
   })
 
   it('is true within 48 hours of start', () => {
-    expect(isRegistrationClosedByTime(schedule, new Date('2030-06-10T18:00:00.000Z'))).toBe(
+    expect(isRegistrationClosedByTime(schedule, new Date('2030-06-10T18:00:00.000Z'), undefined, 48)).toBe(
+      true
+    )
+  })
+
+  it('respects per-program close hours', () => {
+    const between24And48HoursBefore = new Date('2030-06-09T12:00:00.000Z')
+
+    expect(
+      isRegistrationClosedByTime(schedule, between24And48HoursBefore, undefined, 24)
+    ).toBe(false)
+    expect(
+      isRegistrationClosedByTime(schedule, between24And48HoursBefore, undefined, 48)
+    ).toBe(true)
+    expect(isRegistrationClosedByTime(schedule, new Date('2030-06-09T19:00:00.000Z'), undefined, 24)).toBe(
       true
     )
   })

@@ -5,6 +5,8 @@ export type HubSpotProgramPipelineConfig = {
   pipelineType: string
   pipelineStage: string
   closedPipelineStage?: string
+  /** Hours before session 1 start when registration closes (unless HubSpot `cutoff_time` is set). */
+  registrationCloseHoursBeforeStart?: number
 }
 
 export type HubSpotConfig = {
@@ -18,6 +20,8 @@ export type HubSpotConfig = {
       session2End: string
       cutoffTime: string
     }
+    /** Fallback when a program omits `registrationCloseHoursBeforeStart`. */
+    defaultRegistrationCloseHoursBeforeStart?: number
   }
   associations: {
     registrant: string
@@ -108,6 +112,20 @@ export function getUnwaitlistedAssociationTypeId() {
 
 export function getProgramPipelineConfigFromHubSpot(programId: TrainingProgramId) {
   return hubspotConfig.programs[programId]
+}
+
+export function getRegistrationCloseHoursBeforeStart(programId: TrainingProgramId): number {
+  const programHours = hubspotConfig.programs[programId].registrationCloseHoursBeforeStart
+  if (typeof programHours === 'number' && programHours > 0) {
+    return programHours
+  }
+
+  const defaultHours = hubspotConfig.training.defaultRegistrationCloseHoursBeforeStart
+  if (typeof defaultHours === 'number' && defaultHours > 0) {
+    return defaultHours
+  }
+
+  return 48
 }
 
 export function getContactPropertyKeys() {

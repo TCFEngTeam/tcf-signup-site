@@ -3,6 +3,7 @@ import { parseScheduleDateTime, type TrainingSchedule } from '@/lib/dates/format
 import { sortEventsForListing } from '@/lib/programs/sort'
 import {
   getProgramPipelineConfig,
+  getProgramRegistrationCloseHours,
   getTrainingProgram,
   type TrainingProgramId,
 } from '@/lib/programs/config'
@@ -18,20 +19,19 @@ export type ProgramEvent = {
   availableCapacity: number
   active: boolean
   isFull: boolean
-  /** Pipeline closed stage and/or past registration cutoff (HubSpot `cutoff_time` or 48h before start) */
+  /** Pipeline closed stage and/or past registration cutoff (HubSpot `cutoff_time` or program default hours before start) */
   registrationClosed: boolean
   description?: string
 }
 
-export const REGISTRATION_CLOSE_HOURS_BEFORE_START = 48
+export const DEFAULT_REGISTRATION_CLOSE_HOURS_BEFORE_START = 48
 
-const REGISTRATION_CLOSE_MS = REGISTRATION_CLOSE_HOURS_BEFORE_START * 60 * 60 * 1000
-
-/** When `cutoffTime` is set on the training, registration closes at that instant; otherwise 48h before start. */
+/** When `cutoffTime` is set on the training, registration closes at that instant; otherwise N hours before start. */
 export function isRegistrationClosedByTime(
   schedule: TrainingSchedule,
   now: Date = new Date(),
-  cutoffTime?: string
+  cutoffTime?: string,
+  registrationCloseHoursBeforeStart = DEFAULT_REGISTRATION_CLOSE_HOURS_BEFORE_START
 ): boolean {
   const explicitCutoff = parseScheduleDateTime(cutoffTime)
   if (explicitCutoff) {
@@ -41,7 +41,8 @@ export function isRegistrationClosedByTime(
   const sessionStart = parseScheduleDateTime(schedule.session1Start)
   if (!sessionStart) return false
 
-  const registrationClosesAt = sessionStart.getTime() - REGISTRATION_CLOSE_MS
+  const registrationCloseMs = registrationCloseHoursBeforeStart * 60 * 60 * 1000
+  const registrationClosesAt = sessionStart.getTime() - registrationCloseMs
   return now.getTime() >= registrationClosesAt
 }
 
@@ -66,15 +67,23 @@ export type ProgramEventResult = {
 export function toProgramEvent(
   event: ReturnType<typeof mapTrainingToEvent>,
   closedPipelineStage?: string,
-  options?: { now?: Date }
+  options?: { now?: Date; registrationCloseHoursBeforeStart?: number }
 ): ProgramEvent {
   const now = options?.now ?? new Date()
+  const registrationCloseHoursBeforeStart =
+    options?.registrationCloseHoursBeforeStart ?? DEFAULT_REGISTRATION_CLOSE_HOURS_BEFORE_START
   const pipelineClosed = Boolean(
     closedPipelineStage &&
       event.hubspotPipelineStage?.trim() === closedPipelineStage.trim()
   )
   const registrationClosed =
-    pipelineClosed || isRegistrationClosedByTime(event.schedule, now, event.cutoffTime)
+    pipelineClosed ||
+    isRegistrationClosedByTime(
+      event.schedule,
+      now,
+      event.cutoffTime,
+      registrationCloseHoursBeforeStart
+    )
 
   return {
     id: event.id,
@@ -100,13 +109,16 @@ export async function loadProgramEvents(
   }
 
   const { pipelineStage, pipelineType, closedPipelineStage } = getProgramPipelineConfig(programId)
+  const registrationCloseHoursBeforeStart = getProgramRegistrationCloseHours(programId)
 
   try {
     const trainings = await getTrainingObjects(pipelineStage, pipelineType, closedPipelineStage)
     const events = sortEventsForListing(
       trainings
         .map(mapTrainingToEvent)
-        .map((event) => toProgramEvent(event, closedPipelineStage))
+        .map((event) =>
+          toProgramEvent(event, closedPipelineStage, { registrationCloseHoursBeforeStart })
+        )
     )
     return { events, error: null }
   } catch (hsErr) {

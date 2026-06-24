@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { hubspotConfig } from '@/lib/hubspot/config'
 import {
   getProgramPipelineConfig,
+  getProgramRegistrationCloseHours,
   getTrainingProgram,
   isTrainingProgramId,
 } from '@/lib/programs/config'
@@ -23,5 +24,10 @@ describe('trainingPrograms', () => {
   it('reads pipeline settings from config/hubspot.json', () => {
     expect(getProgramPipelineConfig('mhfa')).toEqual(hubspotConfig.programs.mhfa)
     expect(getProgramPipelineConfig('qpr')).toEqual(hubspotConfig.programs.qpr)
+  })
+
+  it('reads registration close hours per program', () => {
+    expect(getProgramRegistrationCloseHours('mhfa')).toBe(48)
+    expect(getProgramRegistrationCloseHours('qpr')).toBe(24)
   })
 })

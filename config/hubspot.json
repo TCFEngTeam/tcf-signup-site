@@ -22,7 +22,8 @@
       "session2Start": "training_2nd_day_start_datetime",
       "session2End": "training_2nd_day_end_datetime",
       "cutoffTime": "cutoff_time"
-    }
+    },
+    "defaultRegistrationCloseHoursBeforeStart": 48
   },
   "associations": {
     "registrant": "registrant",
@@ -34,12 +35,14 @@
     "mhfa": {
       "pipelineType": "9dd7104c-1ae0-402b-a194-9cc567fd6a45",
       "pipelineStage": "3e1a235d-1a64-4b7a-9ed5-7f0273ebd774",
-      "closedPipelineStage": "1372234401"
+      "closedPipelineStage": "1372234401",
+      "registrationCloseHoursBeforeStart": 48
     },
     "qpr": {
       "pipelineType": "905081238",
       "pipelineStage": "1369953208",
-      "closedPipelineStage": "1372235091"
+      "closedPipelineStage": "1372235091",
+      "registrationCloseHoursBeforeStart": 24
     }
   },
   "contactProperties": {
