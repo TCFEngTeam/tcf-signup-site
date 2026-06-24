@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { updateStudentProfile } from '@/lib/hubspot/api'
+import { updateProfile } from '@/lib/hubspot/api'
 
 const ALLOWED_ORIGINS = new Set([
   'https://www-trustedcarefoundation-org.sandbox.hs-sites.com',
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const updatedStudent = await updateStudentProfile(contactId, properties)
+    const updatedStudent = await updateProfile(contactId, properties)
     return jsonWithCors({ success: true }, req)
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error'
