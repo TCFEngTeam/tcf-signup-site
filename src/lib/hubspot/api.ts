@@ -1081,6 +1081,17 @@ export async function updateCompanyProperties(
   companyId: string,
   properties: Record<string, string>
 ): Promise<HubSpotCompany> {
+}
+
+/**
+ * Disassociate a contact from an opportunity (remove the Saved label).
+ * @param contactId HubSpot contact ID
+ * @param opportunityId HubSpot deal ID
+ */
+export async function disassociateContactFromOpportunity(
+  contactId: string,
+  opportunityId: string
+): Promise<void> {
   if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }

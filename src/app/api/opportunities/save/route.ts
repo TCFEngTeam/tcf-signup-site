@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { associateContactToOpportunity, getContactByEmail } from '@/lib/hubspot/api'
+import { associateContactToOpportunity, disassociateContactFromOpportunity, getContactByEmail } from '@/lib/hubspot/api'
 
 const ALLOWED_ORIGINS = new Set([
   'https://www-trustedcarefoundation-org.sandbox.hs-sites.com',
@@ -7,8 +7,9 @@ const ALLOWED_ORIGINS = new Set([
 ])
 
 const BASE_CORS_HEADERS = {
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Credentials': 'true',
 }
 
 export const dynamic = 'force-dynamic'
@@ -46,15 +47,36 @@ export async function POST(req: Request) {
     const body = await req.json()
     const { contactId, opportunityId } = body || {}
 
+    if (!contactId) {
+      return jsonWithCors({ error: 'Missing contactId' }, req, { status: 400 })
+    }
+
     if (!opportunityId || typeof opportunityId !== 'string') {
       return jsonWithCors({ error: 'Missing opportunityId' }, req, { status: 400 })
     }
+
+    await associateContactToOpportunity(contactId, opportunityId)
+    return jsonWithCors({ success: true }, req)
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return jsonWithCors({ error: message }, req, { status: 500 })
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const body = await req.json()
+    const { contactId, opportunityId } = body || {}
 
     if (!contactId) {
       return jsonWithCors({ error: 'Missing contactId' }, req, { status: 400 })
     }
 
-    await associateContactToOpportunity(contactId, opportunityId)
+    if (!opportunityId || typeof opportunityId !== 'string') {
+      return jsonWithCors({ error: 'Missing opportunityId' }, req, { status: 400 })
+    }
+
+    await disassociateContactFromOpportunity(contactId, opportunityId)
     return jsonWithCors({ success: true }, req)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
