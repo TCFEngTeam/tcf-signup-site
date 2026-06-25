@@ -3,6 +3,7 @@ import {
   EMBED_TRAININGS_PATH,
   OPPORTUNITIES_PATH,
   embedTrainingsProgramPath,
+  legacyTrainingRedirects,
   trainingsEventPath,
   trainingsEventSuccessPath,
   trainingsProgramPath,
@@ -33,5 +34,19 @@ describe('trainings routes', () => {
     expect(trainingsUnregisterConfirmPath('abc')).toBe(
       '/trainings/unregister/confirm?token=abc'
     )
+  })
+
+  it('maps legacy program URLs to trainings paths', () => {
+    const redirects = legacyTrainingRedirects()
+
+    expect(redirects.find((r) => r.source === '/mhfa')?.destination).toBe('/trainings/mhfa')
+    expect(redirects.find((r) => r.source === '/qpr')?.destination).toBe('/trainings/qpr')
+    expect(redirects.find((r) => r.source === '/mhfa/events/:id')?.destination).toBe(
+      '/trainings/mhfa/events/:id'
+    )
+    expect(redirects.find((r) => r.source === '/unregister')?.destination).toBe(
+      '/trainings/unregister'
+    )
+    expect(redirects.every((r) => r.permanent)).toBe(true)
   })
 })

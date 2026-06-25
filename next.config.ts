@@ -1,8 +1,11 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
+import { legacyTrainingRedirects } from './src/lib/routes'
 
 const nextConfig: NextConfig = {
-  /* config options here */
   reactCompiler: true,
-};
+  async redirects() {
+    return legacyTrainingRedirects()
+  },
+}
 
-export default nextConfig;
+export default nextConfig
