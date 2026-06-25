@@ -79,7 +79,9 @@ export default function EventCard({ event, program, openSignupInNewTab }: EventC
           </Link>
         ) : signupBlocked ? (
           <span
-            className="btn-primary btn-primary--inactive inline-flex justify-center mt-3"
+            className={`btn-primary btn-primary--inactive inline-flex justify-center mt-3${
+              event?.registrationClosed ? ' btn-primary--registration-closed' : ''
+            }`}
             aria-disabled="true"
           >
             {blockedLabel}

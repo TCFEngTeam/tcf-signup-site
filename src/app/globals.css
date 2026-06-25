@@ -8,7 +8,7 @@
   --surface-green: #ebf5e0;
   --primary-blue: #2c60a4;
   --medium-blue: #429cd1;
-  --light-blue: #8fc2e1;
+  --light-blue: #8dc2e2;
   --primary-green: #3d8538;
   --accessible-green: #35612e;
   --dark-green: #254422;
@@ -34,6 +34,10 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   min-height: 100vh;
+}
+
+body:has(.embed-root) {
+  background: #8dc2e2;
 }
 
 /* Layout helpers */
@@ -450,16 +454,24 @@ h1, h2, h3 {
 }
 
 /* Embeddable training card listing (no site chrome) */
-.embed-listing {
-  padding: 12px;
-  background: transparent;
+.embed-root {
+  min-height: 100vh;
+  background: #8dc2e2;
   color: #161c21;
+  font-size: 19px;
+  line-height: 1.5;
+}
+
+.embed-listing {
+  padding: 16px;
+  background: transparent;
+  color: inherit;
 }
 
 .embed-listing-message {
   margin-bottom: 12px;
-  font-size: 0.875rem;
-  color: rgba(22, 28, 33, 0.74);
+  font-size: 1rem;
+  color: rgba(22, 28, 33, 0.82);
 }
 
 .embed-listing-grid {
@@ -467,6 +479,55 @@ h1, h2, h3 {
   grid-template-columns: 1fr;
   gap: 1.5rem;
   align-items: start;
+}
+
+.embed-root .event-card {
+  border-color: rgba(44, 96, 164, 0.16);
+  box-shadow: 0 16px 32px rgba(44, 96, 164, 0.12);
+}
+
+.embed-root .event-card .event-body {
+  padding: 20px;
+  gap: 10px;
+}
+
+.embed-root .event-card .event-title {
+  font-size: 1.35rem;
+  line-height: 1.3;
+}
+
+.embed-root .event-card .event-meta,
+.embed-root .event-card .event-location,
+.embed-root .event-card .capacity-indicator {
+  font-size: 1rem;
+}
+
+.embed-root .event-card .event-badge {
+  font-size: 0.8rem;
+  padding: 7px 12px;
+}
+
+.embed-root .event-card .event-badge.badge-registration-closed {
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--primary-blue);
+  border: 1px solid rgba(44, 96, 164, 0.28);
+}
+
+.embed-root .btn-primary {
+  font-size: 1rem;
+  padding: 14px 20px;
+}
+
+.embed-root .btn-primary--registration-closed,
+.embed-root .btn-primary--registration-closed:hover {
+  background: rgba(255, 255, 255, 0.42);
+  background-image: none;
+  color: rgba(44, 96, 164, 0.88);
+  border: 2px solid rgba(44, 96, 164, 0.42);
+  box-shadow: none;
+  opacity: 1;
+  cursor: default;
+  transform: none;
 }
 
 @media (min-width: 640px) {
