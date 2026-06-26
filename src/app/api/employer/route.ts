@@ -16,6 +16,7 @@ const BASE_CORS_HEADERS = {
 const ALLOWED_CONTACT_PROPERTIES = new Set([
   'firstname',
   'lastname',
+  'email'
 ])
 
 // Allowed company properties that can be updated via CMS pages
@@ -27,7 +28,6 @@ const ALLOWED_COMPANY_PROPERTIES = new Set([
   'city',
   'state',
   'zip',
-  'email',
   'phone',
 ])
 
