@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { getContactProperty, updateContactProperties } = vi.hoisted(() => ({
+const { getContactProperty, updateContactProperties, associateContactToOpportunity } = vi.hoisted(() => ({
   getContactProperty: vi.fn(),
   updateContactProperties: vi.fn(),
+  associateContactToOpportunity: vi.fn(),
 }))
 
 vi.mock('@/lib/hubspot/api', async () => {
@@ -11,6 +12,7 @@ vi.mock('@/lib/hubspot/api', async () => {
     ...actual,
     getContactProperty,
     updateContactProperties,
+    associateContactToOpportunity,
   }
 })
 
@@ -36,6 +38,7 @@ describe('POST /api/opportunities/apply', () => {
     vi.clearAllMocks()
     getContactProperty.mockResolvedValue(null)
     updateContactProperties.mockResolvedValue({ id: 'contact-1', properties: {} })
+    associateContactToOpportunity.mockResolvedValue(undefined)
   })
 
   it('returns 400 when contactId is missing', async () => {
@@ -128,5 +131,6 @@ describe('POST /api/opportunities/apply', () => {
         'deal-123': 'I want to contribute to the mission.',
       }),
     })
+    expect(associateContactToOpportunity).toHaveBeenCalledWith('contact-1', 'deal-123', 'USER_DEFINED', 19)
   })
 })

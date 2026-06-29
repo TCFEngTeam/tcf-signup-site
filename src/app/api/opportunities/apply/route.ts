@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getContactProperty, updateContactProperties } from '@/lib/hubspot/api'
+import { associateContactToOpportunity, getContactProperty, updateContactProperties } from '@/lib/hubspot/api'
 
 const ALLOWED_ORIGINS = new Set([
   'https://www-trustedcarefoundation-org.sandbox.hs-sites.com',
@@ -150,6 +150,7 @@ export async function POST(req: Request) {
     }
 
     await updateContactProperties(contactId, properties)
+    await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", 19);
     return jsonWithCors({ success: true }, req)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
