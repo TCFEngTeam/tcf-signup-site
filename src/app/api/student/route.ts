@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { updateProfile } from '@/lib/hubspot/api'
+import { updateContactProperties } from '@/lib/hubspot/api'
 
 const ALLOWED_ORIGINS = new Set([
   'https://www-trustedcarefoundation-org.sandbox.hs-sites.com',
@@ -98,10 +98,10 @@ export async function POST(req: Request) {
       )
     }
 
-    await updateProfile(contactId, properties)
+    await updateContactProperties(contactId, properties)
     return jsonWithCors({ success: true }, req)
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error'
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
     const status = message === 'Contact not found' ? 404 : 500
     return jsonWithCors({ error: message }, req, { status })
   }

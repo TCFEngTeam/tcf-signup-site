@@ -1,14 +1,14 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
-const { updateProfile } = vi.hoisted(() => ({
-  updateProfile: vi.fn(),
+const { updateContactProperties } = vi.hoisted(() => ({
+  updateContactProperties: vi.fn(),
 }))
 
 vi.mock('@/lib/hubspot/api', async () => {
   const actual = await vi.importActual<typeof import('@/lib/hubspot/api')>('@/lib/hubspot/api')
   return {
     ...actual,
-    updateProfile,
+    updateContactProperties,
   }
 })
 
@@ -32,7 +32,7 @@ function postUpdate(body: unknown) {
 describe('POST /api/student', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    updateProfile.mockResolvedValue({ id: 'contact-1', properties: {} })
+    updateContactProperties.mockResolvedValue({ id: 'contact-1', properties: {} })
   })
 
   it('returns 400 when contactId is missing', async () => {
@@ -50,7 +50,7 @@ describe('POST /api/student', () => {
   })
 
   it('returns 404 when the contact is not found', async () => {
-    updateProfile.mockRejectedValueOnce(new Error('Contact not found'))
+    updateContactProperties.mockRejectedValueOnce(new Error('Contact not found'))
     const res = await postUpdate({
       contactId: 'contact-1',
       properties: { phone: '123-456-7890' },
@@ -87,6 +87,6 @@ describe('POST /api/student', () => {
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ success: true })
     expect(res.headers.get('access-control-allow-origin')).toBe(ALLOWED_ORIGIN)
-    expect(updateProfile).toHaveBeenCalledWith('contact-1', { phone: '123-456-7890' })
+    expect(updateContactProperties).toHaveBeenCalledWith('contact-1', { phone: '123-456-7890' })
   })
 })
