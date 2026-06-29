@@ -78,12 +78,12 @@ describe('POST /api/opportunities/save', () => {
     expect(res.headers.get('access-control-allow-credentials')).toBe('true')
   })
 
-  it('associates the contact to the opportunity with the Saved label', async () => {
+  it('associates the contact to the opportunity with the requested label', async () => {
     const res = await postSave({ contactId: 'contact-1', opportunityId: 'deal-123' })
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ success: true })
     expect(res.headers.get('access-control-allow-origin')).toBe(ALLOWED_ORIGIN)
-    expect(associateContactToOpportunity).toHaveBeenCalledWith('contact-1', 'deal-123')
+    expect(associateContactToOpportunity).toHaveBeenCalledWith('contact-1', 'deal-123', 'USER_DEFINED', 19)
   })
 
   it('disassociates the contact from the opportunity', async () => {

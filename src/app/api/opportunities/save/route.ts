@@ -55,7 +55,7 @@ export async function POST(req: Request) {
       return jsonWithCors({ error: 'Missing opportunityId' }, req, { status: 400 })
     }
 
-    await associateContactToOpportunity(contactId, opportunityId)
+    await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", 36);
     return jsonWithCors({ success: true }, req)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
@@ -76,7 +76,7 @@ export async function DELETE(req: Request) {
       return jsonWithCors({ error: 'Missing opportunityId' }, req, { status: 400 })
     }
 
-    await disassociateContactFromOpportunity(contactId, opportunityId)
+    await disassociateContactFromOpportunity(contactId, opportunityId, "USER_DEFINED", 36);
     return jsonWithCors({ success: true }, req)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'

@@ -1001,7 +1001,9 @@ export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
  */
 export async function associateContactToOpportunity(
   contactId: string,
-  opportunityId: string
+  opportunityId: string,
+  associationCategory: string,
+  associationTypeId: number
 ): Promise<void> {
   if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
@@ -1022,8 +1024,8 @@ export async function associateContactToOpportunity(
           to: { id: opportunityId },
           types: [
             {
-              associationCategory: 'USER_DEFINED',
-              associationTypeId: 36
+              associationCategory,
+              associationTypeId
             }
           ]
         }
@@ -1050,7 +1052,9 @@ export async function associateContactToOpportunity(
  */
 export async function disassociateContactFromOpportunity(
   contactId: string,
-  opportunityId: string
+  opportunityId: string,
+  associationCategory: string,
+  associationTypeId: number
 ): Promise<void> {
   if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
@@ -1071,8 +1075,8 @@ export async function disassociateContactFromOpportunity(
           to: { id: opportunityId },
           types: [
             {
-              associationCategory: 'USER_DEFINED',
-              associationTypeId: 36,
+              associationCategory,
+              associationTypeId
             },
           ],
         },
