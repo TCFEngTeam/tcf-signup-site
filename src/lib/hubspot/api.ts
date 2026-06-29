@@ -1043,7 +1043,56 @@ export async function associateContactToOpportunity(
   })
 }
 
-export async function updateProfile(
+/**
+ * Disassociate a contact from an opportunity (remove the Saved label).
+ * @param contactId HubSpot contact ID
+ * @param opportunityId HubSpot deal ID
+ */
+export async function disassociateContactFromOpportunity(
+  contactId: string,
+  opportunityId: string
+): Promise<void> {
+  if (!getApiKey()) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  const opportunityObjectType = '0-420'
+  const url = `${HUBSPOT_API_BASE}/crm/v4/associations/contacts/${opportunityObjectType}/batch/labels/archive`
+  const response = await hubspotFetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${getApiKey()}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      inputs: [
+        {
+          from: { id: contactId },
+          to: { id: opportunityId },
+          types: [
+            {
+              associationCategory: 'USER_DEFINED',
+              associationTypeId: 36,
+            },
+          ],
+        },
+      ],
+    }),
+  })
+
+  const parsed = await safeParseResponse(response)
+  if (!response.ok) {
+    throw new Error(`Failed to disassociate contact from opportunity: ${response.statusText}`)
+  }
+
+  console.debug('Disassociated contact from opportunity:', {
+    contactId,
+    opportunityId,
+    parsed,
+  })
+}
+
+export async function updateContactProperties(
   contactId: string, 
   properties: Record<string, string>
 ): Promise<HubSpotContact> {
@@ -1104,51 +1153,39 @@ export async function updateCompanyProperties(
   return parsed
 }
 
+
 /**
- * Disassociate a contact from an opportunity (remove the Saved label).
+ * Fetch a specific property from a contact by ID
  * @param contactId HubSpot contact ID
- * @param opportunityId HubSpot deal ID
+ * @param property Property name to fetch
+ * @returns Property value or null if not found
  */
-export async function disassociateContactFromOpportunity(
-  contactId: string,
-  opportunityId: string
-): Promise<void> {
+export async function getContactProperty(contactId: string,property: string): Promise<string | null> {
   if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
 
-  const opportunityObjectType = '0-420'
-  const url = `${HUBSPOT_API_BASE}/crm/v4/associations/contacts/${opportunityObjectType}/batch/labels/archive`
-  const response = await hubspotFetch(url, {
-    method: 'POST',
+  const url = new URL(`${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${contactId}`)
+  url.searchParams.set('properties', property)
+
+  const response = await hubspotFetch(url.toString(), {
+    method: 'GET',
     headers: {
       Authorization: `Bearer ${getApiKey()}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      inputs: [
-        {
-          from: { id: contactId },
-          to: { id: opportunityId },
-          types: [
-            {
-              associationCategory: 'USER_DEFINED',
-              associationTypeId: 36,
-            },
-          ],
-        },
-      ],
-    }),
   })
+
+  if (response.status === 404) {
+    return null
+  }
 
   const parsed = await safeParseResponse(response)
   if (!response.ok) {
-    throw new Error(`Failed to disassociate contact from opportunity: ${response.statusText}`)
+    const msg =
+      (parsed && (parsed.message || parsed.error || parsed.text)) || response.statusText
+    throw new Error(`Failed to fetch contact property: ${msg}`)
   }
 
-  console.debug('Disassociated contact from opportunity:', {
-    contactId,
-    opportunityId,
-    parsed,
-  })
+  return parsed?.properties?.[property] ?? null
 }

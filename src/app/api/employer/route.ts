@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { updateProfile, updateCompanyProperties } from '@/lib/hubspot/api'
+import { updateContactProperties, updateCompanyProperties } from '@/lib/hubspot/api'
 
 const ALLOWED_ORIGINS = new Set([
   'https://www-trustedcarefoundation-org.sandbox.hs-sites.com',
@@ -122,8 +122,8 @@ export async function POST(req: Request) {
 
     // Update contact if contactId and contact properties are provided
     if (contactId && contactProperties && Object.keys(contactProperties).length > 0) {
-      try {
-        await updateProfile(contactId, contactProperties)
+        try {
+        await updateContactProperties(contactId, contactProperties)
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error'
         return jsonWithCors(
