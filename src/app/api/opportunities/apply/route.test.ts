@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { updateContactProperties } = vi.hoisted(() => ({
+const { getContactProperty, updateContactProperties } = vi.hoisted(() => ({
+  getContactProperty: vi.fn(),
   updateContactProperties: vi.fn(),
 }))
 
@@ -8,6 +9,7 @@ vi.mock('@/lib/hubspot/api', async () => {
   const actual = await vi.importActual<typeof import('@/lib/hubspot/api')>('@/lib/hubspot/api')
   return {
     ...actual,
+    getContactProperty,
     updateContactProperties,
   }
 })
@@ -32,6 +34,7 @@ function postApply(body: unknown) {
 describe('POST /api/opportunities/apply', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getContactProperty.mockResolvedValue(null)
     updateContactProperties.mockResolvedValue({ id: 'contact-1', properties: {} })
   })
 
@@ -62,7 +65,38 @@ describe('POST /api/opportunities/apply', () => {
     expect(res.headers.get('access-control-allow-credentials')).toBe('true')
   })
 
+  it('reads the existing why property from nested payload properties', async () => {
+    const res = await POST(
+      new Request('http://localhost/api/opportunities/apply', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Origin: ALLOWED_ORIGIN,
+        },
+        body: JSON.stringify({
+          contactId: 'contact-1',
+          opportunityId: 'deal-123',
+          properties: {
+            firstname: 'Jane',
+            why_are_you_interested_in_this_role_: 'I want to contribute to the mission.',
+          },
+        }),
+      })
+    )
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ success: true })
+    expect(updateContactProperties).toHaveBeenCalledWith('contact-1', {
+      firstname: 'Jane',
+      why_are_you_interested_in_this_role_: JSON.stringify({
+        'deal-123': 'I want to contribute to the mission.',
+      }),
+    })
+  })
+
   it('updates contact properties and appends the opportunity answer to existing why property data', async () => {
+    getContactProperty.mockResolvedValue('{"deal-456":"I volunteered before."}')
+
     const res = await postApply({
       contactId: 'contact-1',
       opportunityId: 'deal-123',
