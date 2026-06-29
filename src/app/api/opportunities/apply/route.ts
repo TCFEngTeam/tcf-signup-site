@@ -45,23 +45,23 @@ function jsonWithCors(body: unknown, req: Request, init?: ResponseInit) {
   })
 }
 
-function getValue(source: Record<string, unknown>, keys: string[]) {
-  for (const key of keys) {
-    const value = source[key]
-    if (value !== undefined && value !== null) {
-      return value
-    }
+function getSourcePayload(body: unknown) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return {}
   }
 
-  return undefined
+  const record = body as Record<string, unknown>
+  const nestedProperties = record.properties
+
+  return nestedProperties &&
+    typeof nestedProperties === 'object' &&
+    !Array.isArray(nestedProperties)
+    ? (nestedProperties as Record<string, unknown>)
+    : record
 }
 
 function normalizeProperties(body: unknown) {
-  const source = (body as Record<string, unknown>).properties &&
-    typeof (body as Record<string, unknown>).properties === 'object' &&
-    !Array.isArray((body as Record<string, unknown>).properties)
-    ? ((body as Record<string, unknown>).properties as Record<string, unknown>)
-    : (body as Record<string, unknown>)
+  const source = getSourcePayload(body)
 
   const properties: Record<string, string> = {}
 
@@ -135,11 +135,11 @@ export async function POST(req: Request) {
     }
 
     const source = body && typeof body === 'object' && !Array.isArray(body)
-      ? (body as Record<string, unknown>)
+      ? getSourcePayload(body)
       : {}
 
-    const answer = source['why_are_you_interested_in_this_role_'];
-    const oldInterestReasons = await getContactProperty(contactId, WHY_PROPERTY);
+    const answer = source[WHY_PROPERTY]
+    const oldInterestReasons = await getContactProperty(contactId, WHY_PROPERTY)
 
     if (answer !== undefined && answer !== null) {
       properties[WHY_PROPERTY] = buildWhyPropertyValue(opportunityId, answer, oldInterestReasons)
