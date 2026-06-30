@@ -150,6 +150,7 @@ export async function POST(req: Request) {
     }
 
     await updateContactProperties(contactId, properties)
+    await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", 41);
     await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", 19);
     return jsonWithCors({ success: true }, req)
   } catch (err: unknown) {
