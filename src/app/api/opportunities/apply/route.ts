@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
-import { associateContactToOpportunity, getContactProperty, updateContactProperties } from '@/lib/hubspot/api'
+import { getContactProperty, 
+         updateContactProperties,
+         associateContactToOpportunity,
+         disassociateContactFromOpportunity } from '@/lib/hubspot/api'
 
 const ALLOWED_ORIGINS = new Set([
   'https://www-trustedcarefoundation-org.sandbox.hs-sites.com',
@@ -124,6 +127,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const contactId = typeof body?.contactId === 'string' ? body.contactId.trim() : undefined;
     const opportunityId = typeof body?.opportunityId === 'string' ? body.opportunityId.trim() : undefined;
+    const action = body.action;
     const properties = normalizeProperties(body);
 
     if (!contactId) {
@@ -149,9 +153,15 @@ export async function POST(req: Request) {
       return jsonWithCors({ error: 'Missing or invalid properties' }, req, { status: 400 })
     }
 
-    await updateContactProperties(contactId, properties)
-    await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", 41);
-    await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", 19);
+    await updateContactProperties(contactId, properties);
+
+    if (action === "submit") {
+      await disassociateContactFromOpportunity(contactId, opportunityId, "USER_DEFINED", 43);
+      await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", 41);
+      await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", 19);
+    } else {
+      await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", 43);
+    }
     return jsonWithCors({ success: true }, req)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
