@@ -45,11 +45,7 @@ export function OPTIONS(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const {
-      contactId,
-      opportunityId,
-      associationCategory,
-      associationTypeId } = body || {}
+    const { contactId, opportunityId } = body || {}
 
     if (!contactId) {
       return jsonWithCors({ error: 'Missing contactId' }, req, { status: 400 })
@@ -59,7 +55,7 @@ export async function POST(req: Request) {
       return jsonWithCors({ error: 'Missing opportunityId' }, req, { status: 400 })
     }
 
-    await associateContactToOpportunity(contactId, opportunityId, associationCategory, associationTypeId)
+    await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", 36)
     return jsonWithCors({ success: true }, req)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
@@ -70,10 +66,7 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const body = await req.json()
-    const { contactId,
-      opportunityId,
-      associationCategory,
-      associationTypeId } = body || {}
+    const { contactId, opportunityId } = body || {}
 
     if (!contactId) {
       return jsonWithCors({ error: 'Missing contactId' }, req, { status: 400 })
@@ -83,7 +76,7 @@ export async function DELETE(req: Request) {
       return jsonWithCors({ error: 'Missing opportunityId' }, req, { status: 400 })
     }
 
-    await disassociateContactFromOpportunity(contactId, opportunityId, associationCategory, associationTypeId)
+    await disassociateContactFromOpportunity(contactId, opportunityId, "USER_DEFINED", 36)
     return jsonWithCors({ success: true }, req)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
