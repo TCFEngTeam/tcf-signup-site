@@ -171,7 +171,6 @@ export async function POST(req: Request) {
     if (action === "submit") {
       await disassociateContactFromOpportunity(contactId, opportunityId, "USER_DEFINED", 43);
       await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", 41);
-      await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", 19);
     } else {
       await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", 43);
     }
