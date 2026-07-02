@@ -5,6 +5,7 @@ const {
   loadProgramEventById,
   getContactByEmail,
   isContactRegisteredForTraining,
+  isContactRegisteredForAnotherTraining,
   isContactOnWaitlistForTraining,
   createOrUpdateContact,
   getOrCreateCompanyByWebsite,
@@ -17,6 +18,7 @@ const {
   loadProgramEventById: vi.fn(),
   getContactByEmail: vi.fn(),
   isContactRegisteredForTraining: vi.fn(),
+  isContactRegisteredForAnotherTraining: vi.fn(),
   isContactOnWaitlistForTraining: vi.fn(),
   createOrUpdateContact: vi.fn(),
   getOrCreateCompanyByWebsite: vi.fn(),
@@ -49,6 +51,7 @@ vi.mock('@/lib/hubspot/api', async () => {
     ...actual,
     getContactByEmail,
     isContactRegisteredForTraining,
+    isContactRegisteredForAnotherTraining,
     isContactOnWaitlistForTraining,
     createOrUpdateContact,
     getOrCreateCompanyByWebsite,
@@ -87,6 +90,7 @@ describe('POST /api/signup', () => {
     })
     getContactByEmail.mockResolvedValue(null)
     isContactRegisteredForTraining.mockResolvedValue(false)
+    isContactRegisteredForAnotherTraining.mockResolvedValue(false)
     isContactOnWaitlistForTraining.mockResolvedValue(false)
     createOrUpdateContact.mockResolvedValue({ id: 'contact-1' })
     getOrCreateCompanyByWebsite.mockResolvedValue({ id: 'company-1' })
@@ -189,6 +193,18 @@ describe('POST /api/signup', () => {
     expect(await res.json()).toMatchObject({
       error: signupFormContent.messages.trainingUnavailable,
     })
+  })
+
+  it('returns 409 when the contact is already registered for another training', async () => {
+    getContactByEmail.mockResolvedValue({ id: 'contact-1' })
+    isContactRegisteredForAnotherTraining.mockResolvedValue(true)
+
+    const res = await postSignup(signupRequestBody())
+    expect(res.status).toBe(409)
+    expect(await res.json()).toMatchObject({
+      error: signupFormContent.messages.alreadyRegisteredAnotherTraining,
+    })
+    expect(createOrUpdateContact).not.toHaveBeenCalled()
   })
 
   it('returns 409 when the contact is already registered', async () => {

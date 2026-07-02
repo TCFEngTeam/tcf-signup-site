@@ -129,6 +129,28 @@ export function hasActiveRegistrantAssociation(
   )
 }
 
+export function findTrainingIdsWithActiveRegistrantAssociation(
+  rows: TrainingAssociationRow[],
+  registrantLabel: string,
+  registrantTypeId?: string,
+  cancelledLabel?: string,
+  cancelledTypeId?: string
+): string[] {
+  const trainingIds = [...new Set(rows.map((row) => row.trainingId))]
+
+  return trainingIds.filter(
+    (trainingId) =>
+      findRegistrantAssociationsForTraining(
+        rows,
+        trainingId,
+        registrantLabel,
+        registrantTypeId,
+        cancelledLabel,
+        cancelledTypeId
+      ).length > 0
+  )
+}
+
 export function findNonRegistrantAssociationsForTraining(
   rows: TrainingAssociationRow[],
   trainingId: string,

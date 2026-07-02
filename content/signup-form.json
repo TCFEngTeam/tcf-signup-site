@@ -18,6 +18,7 @@
     "trainingUnavailable": "This session is not accepting signups.",
     "registrationClosed": "Registration is closed for this session",
     "alreadyRegistered": "You are already registered for this event. Check your email for confirmation details.",
+    "alreadyRegisteredAnotherTraining": "You are already registered for another training session. Cancel that registration before signing up for a different session.",
     "alreadyOnWaitlist": "You are already on the waitlist for this event.",
     "signupUnavailable": "Unable to complete signup. Please try again or contact support."
   },

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import {
   getContactByEmail,
   isContactOnWaitlistForTraining,
+  isContactRegisteredForAnotherTraining,
   isContactRegisteredForTraining,
 } from '@/lib/hubspot/api'
 import { isTrainingProgramId } from '@/lib/programs/config'
@@ -27,15 +28,20 @@ export async function POST(req: Request) {
 
     const contact = await getContactByEmail(email.trim())
     if (!contact?.id) {
-      return NextResponse.json({ registered: false, waitlisted: false })
+      return NextResponse.json({
+        registered: false,
+        waitlisted: false,
+        registeredForAnotherTraining: false,
+      })
     }
 
-    const [registered, waitlisted] = await Promise.all([
+    const [registered, waitlisted, registeredForAnotherTraining] = await Promise.all([
       isContactRegisteredForTraining(contact.id, eventId),
       isContactOnWaitlistForTraining(contact.id, eventId),
+      isContactRegisteredForAnotherTraining(contact.id, eventId),
     ])
 
-    return NextResponse.json({ registered, waitlisted })
+    return NextResponse.json({ registered, waitlisted, registeredForAnotherTraining })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     return NextResponse.json({ error: message }, { status: 500 })

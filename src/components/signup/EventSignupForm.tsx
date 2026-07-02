@@ -73,7 +73,9 @@ export default function EventSignupForm({
   const [smsConsent, setSmsConsent] = useState<string>(prefillData?.smsConsent ?? '')
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
-  const [signupBlocked, setSignupBlocked] = useState<'none' | 'registered' | 'waitlisted'>('none')
+  const [signupBlocked, setSignupBlocked] = useState<
+    'none' | 'registered' | 'registeredElsewhere' | 'waitlisted'
+  >('none')
   const [checkingStatus, setCheckingStatus] = useState(false)
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({})
   const [submitAttempted, setSubmitAttempted] = useState(false)
@@ -131,17 +133,26 @@ export default function EventSignupForm({
         return
       }
 
-      const payload = (await res.json()) as { registered?: boolean; waitlisted?: boolean }
+      const payload = (await res.json()) as {
+        registered?: boolean
+        waitlisted?: boolean
+        registeredForAnotherTraining?: boolean
+      }
       if (payload.waitlisted) {
         setSignupBlocked('waitlisted')
         setMessage(formMessages.alreadyOnWaitlist)
       } else if (payload.registered) {
         setSignupBlocked('registered')
         setMessage(formMessages.alreadyRegistered)
+      } else if (!waitlist && payload.registeredForAnotherTraining) {
+        setSignupBlocked('registeredElsewhere')
+        setMessage(formMessages.alreadyRegisteredAnotherTraining)
       } else {
         setSignupBlocked('none')
         setMessage((current) =>
-          current === formMessages.alreadyOnWaitlist || current === formMessages.alreadyRegistered
+          current === formMessages.alreadyOnWaitlist ||
+          current === formMessages.alreadyRegistered ||
+          current === formMessages.alreadyRegisteredAnotherTraining
             ? null
             : current
         )
@@ -223,8 +234,12 @@ export default function EventSignupForm({
       setMessage(formMessages.alreadyOnWaitlist)
       return
     }
-    if (signupBlocked === 'registered') {
-      setMessage(formMessages.alreadyRegistered)
+    if (signupBlocked === 'registered' || signupBlocked === 'registeredElsewhere') {
+      setMessage(
+        signupBlocked === 'registeredElsewhere'
+          ? formMessages.alreadyRegisteredAnotherTraining
+          : formMessages.alreadyRegistered
+      )
       return
     }
 

@@ -4,6 +4,7 @@
  */
 
 import pagesJson from '../../../content/pages.json'
+import { signupFormContent } from '@/lib/content'
 import type { PagesContent } from '@/lib/content/types'
 import type { TrainingSchedule } from '@/lib/dates/format-schedule'
 import { getTrainingCutoffPropertyKey, getTrainingSchedulePropertyKeys } from '@/lib/hubspot/config'
@@ -26,6 +27,7 @@ import {
   contactHasAssociationForTraining,
   findNonRegistrantAssociationsForTraining,
   findRegistrantAssociationsForTraining,
+  findTrainingIdsWithActiveRegistrantAssociation,
   findUnwaitlistedAssociationsForTraining,
   findWaitlistAssociationsForTraining,
   hasActiveRegistrantAssociation,
@@ -169,6 +171,36 @@ export async function isContactRegisteredForTraining(
     getRegistrantAssociationLabel(),
     getRegistrantAssociationTypeId()
   )
+}
+
+/** True when the contact has an active registrant association on a different training. */
+export async function isContactRegisteredForAnotherTraining(
+  contactId: string,
+  trainingId: string
+): Promise<boolean> {
+  const associations = await getContactTrainingAssociations(contactId)
+  const activeRegistrantTrainingIds = findTrainingIdsWithActiveRegistrantAssociation(
+    associations,
+    getRegistrantAssociationLabel(),
+    getRegistrantAssociationTypeId(),
+    getCancelledAssociationLabel(),
+    getCancelledAssociationTypeId()
+  )
+
+  return activeRegistrantTrainingIds.some((id) => id !== String(trainingId))
+}
+
+function contactHasRegistrantAssociationElsewhere(
+  associations: TrainingAssociationRow[],
+  trainingId: string
+): boolean {
+  return findTrainingIdsWithActiveRegistrantAssociation(
+    associations,
+    getRegistrantAssociationLabel(),
+    getRegistrantAssociationTypeId(),
+    getCancelledAssociationLabel(),
+    getCancelledAssociationTypeId()
+  ).some((id) => id !== String(trainingId))
 }
 
 /** Returns true if the contact has a waitlist association to this training. */
@@ -740,6 +772,10 @@ export async function associateContactToTraining(
   }
 
   const associations = await getContactTrainingAssociations(contactId)
+
+  if (role === 'registrant' && contactHasRegistrantAssociationElsewhere(associations, trainingId)) {
+    throw new AlreadyRegisteredError(signupFormContent.messages.alreadyRegisteredAnotherTraining)
+  }
 
   if (role === 'registrant') {
     const replaceableRows = findNonRegistrantAssociationsForTraining(

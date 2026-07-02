@@ -7,6 +7,7 @@ import {
   getContactByEmail,
   getOrCreateCompanyByWebsite,
   isContactOnWaitlistForTraining,
+  isContactRegisteredForAnotherTraining,
   isContactRegisteredForTraining,
   type ContactData,
 } from '@/lib/hubspot/api'
@@ -90,6 +91,9 @@ export async function POST(req: Request) {
       if (await isContactRegisteredForTraining(existingContact.id, eventId)) {
         return NextResponse.json({ error: messages.alreadyRegistered }, { status: 409 })
       }
+      if (!waitlisted && (await isContactRegisteredForAnotherTraining(existingContact.id, eventId))) {
+        return NextResponse.json({ error: messages.alreadyRegisteredAnotherTraining }, { status: 409 })
+      }
       if (await isContactOnWaitlistForTraining(existingContact.id, eventId)) {
         return NextResponse.json({ error: messages.alreadyOnWaitlist }, { status: 409 })
       }
@@ -119,6 +123,9 @@ export async function POST(req: Request) {
 
       if (await isContactRegisteredForTraining(hubspotContactId, eventId)) {
         return NextResponse.json({ error: messages.alreadyRegistered }, { status: 409 })
+      }
+      if (!waitlisted && (await isContactRegisteredForAnotherTraining(hubspotContactId, eventId))) {
+        return NextResponse.json({ error: messages.alreadyRegisteredAnotherTraining }, { status: 409 })
       }
       if (waitlisted && (await isContactOnWaitlistForTraining(hubspotContactId, eventId))) {
         return NextResponse.json({ error: messages.alreadyOnWaitlist }, { status: 409 })
