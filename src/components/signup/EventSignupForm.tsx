@@ -292,11 +292,17 @@ export default function EventSignupForm({
             const allEvents: {
               id: string
               isFull?: boolean
+              waitlistFull?: boolean
               registrationClosed?: boolean
             }[] = await eventRes.json()
             const currentEvent = allEvents.find((entry) => entry.id === eventId)
             if (currentEvent?.registrationClosed) {
               setMessage(formMessages.eventRegistrationClosed)
+              setSubmitting(false)
+              return
+            }
+            if (waitlist && currentEvent?.waitlistFull) {
+              setMessage(formMessages.eventWaitlistFull)
               setSubmitting(false)
               return
             }

@@ -55,6 +55,7 @@ export type SignupFormContent = {
     invalidPhone: string
     missingRequiredFields: string
     eventFull: string
+    eventWaitlistFull: string
     eventRegistrationClosed: string
     signupSuccess: string
     waitlistSuccess: string
@@ -62,6 +63,7 @@ export type SignupFormContent = {
     networkError: string
     trainingNotFound: string
     trainingFull: string
+    waitlistFull: string
     registrationClosed: string
     alreadyRegistered: string
     signupUnavailable: string
@@ -126,6 +128,7 @@ export type PagesContent = {
   }
   eventCard: {
     badgeFull: string
+    badgeWaitlistFull: string
     badgeRegistrationClosed: string
     badgeWaitlist: string
     badgeOpen: string
@@ -137,8 +140,11 @@ export type PagesContent = {
   capacity: {
     full: string
     registrationClosed: string
+    waitlistFull: string
     oneSeatRemaining: string
     seatsRemaining: string
+    oneWaitlistSpotRemaining: string
+    waitlistSpotsRemaining: string
   }
   schedule: {
     dateToBeAnnounced: string
@@ -152,6 +158,7 @@ export type PagesContent = {
     backToEvents: string
     inactive: string
     full: string
+    waitlistFull: string
     waitlistNotice: string
     waitlistHeading: string
     registrationClosed: string

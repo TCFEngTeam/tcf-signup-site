@@ -1,6 +1,6 @@
 import React from 'react'
 import { pagesContent } from '@/lib/content'
-import type { ProgramEvent } from '@/lib/programs/events'
+import { canJoinWaitlist, type ProgramEvent } from '@/lib/programs/events'
 import CapacityIndicator from './CapacityIndicator'
 import TrainingScheduleText from './TrainingScheduleText'
 
@@ -16,26 +16,44 @@ type EventDetailsProps = {
       | 'capacity'
       | 'registered'
       | 'isFull'
+      | 'waitlistFull'
+      | 'availableWaitlistCapacity'
       | 'active'
       | 'registrationClosed'
     >
   >
 }
 
-function canJoinWaitlist(event: EventDetailsProps['event']) {
-  return Boolean(event?.isFull && event?.active !== false && !event?.registrationClosed)
-}
-
 function eventBadgeLabel(event: EventDetailsProps['event']) {
   if (event?.registrationClosed) return card.badgeRegistrationClosed
-  if (canJoinWaitlist(event)) return card.badgeWaitlist
+  if (
+    canJoinWaitlist({
+      active: event?.active !== false,
+      isFull: Boolean(event?.isFull),
+      registrationClosed: Boolean(event?.registrationClosed),
+      waitlistFull: Boolean(event?.waitlistFull),
+    })
+  ) {
+    return card.badgeWaitlist
+  }
+  if (event?.isFull && event?.waitlistFull) return card.badgeWaitlistFull
   if (event?.isFull) return card.badgeFull
   return card.badgeOpen
 }
 
 function eventBadgeClass(event: EventDetailsProps['event']) {
   if (event?.registrationClosed) return 'badge-registration-closed'
-  if (canJoinWaitlist(event)) return 'badge-waitlist'
+  if (
+    canJoinWaitlist({
+      active: event?.active !== false,
+      isFull: Boolean(event?.isFull),
+      registrationClosed: Boolean(event?.registrationClosed),
+      waitlistFull: Boolean(event?.waitlistFull),
+    })
+  ) {
+    return 'badge-waitlist'
+  }
+  if (event?.isFull && event?.waitlistFull) return 'badge-waitlist-full'
   if (event?.isFull) return 'badge-full'
   return 'badge-open'
 }
@@ -50,7 +68,10 @@ export default function EventDetails({ event }: EventDetailsProps) {
       <CapacityIndicator
         capacity={event?.capacity}
         registered={event?.registered}
+        isFull={event?.isFull}
         registrationClosed={event?.registrationClosed}
+        availableWaitlistCapacity={event?.availableWaitlistCapacity}
+        waitlistFull={event?.waitlistFull}
       />
       <div className="extras">{/* host info, map, image, etc. */}</div>
     </section>

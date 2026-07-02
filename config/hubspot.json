@@ -11,6 +11,7 @@
       "hs_course_name",
       "hs_enrollment_capacity",
       "available_capacity",
+      "available_waitlist_capacity",
       "cutoff_time",
       "name",
       "location",

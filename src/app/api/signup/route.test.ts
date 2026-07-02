@@ -120,7 +120,14 @@ describe('POST /api/signup', () => {
 
   it('waitlists when the event is full and active', async () => {
     loadProgramEventById.mockResolvedValue({
-      event: { id: 'event-123', isFull: true, active: true, availableCapacity: 0 },
+      event: {
+        id: 'event-123',
+        isFull: true,
+        active: true,
+        availableCapacity: 0,
+        availableWaitlistCapacity: 2,
+        waitlistFull: false,
+      },
       error: null,
     })
 
@@ -149,6 +156,26 @@ describe('POST /api/signup', () => {
         event: expect.objectContaining({ id: 'event-123' }),
       })
     )
+  })
+
+  it('returns 409 when the waitlist is full', async () => {
+    loadProgramEventById.mockResolvedValue({
+      event: {
+        id: 'event-123',
+        isFull: true,
+        active: true,
+        availableCapacity: 0,
+        availableWaitlistCapacity: 0,
+        waitlistFull: true,
+      },
+      error: null,
+    })
+
+    const res = await postSignup(signupRequestBody())
+    expect(res.status).toBe(409)
+    expect(await res.json()).toMatchObject({
+      error: signupFormContent.messages.waitlistFull,
+    })
   })
 
   it('returns 409 when the event is inactive', async () => {

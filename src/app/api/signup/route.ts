@@ -79,6 +79,9 @@ export async function POST(req: Request) {
       if (!ev.active) {
         return NextResponse.json({ error: messages.trainingUnavailable }, { status: 409 })
       }
+      if (ev.isFull && ev.waitlistFull) {
+        return NextResponse.json({ error: messages.waitlistFull }, { status: 409 })
+      }
       return NextResponse.json({ error: messages.trainingFull }, { status: 409 })
     }
 

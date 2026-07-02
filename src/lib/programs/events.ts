@@ -17,8 +17,10 @@ export type ProgramEvent = {
   capacity: number
   registered: number
   availableCapacity: number
+  availableWaitlistCapacity: number
   active: boolean
   isFull: boolean
+  waitlistFull: boolean
   /** Pipeline closed stage and/or past registration cutoff (HubSpot `cutoff_time` or program default hours before start) */
   registrationClosed: boolean
   description?: string
@@ -50,8 +52,14 @@ export function canAcceptRegistration(event: ProgramEvent): boolean {
   return event.active && !event.isFull && !event.registrationClosed
 }
 
+export function canJoinWaitlist(
+  event: Pick<ProgramEvent, 'active' | 'isFull' | 'registrationClosed' | 'waitlistFull'>
+): boolean {
+  return event.active && event.isFull && !event.registrationClosed && !event.waitlistFull
+}
+
 export function canAcceptWaitlist(event: ProgramEvent): boolean {
-  return event.active && event.isFull
+  return canJoinWaitlist(event)
 }
 
 export type ProgramEventsResult = {
@@ -94,8 +102,10 @@ export function toProgramEvent(
     capacity: event.capacity,
     registered: event.registered,
     availableCapacity: event.availableCapacity,
+    availableWaitlistCapacity: event.availableWaitlistCapacity,
     active: event.active,
     isFull: event.availableCapacity <= 0,
+    waitlistFull: event.waitlistFull,
     registrationClosed,
     description: event.description,
   }

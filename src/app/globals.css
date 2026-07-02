@@ -165,6 +165,12 @@ h1, h2, h3 {
   color: var(--primary-blue);
 }
 
+.event-card .event-badge.badge-waitlist-full,
+.event-details .event-badge.badge-waitlist-full {
+  background: rgba(44, 96, 164, 0.14);
+  color: var(--primary-blue);
+}
+
 .btn-primary {
   border: none;
   background: linear-gradient(135deg, var(--primary-blue), var(--medium-blue));
@@ -445,6 +451,10 @@ h1, h2, h3 {
 }
 .capacity-indicator.full {
   color: var(--error-red);
+}
+.capacity-indicator.waitlist-full {
+  color: var(--primary-blue);
+  font-weight: 700;
 }
 
 /* Responsive tweaks */

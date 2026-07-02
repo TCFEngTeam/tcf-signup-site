@@ -307,16 +307,38 @@ describe('toProgramEvent cutoff_time', () => {
 })
 
 describe('waitlist eligibility', () => {
-  it('allows waitlist when full and active', () => {
+  it('allows waitlist when full, active, and waitlist has capacity', () => {
     const event = toProgramEvent(
       mapTrainingToEvent({
         id: '1',
-        properties: { available_capacity: '0', capacity: '10' },
+        properties: {
+          available_capacity: '0',
+          capacity: '10',
+          available_waitlist_capacity: '3',
+        },
       })
     )
 
     expect(canAcceptWaitlist(event)).toBe(true)
+    expect(event.waitlistFull).toBe(false)
+    expect(event.availableWaitlistCapacity).toBe(3)
     expect(canAcceptRegistration(event)).toBe(false)
+  })
+
+  it('blocks waitlist when available_waitlist_capacity is zero', () => {
+    const event = toProgramEvent(
+      mapTrainingToEvent({
+        id: '1',
+        properties: {
+          available_capacity: '0',
+          capacity: '10',
+          available_waitlist_capacity: '0',
+        },
+      })
+    )
+
+    expect(canAcceptWaitlist(event)).toBe(false)
+    expect(event.waitlistFull).toBe(true)
   })
 
   it('blocks waitlist when inactive', () => {
@@ -340,13 +362,14 @@ describe('waitlist eligibility', () => {
         properties: {
           available_capacity: '0',
           capacity: '10',
+          available_waitlist_capacity: '5',
           hs_pipeline_stage: 'closed-stage-id',
         },
       }),
       'closed-stage-id'
     )
 
-    expect(canAcceptWaitlist(event)).toBe(true)
+    expect(canAcceptWaitlist(event)).toBe(false)
     expect(event.registrationClosed).toBe(true)
   })
 })

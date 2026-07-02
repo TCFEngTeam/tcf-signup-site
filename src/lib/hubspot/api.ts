@@ -113,6 +113,8 @@ export interface TrainingEvent {
   capacity: number
   registered: number
   availableCapacity: number
+  availableWaitlistCapacity: number
+  waitlistFull: boolean
   active: boolean
   description?: string
   hubspotPipelineStage?: string
@@ -968,6 +970,8 @@ export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
     10
   )
   const availableCapacity = parseInt(props.available_capacity || '0', 10)
+  const availableWaitlistCapacity = parseInt(props.available_waitlist_capacity || '0', 10)
+  const waitlistFull = availableWaitlistCapacity <= 0
   const scheduleKeys = getTrainingSchedulePropertyKeys()
   const cutoffKey = getTrainingCutoffPropertyKey()
   const schedule: TrainingSchedule = {
@@ -987,6 +991,8 @@ export function mapTrainingToEvent(training: HubSpotTraining): TrainingEvent {
     capacity,
     registered: Math.max(0, capacity - availableCapacity),
     availableCapacity,
+    availableWaitlistCapacity,
+    waitlistFull,
     active: true,
     description: props.description,
     hubspotPipelineStage: props.hs_pipeline_stage,

@@ -58,6 +58,11 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
 
   const waitlistMode = canAcceptWaitlist(event)
   const signupOpen = canAcceptRegistration(event) || waitlistMode
+  const signupClosedMessage = event.registrationClosed
+    ? detail.registrationClosed
+    : event.isFull && event.waitlistFull
+      ? detail.waitlistFull
+      : detail.full
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 text-slate-900">
@@ -98,7 +103,7 @@ export default async function ProgramEventPage({ params }: ProgramEventPageProps
             </section>
           ) : (
             <p className="text-sm text-zinc-600">
-              {detail.registrationClosed}{' '}
+              {signupClosedMessage}{' '}
               <Link className="underline" href={trainingsProgramPath(program.slug)}>
                 {formatContent(detail.browseOtherEvents, { program: programLabel })}
               </Link>

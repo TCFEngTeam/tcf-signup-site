@@ -6,6 +6,7 @@ import { trainingsEventPath } from '@/lib/routes'
 import type { TrainingSchedule } from '@/lib/dates/format-schedule'
 import { pagesContent } from '@/lib/content'
 import type { TrainingProgramId } from '@/lib/programs/config'
+import { canJoinWaitlist } from '@/lib/programs/events'
 import CapacityIndicator from './CapacityIndicator'
 import TrainingScheduleText from './TrainingScheduleText'
 
@@ -19,6 +20,8 @@ type EventCardEvent = {
   capacity?: number
   registered?: number
   isFull?: boolean
+  waitlistFull?: boolean
+  availableWaitlistCapacity?: number
   active?: boolean
   registrationClosed?: boolean
 }
@@ -30,28 +33,49 @@ type EventCardProps = {
   openSignupInNewTab?: boolean
 }
 
-function canJoinWaitlist(event: EventCardEvent | undefined) {
-  return Boolean(event?.isFull && event?.active !== false && !event?.registrationClosed)
-}
-
 function eventBadgeLabel(event: EventCardEvent | undefined) {
   if (event?.registrationClosed) return card.badgeRegistrationClosed
-  if (canJoinWaitlist(event)) return card.badgeWaitlist
+  if (canJoinWaitlist({
+    active: event?.active !== false,
+    isFull: Boolean(event?.isFull),
+    registrationClosed: Boolean(event?.registrationClosed),
+    waitlistFull: Boolean(event?.waitlistFull),
+  })) {
+    return card.badgeWaitlist
+  }
+  if (event?.isFull && event?.waitlistFull) return card.badgeWaitlistFull
   if (event?.isFull) return card.badgeFull
   return card.badgeOpen
 }
 
 function eventBadgeClass(event: EventCardEvent | undefined) {
   if (event?.registrationClosed) return 'badge-registration-closed'
-  if (canJoinWaitlist(event)) return 'badge-waitlist'
+  if (canJoinWaitlist({
+    active: event?.active !== false,
+    isFull: Boolean(event?.isFull),
+    registrationClosed: Boolean(event?.registrationClosed),
+    waitlistFull: Boolean(event?.waitlistFull),
+  })) {
+    return 'badge-waitlist'
+  }
+  if (event?.isFull && event?.waitlistFull) return 'badge-waitlist-full'
   if (event?.isFull) return 'badge-full'
   return 'badge-open'
 }
 
 export default function EventCard({ event, program, openSignupInNewTab }: EventCardProps) {
-  const waitlistOpen = canJoinWaitlist(event)
+  const waitlistOpen = canJoinWaitlist({
+    active: event?.active !== false,
+    isFull: Boolean(event?.isFull),
+    registrationClosed: Boolean(event?.registrationClosed),
+    waitlistFull: Boolean(event?.waitlistFull),
+  })
   const signupBlocked = Boolean(event?.registrationClosed || (event?.isFull && !waitlistOpen))
-  const blockedLabel = event?.registrationClosed ? card.badgeRegistrationClosed : card.badgeFull
+  const blockedLabel = event?.registrationClosed
+    ? card.badgeRegistrationClosed
+    : event?.waitlistFull
+      ? card.badgeWaitlistFull
+      : card.badgeFull
   const signupLinkProps = openSignupInNewTab
     ? { target: '_blank' as const, rel: 'noopener noreferrer' }
     : {}
@@ -66,7 +90,10 @@ export default function EventCard({ event, program, openSignupInNewTab }: EventC
         <CapacityIndicator
           capacity={event?.capacity}
           registered={event?.registered}
+          isFull={event?.isFull}
           registrationClosed={event?.registrationClosed}
+          availableWaitlistCapacity={event?.availableWaitlistCapacity}
+          waitlistFull={event?.waitlistFull}
         />
 
         {waitlistOpen ? (
