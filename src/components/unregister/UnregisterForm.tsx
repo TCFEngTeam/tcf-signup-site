@@ -153,10 +153,10 @@ export default function UnregisterForm({
   return (
     <form
       onSubmit={isSelectingSession ? handleSendConfirmation : handleCheckRegistrations}
-      className="space-y-5"
+      className="event-signup-form space-y-5"
     >
       <div>
-        <label htmlFor="unregister-program" className="block text-sm font-medium">
+        <label htmlFor="unregister-program" className="field-label">
           {request.programLabel}
         </label>
         <select
@@ -195,7 +195,7 @@ export default function UnregisterForm({
 
           {!isSent ? (
             <div>
-              <label htmlFor="unregister-session" className="block text-sm font-medium">
+              <label htmlFor="unregister-session" className="field-label">
                 {request.sessionLabel}
               </label>
               <select
@@ -232,7 +232,7 @@ export default function UnregisterForm({
         </>
       ) : (
         <div>
-          <label htmlFor="unregister-email" className="block text-sm font-medium">
+          <label htmlFor="unregister-email" className="field-label">
             {request.emailLabel}
           </label>
           <input
