@@ -149,6 +149,9 @@ export default function UnregisterForm({
 
   const isSelectingSession = phase === 'select_session'
   const isSent = phase === 'sent'
+  const programSelectLocked =
+    Boolean(initialProgram) || isSelectingSession || isSent || programOptions.length <= 1
+  const sessionSelectLocked = sessionOptions.length <= 1
 
   return (
     <form
@@ -166,8 +169,8 @@ export default function UnregisterForm({
             setProgram(e.target.value as TrainingProgramId)
             resetToEmailStep()
           }}
-          className="mt-1 w-full"
-          disabled={Boolean(initialProgram) || isSelectingSession || isSent}
+          className={`mt-1 w-full${programSelectLocked ? ' form-select-no-arrow' : ''}`}
+          disabled={programSelectLocked}
         >
           {programOptions.map((entry) => (
             <option key={entry.id} value={entry.id}>
@@ -218,10 +221,13 @@ export default function UnregisterForm({
                       : request.selectSession
                   )
                 }}
-                className="mt-1 w-full"
+                className={`mt-1 w-full${sessionSelectLocked ? ' form-select-no-arrow' : ''}`}
+                disabled={sessionSelectLocked}
                 required
               >
-                <option value="">{request.sessionPlaceholder}</option>
+                {sessionOptions.length > 1 ? (
+                  <option value="">{request.sessionPlaceholder}</option>
+                ) : null}
                 {sessionOptions.map((option) => (
                   <option key={`${option.trainingId}-${option.kind}`} value={option.trainingId}>
                     {option.title}

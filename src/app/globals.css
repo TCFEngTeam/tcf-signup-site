@@ -273,6 +273,21 @@ h1, h2, h3 {
   box-shadow: 0 0 0 4px rgba(66, 156, 209, 0.12);
 }
 
+.event-signup-form select.form-select-no-arrow {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: none;
+  padding-right: 14px;
+  cursor: default;
+}
+
+.event-signup-form select.form-select-no-arrow:disabled {
+  opacity: 1;
+  background: var(--background);
+  color: rgba(22, 28, 33, 0.65);
+}
+
 .event-signup-form button { cursor: pointer }
 
 .event-signup-form .phone-field-row {
