@@ -12,6 +12,7 @@ import {
   type ContactData,
 } from '@/lib/hubspot/api'
 import { signupFormContent } from '@/lib/content'
+import { alreadyRegisteredAnotherTrainingMessage } from '@/lib/signup/messages'
 import { formatSignupFormData, isSignupFormatError } from '@/lib/signup/format-fields'
 import { canAcceptRegistration, canAcceptWaitlist, loadProgramEventById } from '@/lib/programs/events'
 import { isTrainingProgramId } from '@/lib/programs/config'
@@ -22,6 +23,10 @@ import {
 } from '@/lib/signup/email'
 
 export const dynamic = 'force-dynamic'
+
+const alreadyRegisteredAnotherTrainingError = alreadyRegisteredAnotherTrainingMessage(
+  signupFormContent.messages
+)
 
 export async function POST(req: Request) {
   const messages = signupFormContent.messages
@@ -92,7 +97,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: messages.alreadyRegistered }, { status: 409 })
       }
       if (!waitlisted && (await isContactRegisteredForAnotherTraining(existingContact.id, eventId))) {
-        return NextResponse.json({ error: messages.alreadyRegisteredAnotherTraining }, { status: 409 })
+        return NextResponse.json({ error: alreadyRegisteredAnotherTrainingError }, { status: 409 })
       }
       if (await isContactOnWaitlistForTraining(existingContact.id, eventId)) {
         return NextResponse.json({ error: messages.alreadyOnWaitlist }, { status: 409 })
@@ -125,7 +130,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: messages.alreadyRegistered }, { status: 409 })
       }
       if (!waitlisted && (await isContactRegisteredForAnotherTraining(hubspotContactId, eventId))) {
-        return NextResponse.json({ error: messages.alreadyRegisteredAnotherTraining }, { status: 409 })
+        return NextResponse.json({ error: alreadyRegisteredAnotherTrainingError }, { status: 409 })
       }
       if (waitlisted && (await isContactOnWaitlistForTraining(hubspotContactId, eventId))) {
         return NextResponse.json({ error: messages.alreadyOnWaitlist }, { status: 409 })

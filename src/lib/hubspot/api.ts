@@ -5,6 +5,7 @@
 
 import pagesJson from '../../../content/pages.json'
 import { signupFormContent } from '@/lib/content'
+import { alreadyRegisteredAnotherTrainingMessage } from '@/lib/signup/messages'
 import type { PagesContent } from '@/lib/content/types'
 import type { TrainingSchedule } from '@/lib/dates/format-schedule'
 import { getTrainingCutoffPropertyKey, getTrainingSchedulePropertyKeys } from '@/lib/hubspot/config'
@@ -774,7 +775,9 @@ export async function associateContactToTraining(
   const associations = await getContactTrainingAssociations(contactId)
 
   if (role === 'registrant' && contactHasRegistrantAssociationElsewhere(associations, trainingId)) {
-    throw new AlreadyRegisteredError(signupFormContent.messages.alreadyRegisteredAnotherTraining)
+    throw new AlreadyRegisteredError(
+      alreadyRegisteredAnotherTrainingMessage(signupFormContent.messages)
+    )
   }
 
   if (role === 'registrant') {

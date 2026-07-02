@@ -66,7 +66,9 @@ export type SignupFormContent = {
     waitlistFull: string
     registrationClosed: string
     alreadyRegistered: string
-    alreadyRegisteredAnotherTraining: string
+    alreadyRegisteredAnotherTrainingIntro: string
+    alreadyRegisteredAnotherTrainingLinkLabel: string
+    alreadyRegisteredAnotherTrainingOutro: string
     signupUnavailable: string
     trainingUnavailable: string
     alreadyOnWaitlist: string

@@ -61,6 +61,7 @@ vi.mock('@/lib/hubspot/api', async () => {
 })
 
 import { signupFormContent } from '@/lib/content'
+import { alreadyRegisteredAnotherTrainingMessage } from '@/lib/signup/messages'
 import { POST } from './route'
 
 function postSignup(body: unknown) {
@@ -202,7 +203,7 @@ describe('POST /api/signup', () => {
     const res = await postSignup(signupRequestBody())
     expect(res.status).toBe(409)
     expect(await res.json()).toMatchObject({
-      error: signupFormContent.messages.alreadyRegisteredAnotherTraining,
+      error: alreadyRegisteredAnotherTrainingMessage(signupFormContent.messages),
     })
     expect(createOrUpdateContact).not.toHaveBeenCalled()
   })

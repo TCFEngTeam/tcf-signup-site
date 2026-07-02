@@ -1,8 +1,9 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { trainingsEventSuccessPath } from '@/lib/routes'
+import { trainingsEventSuccessPath, trainingsUnregisterPath } from '@/lib/routes'
 import {
   composePhoneNumber,
   formatCityName,
@@ -17,6 +18,10 @@ import {
 } from '@/lib/signup/format-fields'
 import { siteContent, signupFormContent, type SignupFormFieldKey } from '@/lib/content'
 import { loadProfile, saveProfile } from '@/lib/signup/profile-store'
+import {
+  alreadyRegisteredAnotherTrainingMessage,
+  isAlreadyRegisteredAnotherTrainingMessage,
+} from '@/lib/signup/messages'
 import PhoneNumberField from './PhoneNumberField'
 import type { TrainingProgramId } from '@/lib/programs/config'
 
@@ -146,13 +151,13 @@ export default function EventSignupForm({
         setMessage(formMessages.alreadyRegistered)
       } else if (!waitlist && payload.registeredForAnotherTraining) {
         setSignupBlocked('registeredElsewhere')
-        setMessage(formMessages.alreadyRegisteredAnotherTraining)
+        setMessage(alreadyRegisteredAnotherTrainingMessage(formMessages))
       } else {
         setSignupBlocked('none')
         setMessage((current) =>
           current === formMessages.alreadyOnWaitlist ||
           current === formMessages.alreadyRegistered ||
-          current === formMessages.alreadyRegisteredAnotherTraining
+          isAlreadyRegisteredAnotherTrainingMessage(current ?? '', formMessages)
             ? null
             : current
         )
@@ -237,7 +242,7 @@ export default function EventSignupForm({
     if (signupBlocked === 'registered' || signupBlocked === 'registeredElsewhere') {
       setMessage(
         signupBlocked === 'registeredElsewhere'
-          ? formMessages.alreadyRegisteredAnotherTraining
+          ? alreadyRegisteredAnotherTrainingMessage(formMessages)
           : formMessages.alreadyRegistered
       )
       return
@@ -355,6 +360,9 @@ export default function EventSignupForm({
 
         if (!res.ok) {
           const errMsg = payload?.error ?? payload?.text ?? formMessages.signupFailed
+          if (isAlreadyRegisteredAnotherTrainingMessage(errMsg, formMessages)) {
+            setSignupBlocked('registeredElsewhere')
+          }
           setMessage(errMsg)
         } else {
           saveProfile(formatted)
@@ -385,6 +393,13 @@ export default function EventSignupForm({
   function fieldHasError(label: string) {
     return shouldShowError(label)
   }
+
+  const unregisterHref = programId
+    ? `${trainingsUnregisterPath()}?program=${programId}`
+    : trainingsUnregisterPath()
+  const showAnotherTrainingError =
+    signupBlocked === 'registeredElsewhere' ||
+    (message !== null && isAlreadyRegisteredAnotherTrainingMessage(message, formMessages))
 
   return (
     <form className="event-signup-form signup-card" onSubmit={handleSubmit} noValidate>
@@ -602,7 +617,17 @@ export default function EventSignupForm({
                 : 'error-chip'
             }`}
           >
-            {message}
+            {showAnotherTrainingError ? (
+              <>
+                {formMessages.alreadyRegisteredAnotherTrainingIntro}{' '}
+                <Link href={unregisterHref} className="underline font-semibold">
+                  {formMessages.alreadyRegisteredAnotherTrainingLinkLabel}
+                </Link>{' '}
+                {formMessages.alreadyRegisteredAnotherTrainingOutro}
+              </>
+            ) : (
+              message
+            )}
           </div>
         )}
       </div>
