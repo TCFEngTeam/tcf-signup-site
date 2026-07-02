@@ -19,8 +19,9 @@
     "registrationClosed": "Registration is closed for this session",
     "alreadyRegistered": "You are already registered for this event. Check your email for confirmation details.",
     "alreadyRegisteredAnotherTrainingIntro": "You are already registered for another training session.",
-    "alreadyRegisteredAnotherTrainingLinkLabel": "Cancel your registration",
-    "alreadyRegisteredAnotherTrainingOutro": "before signing up for a different session.",
+    "alreadyRegisteredAnotherTrainingBeforeLink": "Cancel your registration",
+    "alreadyRegisteredAnotherTrainingLinkLabel": "here",
+    "alreadyRegisteredAnotherTrainingOutro": "or find the link in your email when you signed up previously.",
     "alreadyOnWaitlist": "You are already on the waitlist for this event.",
     "signupUnavailable": "Unable to complete signup. Please try again or contact support."
   },

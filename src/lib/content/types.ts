@@ -67,6 +67,7 @@ export type SignupFormContent = {
     registrationClosed: string
     alreadyRegistered: string
     alreadyRegisteredAnotherTrainingIntro: string
+    alreadyRegisteredAnotherTrainingBeforeLink: string
     alreadyRegisteredAnotherTrainingLinkLabel: string
     alreadyRegisteredAnotherTrainingOutro: string
     signupUnavailable: string

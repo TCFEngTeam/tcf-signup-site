@@ -3,6 +3,7 @@ import type { SignupFormContent } from '@/lib/content/types'
 type AlreadyRegisteredAnotherTrainingCopy = Pick<
   SignupFormContent['messages'],
   | 'alreadyRegisteredAnotherTrainingIntro'
+  | 'alreadyRegisteredAnotherTrainingBeforeLink'
   | 'alreadyRegisteredAnotherTrainingLinkLabel'
   | 'alreadyRegisteredAnotherTrainingOutro'
 >
@@ -10,7 +11,7 @@ type AlreadyRegisteredAnotherTrainingCopy = Pick<
 export function alreadyRegisteredAnotherTrainingMessage(
   messages: AlreadyRegisteredAnotherTrainingCopy
 ): string {
-  return `${messages.alreadyRegisteredAnotherTrainingIntro} ${messages.alreadyRegisteredAnotherTrainingLinkLabel} ${messages.alreadyRegisteredAnotherTrainingOutro}`
+  return `${messages.alreadyRegisteredAnotherTrainingIntro} ${messages.alreadyRegisteredAnotherTrainingBeforeLink} ${messages.alreadyRegisteredAnotherTrainingLinkLabel} ${messages.alreadyRegisteredAnotherTrainingOutro}`
 }
 
 export function isAlreadyRegisteredAnotherTrainingMessage(

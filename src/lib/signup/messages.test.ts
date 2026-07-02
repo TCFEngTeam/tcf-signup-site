@@ -8,7 +8,7 @@ import {
 describe('alreadyRegisteredAnotherTrainingMessage', () => {
   it('builds the plain-text API error message', () => {
     expect(alreadyRegisteredAnotherTrainingMessage(signupFormContent.messages)).toBe(
-      'You are already registered for another training session. Cancel your registration before signing up for a different session.'
+      'You are already registered for another training session. Cancel your registration here or find the link in your email when you signed up previously.'
     )
   })
 

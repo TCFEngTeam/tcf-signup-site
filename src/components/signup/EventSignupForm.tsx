@@ -620,6 +620,7 @@ export default function EventSignupForm({
             {showAnotherTrainingError ? (
               <>
                 {formMessages.alreadyRegisteredAnotherTrainingIntro}{' '}
+                {formMessages.alreadyRegisteredAnotherTrainingBeforeLink}{' '}
                 <Link href={unregisterHref} className="underline font-semibold">
                   {formMessages.alreadyRegisteredAnotherTrainingLinkLabel}
                 </Link>{' '}
