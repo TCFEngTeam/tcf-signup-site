@@ -238,6 +238,23 @@ h1, h2, h3 {
   box-shadow: none;
 }
 
+.event-signup-form .form-field-readonly {
+  box-sizing: border-box;
+  display: block;
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgba(44, 96, 164, 0.16);
+  padding: 12px 14px;
+  border-radius: 14px;
+  width: 100%;
+  background: var(--background);
+  color: rgba(22, 28, 33, 0.65);
+  font: inherit;
+  pointer-events: none;
+  user-select: none;
+  cursor: default;
+}
+
 .event-signup-form select,
 .event-signup-form textarea {
   border: 1px solid rgba(44, 96, 164, 0.16);

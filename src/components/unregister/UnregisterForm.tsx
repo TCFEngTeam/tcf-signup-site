@@ -180,8 +180,13 @@ export default function UnregisterForm({
       {isSelectingSession || isSent ? (
         <>
           <div>
-            <div className="text-sm font-medium">{request.checkedEmailLabel}</div>
-            <p className="mt-1 text-sm text-slate-800">{checkedEmail}</p>
+            <div className="field-label">{request.checkedEmailLabel}</div>
+            <div
+              id="unregister-checked-email"
+              className="mt-1 w-full form-field-readonly border border-solid border-[rgba(44,96,164,0.16)]"
+            >
+              {checkedEmail}
+            </div>
             {!isSent ? (
               <button
                 type="button"
