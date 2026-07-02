@@ -25,6 +25,8 @@ const ALLOWED_PROPERTIES = new Set([
   'college_major',
   'current_year_in_school',
   'why_are_you_interested_in_this_role_',
+  "resume_url",
+  "cover_letter_url"
 ])
 
 const WHY_PROPERTY = 'why_are_you_interested_in_this_role_'
@@ -69,7 +71,7 @@ function normalizeProperties(body: unknown) {
   const properties: Record<string, string> = {}
 
   for (const key of ALLOWED_PROPERTIES) {
-    if (key === WHY_PROPERTY) {
+    if (key === WHY_PROPERTY || key === 'resume_url' || key === 'cover_letter_url') {
       continue
     }
 
@@ -86,7 +88,7 @@ function normalizeProperties(body: unknown) {
   return properties
 }
 
-function buildWhyPropertyValue(opportunityId: string, answer: unknown, oldValue: unknown) {
+function buildJson(opportunityId: string, answer: unknown, oldValue: unknown) {
   const parsedExisting: Record<string, string> = {}
 
   if (typeof oldValue === 'string' && oldValue.trim()) {
@@ -143,10 +145,21 @@ export async function POST(req: Request) {
       : {}
 
     const answer = source[WHY_PROPERTY]
-    const oldInterestReasons = await getContactProperty(contactId, WHY_PROPERTY)
-
     if (answer !== undefined && answer !== null) {
-      properties[WHY_PROPERTY] = buildWhyPropertyValue(opportunityId, answer, oldInterestReasons)
+      const oldInterestReasons = await getContactProperty(contactId, WHY_PROPERTY);
+      properties[WHY_PROPERTY] = buildJson(opportunityId, answer, oldInterestReasons)
+    }
+
+    const resumeUrl = source["resume_url"];
+    if (resumeUrl !== undefined && resumeUrl !== null) {
+      const resumeJson = await getContactProperty(contactId, "resume_json");
+      properties["resume_json"] = buildJson(opportunityId, resumeUrl, resumeJson)
+    }
+
+    const coverLetterUrl = source["cover_letter_url"];
+    if (coverLetterUrl !== undefined && coverLetterUrl !== null) {
+      const coverLetterJson = await getContactProperty(contactId, "cover_letter_json");
+      properties["cover_letter_json"] = buildJson(opportunityId, coverLetterUrl, coverLetterJson)
     }
 
     if (!properties || Object.keys(properties).length === 0) {
