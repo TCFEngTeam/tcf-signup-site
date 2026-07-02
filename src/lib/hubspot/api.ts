@@ -1193,3 +1193,42 @@ export async function getContactProperty(contactId: string,property: string): Pr
 
   return parsed?.properties?.[property] ?? null
 }
+
+/**
+ * Upload a file to HubSpot File Manager and return the resulting URL.
+ */
+export async function uploadFileToHubSpot(
+  formData: FormData
+): Promise<string> {
+  if (!getApiKey()) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  const url = `${HUBSPOT_API_BASE}/files/v3/files`
+  const response = await hubspotFetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${getApiKey()}`,
+    },
+    body: formData,
+  })
+
+  const parsed = await safeParseResponse(response)
+  if (!response.ok) {
+    const msg =
+      (parsed && (parsed.message || parsed.error || parsed.text)) || response.statusText
+    throw new Error(`Failed to upload file to HubSpot: ${msg}`)
+  }
+
+  const uploaded = Array.isArray(parsed?.objects)
+    ? parsed.objects[0]
+    : parsed
+  const fileUrl = uploaded?.url;
+
+  if (!fileUrl || typeof fileUrl !== 'string') {
+    throw new Error('HubSpot file upload succeeded but did not return a file URL')
+  }
+
+  console.debug('Uploaded file to HubSpot:', { fileUrl });
+  return fileUrl
+}
