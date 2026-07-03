@@ -155,10 +155,8 @@ export async function POST(req: Request) {
     }
 
     const coverLetterUrl = source["cover_letter_url"];
-    if (coverLetterUrl !== undefined && coverLetterUrl !== null) {
-      const coverLetterJson = await getContactProperty(contactId, "cover_letter_json");
-      properties["cover_letter_json"] = buildJson(opportunityId, coverLetterUrl as string | null, coverLetterJson)
-    }
+    const coverLetterJson = await getContactProperty(contactId, "cover_letter_json");
+    properties["cover_letter_json"] = buildJson(opportunityId, coverLetterUrl as string | null, coverLetterJson);
 
     if (!properties || Object.keys(properties).length === 0) {
       return jsonWithCors({ error: 'Missing or invalid properties' }, req, { status: 400 })
