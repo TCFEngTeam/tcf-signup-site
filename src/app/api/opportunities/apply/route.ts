@@ -88,7 +88,7 @@ function normalizeProperties(body: unknown) {
   return properties
 }
 
-function buildJson(opportunityId: string, answer: unknown, oldValue: unknown) {
+function buildJson(opportunityId: string, currValue: string | null, oldValue: unknown) {
   const parsedExisting: Record<string, string> = {}
 
   if (typeof oldValue === 'string' && oldValue.trim()) {
@@ -106,9 +106,7 @@ function buildJson(opportunityId: string, answer: unknown, oldValue: unknown) {
     }
   }
 
-  if (typeof answer === 'string' && answer.trim()) {
-    parsedExisting[opportunityId] = answer
-  }
+  parsedExisting[opportunityId] = currValue ?? "";
 
   return JSON.stringify(parsedExisting)
 }
@@ -147,19 +145,19 @@ export async function POST(req: Request) {
     const answer = source[WHY_PROPERTY]
     if (answer !== undefined && answer !== null) {
       const oldInterestReasons = await getContactProperty(contactId, WHY_PROPERTY);
-      properties[WHY_PROPERTY] = buildJson(opportunityId, answer, oldInterestReasons)
+      properties[WHY_PROPERTY] = buildJson(opportunityId, answer as string, oldInterestReasons)
     }
 
     const resumeUrl = source["resume_url"];
     if (resumeUrl !== undefined && resumeUrl !== null) {
       const resumeJson = await getContactProperty(contactId, "resume_json");
-      properties["resume_json"] = buildJson(opportunityId, resumeUrl, resumeJson)
+      properties["resume_json"] = buildJson(opportunityId, resumeUrl as string, resumeJson)
     }
 
     const coverLetterUrl = source["cover_letter_url"];
     if (coverLetterUrl !== undefined && coverLetterUrl !== null) {
       const coverLetterJson = await getContactProperty(contactId, "cover_letter_json");
-      properties["cover_letter_json"] = buildJson(opportunityId, coverLetterUrl, coverLetterJson)
+      properties["cover_letter_json"] = buildJson(opportunityId, coverLetterUrl as string | null, coverLetterJson)
     }
 
     if (!properties || Object.keys(properties).length === 0) {

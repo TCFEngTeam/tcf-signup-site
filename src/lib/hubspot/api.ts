@@ -1164,7 +1164,7 @@ export async function updateCompanyProperties(
  * @param property Property name to fetch
  * @returns Property value or null if not found
  */
-export async function getContactProperty(contactId: string,property: string): Promise<string | null> {
+export async function getContactProperty(contactId: string, property: string): Promise<string | null> {
   if (!getApiKey()) {
     throw new Error('HUBSPOT_API_KEY is not configured')
   }
