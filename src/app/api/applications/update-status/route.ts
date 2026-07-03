@@ -55,7 +55,23 @@ export async function POST(req: Request) {
       return jsonWithCors({ error: 'Missing opportunityId' }, req, { status: 400 })
     }
 
-    await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", status === "accept" ? 5 : 45);
+    const normalizedStatus = typeof status === 'string' ? status.trim().toLowerCase() : ''
+    const hubspotStatusId =
+      normalizedStatus === 'offer' || normalizedStatus === 'accept'
+        ? 5
+        : normalizedStatus === 'pass'
+          ? 45
+          : normalizedStatus === 'withdraw' || normalizedStatus === 'decline'
+            ? 9
+            : null
+
+    if (hubspotStatusId === null) {
+      return jsonWithCors({ error: 'Unsupported status' }, req, { status: 400 })
+    }
+
+    await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", hubspotStatusId);
+    await disassociateContactFromOpportunity(contactId, opportunityId, "USER_DEFINED", 19);
+    await disassociateContactFromOpportunity(contactId, opportunityId, "USER_DEFINED", 23);
     await disassociateContactFromOpportunity(contactId, opportunityId, "USER_DEFINED", 23);
     return jsonWithCors({ success: true }, req)
   } catch (err: unknown) {
