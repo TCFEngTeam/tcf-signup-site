@@ -43,4 +43,38 @@ describe('applications update-status route', () => {
     )
     expect(disassociateContactFromOpportunity).toHaveBeenCalled()
   })
+
+  it('maps in-review to HubSpot status id 23 and removes offer and pass labels', async () => {
+    const req = new Request('http://localhost/api/applications/update-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contactId: 'contact-123',
+        opportunityId: 'opportunity-456',
+        status: 'in-review',
+      }),
+    })
+
+    const response = await POST(req)
+
+    expect(response.status).toBe(200)
+    expect(associateContactToOpportunity).toHaveBeenCalledWith(
+      'contact-123',
+      'opportunity-456',
+      'USER_DEFINED',
+      23
+    )
+    expect(disassociateContactFromOpportunity).toHaveBeenCalledWith(
+      'contact-123',
+      'opportunity-456',
+      'USER_DEFINED',
+      5
+    )
+    expect(disassociateContactFromOpportunity).toHaveBeenCalledWith(
+      'contact-123',
+      'opportunity-456',
+      'USER_DEFINED',
+      45
+    )
+  })
 })
