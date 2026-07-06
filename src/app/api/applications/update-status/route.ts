@@ -57,22 +57,27 @@ export async function POST(req: Request) {
 
     const normalizedStatus = typeof status === 'string' ? status.trim().toLowerCase() : ''
     const hubspotStatusId =
-      normalizedStatus === 'offer' || normalizedStatus === 'accept'
-        ? 5
-        : normalizedStatus === 'pass'
-          ? 45
-          : normalizedStatus === 'withdraw' || normalizedStatus === 'decline'
-            ? 9
-            : null
+      normalizedStatus === 'in-review'
+        ? 23
+        : normalizedStatus === 'offer' || normalizedStatus === 'accept'
+          ? 5
+          : normalizedStatus === 'pass'
+            ? 45
+            : normalizedStatus === 'withdraw' || normalizedStatus === 'decline'
+              ? 9
+              : null
 
     if (hubspotStatusId === null) {
       return jsonWithCors({ error: 'Unsupported status' }, req, { status: 400 })
     }
 
-    await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", hubspotStatusId);
-    await disassociateContactFromOpportunity(contactId, opportunityId, "USER_DEFINED", 19);
-    await disassociateContactFromOpportunity(contactId, opportunityId, "USER_DEFINED", 23);
-    await disassociateContactFromOpportunity(contactId, opportunityId, "USER_DEFINED", 23);
+    await associateContactToOpportunity(contactId, opportunityId, "USER_DEFINED", hubspotStatusId)
+
+    const disassociateStatusIds = normalizedStatus === 'in-review' ? [5, 45] : [19, 23]
+    for (const disassociateStatusId of disassociateStatusIds) {
+      await disassociateContactFromOpportunity(contactId, opportunityId, "USER_DEFINED", disassociateStatusId)
+    }
+
     return jsonWithCors({ success: true }, req)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
