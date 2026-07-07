@@ -1307,6 +1307,7 @@ export async function getApplicantsForOpportunities(
   }
 
   const results = Array.isArray(parsed?.results) ? parsed.results : []
+  console.debug('getApplicantsForOpportunities batch read response:', { results, targetIds: Array.from(targetIds) })
   const applicantsByOpportunity = new Map<string, object[]>()
 
   for (const oppId of opportunityIds) {
@@ -1314,24 +1315,33 @@ export async function getApplicantsForOpportunities(
 
     for (const entry of results) {
       const fromId = (entry as { from?: { id?: string } })?.from?.id
+      console.debug(`Checking entry from ${fromId} against oppId ${oppId}`)
       if (fromId !== oppId) continue
 
-      for (const applicant of ((entry as { to?: Array<Record<string, unknown>> }).to ?? []) as Array<Record<string, unknown>>) {
+      const toArray = ((entry as { to?: Array<Record<string, unknown>> }).to ?? []) as Array<Record<string, unknown>>
+      console.debug(`Found matching opportunity ${oppId}, processing ${toArray.length} associations`)
+      
+      for (const applicant of toArray) {
         const associationTypes = Array.isArray(applicant.associationTypes)
           ? (applicant.associationTypes as Array<Record<string, unknown>>)
           : []
 
         const matchingAssociation = associationTypes.find(type => {
           const typeId = type?.typeId
-          return targetIds.has(String(typeId))
+          const isMatch = targetIds.has(String(typeId))
+          console.debug(`  Association typeId: ${typeId}, isMatch: ${isMatch}`)
+          return isMatch
         })
 
         const contactId = typeof applicant.toObjectId === 'string' ? applicant.toObjectId : undefined
+        console.debug(`  Contact: ${contactId}, hasMatchingAssociation: ${!!matchingAssociation}`)
         if (!contactId || !matchingAssociation) continue
 
         matchingContactIds.set(contactId, String(matchingAssociation.typeId))
       }
     }
+
+    console.debug(`Opportunity ${oppId} has ${matchingContactIds.size} matching contacts`)
 
     const contacts = [];
 
@@ -1358,8 +1368,10 @@ export async function getApplicantsForOpportunities(
     applicantsByOpportunity.set(oppId, contacts)
   }
 
-  return opportunityIds.map(oppId => ({
+  const finalResult = opportunityIds.map(oppId => ({
     oppId,
     applicants: applicantsByOpportunity.get(oppId) ?? [],
-  }));
+  }))
+  console.debug('getApplicantsForOpportunities final result:', finalResult)
+  return finalResult
 }
