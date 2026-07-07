@@ -1277,3 +1277,89 @@ export async function uploadFileToHubSpot(
   console.debug('Uploaded file to HubSpot:', { fileUrl });
   return fileUrl
 }
+
+export async function getApplicantsForOpportunities(
+  opportunityIds: string[],
+  associationTypeIds: number[] = [22, 24, 46, 6, 8]
+): Promise<object[]> {
+  if (!getApiKey()) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  const targetIds = new Set(associationTypeIds.map((value) => String(value)))
+  const headers = {
+    Authorization: `Bearer ${getApiKey()}`,
+    'Content-Type': 'application/json',
+  }
+
+  const response = await hubspotFetch(`${HUBSPOT_API_BASE}/crm/v4/associations/0-420/contacts/batch/read`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      inputs: opportunityIds.map(id => ({ id })),
+    }),
+  })
+
+  const parsed = await safeParseResponse(response)
+  if (!response.ok) {
+    const msg = (parsed && (parsed.message || parsed.error || parsed.text)) || response.statusText
+    throw new Error(`Failed to list opportunity associations: ${msg}`)
+  }
+
+  const results = Array.isArray(parsed?.results) ? parsed.results : []
+  const applicantsByOpportunity = new Map<string, object[]>()
+
+  for (const oppId of opportunityIds) {
+    const matchingContactIds = new Map<string, string | undefined>()
+
+    for (const entry of results) {
+      const fromId = (entry as { from?: { id?: string } })?.from?.id
+      if (fromId !== oppId) continue
+
+      for (const applicant of ((entry as { to?: Array<Record<string, unknown>> }).to ?? []) as Array<Record<string, unknown>>) {
+        const associationTypes = Array.isArray(applicant.associationTypes)
+          ? (applicant.associationTypes as Array<Record<string, unknown>>)
+          : []
+
+        const matchingAssociation = associationTypes.find(type => {
+          const typeId = type?.typeId
+          return targetIds.has(String(typeId))
+        })
+
+        const contactId = typeof applicant.toObjectId === 'string' ? applicant.toObjectId : undefined
+        if (!contactId || !matchingAssociation) continue
+
+        matchingContactIds.set(contactId, String(matchingAssociation.typeId))
+      }
+    }
+
+    const contacts = [];
+
+    for (const [contactId, associationTypeId] of matchingContactIds.entries()) {
+      const contactResponse = await hubspotFetch(
+        `${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${contactId}?properties=firstname,lastname,email`,
+        {
+          method: 'GET',
+          headers,
+        }
+      )
+
+      if (!contactResponse.ok) continue;
+
+      const contactData = await safeParseResponse(contactResponse)
+      if (contactData && typeof contactData === 'object') {
+        contacts.push({
+          ...(contactData as HubSpotContact),
+          associationTypeId
+        })
+      }
+    }
+
+    applicantsByOpportunity.set(oppId, contacts)
+  }
+
+  return opportunityIds.map(oppId => ({
+    oppId,
+    applicants: applicantsByOpportunity.get(oppId) ?? [],
+  }));
+}
