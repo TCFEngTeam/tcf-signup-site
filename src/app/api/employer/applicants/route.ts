@@ -66,8 +66,8 @@ export async function POST(req: Request) {
       return jsonWithCors({ error: 'At least one opportunity ID is required' }, req, { status: 400 })
     }
 
-    const results = await getApplicantsForOpportunities(opportunityIds)
-    return jsonWithCors({ success: true, results }, req)
+    const [results, debug] = await getApplicantsForOpportunities(opportunityIds)
+    return jsonWithCors({ success: true, results, debug }, req)
     
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'

@@ -1306,8 +1306,10 @@ export async function getApplicantsForOpportunities(
     throw new Error(`Failed to list opportunity associations: ${msg}`)
   }
 
-  const results = Array.isArray(parsed?.results) ? parsed.results : []
-  console.debug('getApplicantsForOpportunities batch read response:', { results, targetIds: Array.from(targetIds) })
+  const debug = [];
+
+  const results = Array.isArray(parsed?.results) ? parsed.results : [];
+  debug.push('getApplicantsForOpportunities batch read response:', { results, targetIds: Array.from(targetIds) })
   const applicantsByOpportunity = new Map<string, object[]>()
 
   for (const oppId of opportunityIds) {
@@ -1315,11 +1317,11 @@ export async function getApplicantsForOpportunities(
 
     for (const entry of results) {
       const fromId = (entry as { from?: { id?: string } })?.from?.id
-      console.debug(`Checking entry from ${fromId} against oppId ${oppId}`)
+      debug.push(`Checking entry from ${fromId} against oppId ${oppId}`)
       if (fromId !== oppId) continue
 
       const toArray = ((entry as { to?: Array<Record<string, unknown>> }).to ?? []) as Array<Record<string, unknown>>
-      console.debug(`Found matching opportunity ${oppId}, processing ${toArray.length} associations`)
+      debug.push(`Found matching opportunity ${oppId}, processing ${toArray.length} associations`)
       
       for (const applicant of toArray) {
         const associationTypes = Array.isArray(applicant.associationTypes)
@@ -1329,19 +1331,19 @@ export async function getApplicantsForOpportunities(
         const matchingAssociation = associationTypes.find(type => {
           const typeId = type?.typeId
           const isMatch = targetIds.has(String(typeId))
-          console.debug(`  Association typeId: ${typeId}, isMatch: ${isMatch}`)
+          debug.push(`  Association typeId: ${typeId}, isMatch: ${isMatch}`)
           return isMatch
         })
 
         const contactId = typeof applicant.toObjectId === 'string' ? applicant.toObjectId : undefined
-        console.debug(`  Contact: ${contactId}, hasMatchingAssociation: ${!!matchingAssociation}`)
+        debug.push(`  Contact: ${contactId}, hasMatchingAssociation: ${!!matchingAssociation}`)
         if (!contactId || !matchingAssociation) continue
 
         matchingContactIds.set(contactId, String(matchingAssociation.typeId))
       }
     }
 
-    console.debug(`Opportunity ${oppId} has ${matchingContactIds.size} matching contacts`)
+    debug.push(`Opportunity ${oppId} has ${matchingContactIds.size} matching contacts`)
 
     const contacts = [];
 
@@ -1372,6 +1374,6 @@ export async function getApplicantsForOpportunities(
     oppId,
     applicants: applicantsByOpportunity.get(oppId) ?? [],
   }))
-  console.debug('getApplicantsForOpportunities final result:', finalResult)
-  return finalResult
+  debug.push('getApplicantsForOpportunities final result:', finalResult);
+  return [finalResult, debug];
 }
