@@ -1335,11 +1335,11 @@ export async function getApplicantsForOpportunities(
           return isMatch
         })
 
-        const contactId = typeof applicant.toObjectId === 'string' ? applicant.toObjectId : undefined
+        const contactId = applicant.toObjectId;
         debug.push(`  Contact: ${contactId}, hasMatchingAssociation: ${!!matchingAssociation}`)
         if (!contactId || !matchingAssociation) continue
 
-        matchingContactIds.set(contactId, String(matchingAssociation.typeId))
+        matchingContactIds.set(String(contactId), String(matchingAssociation.typeId))
       }
     }
 
