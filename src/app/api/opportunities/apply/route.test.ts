@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { getContactProperty, updateContactProperties, associateContactToOpportunity } = vi.hoisted(() => ({
+const { getContactProperty, getOpportunityById, updateContactProperties, associateContactToOpportunity } = vi.hoisted(() => ({
   getContactProperty: vi.fn(),
+  getOpportunityById: vi.fn(),
   updateContactProperties: vi.fn(),
   associateContactToOpportunity: vi.fn(),
 }))
@@ -11,6 +12,7 @@ vi.mock('@/lib/hubspot/api', async () => {
   return {
     ...actual,
     getContactProperty,
+    getOpportunityById,
     updateContactProperties,
     associateContactToOpportunity,
   }
@@ -37,6 +39,7 @@ describe('POST /api/opportunities/apply', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     getContactProperty.mockResolvedValue(null)
+    getOpportunityById.mockResolvedValue({ id: 'deal-123', properties: { hs_pipeline_stage: 'open' } })
     updateContactProperties.mockResolvedValue({ id: 'contact-1', properties: {} })
     associateContactToOpportunity.mockResolvedValue(undefined)
   })
@@ -132,5 +135,31 @@ describe('POST /api/opportunities/apply', () => {
       }),
     })
     expect(associateContactToOpportunity).toHaveBeenCalledWith('contact-1', 'deal-123', 'USER_DEFINED', 19)
+  })
+
+  it('returns 409 when the opportunity is not open for applications', async () => {
+    getOpportunityById.mockResolvedValue({
+      id: 'deal-123',
+      properties: { hs_pipeline_stage: 'closedwon' },
+    })
+
+    const res = await postApply({
+      contactId: 'contact-1',
+      opportunityId: 'deal-123',
+      firstname: 'Jane',
+      lastname: 'Doe',
+      phone: '555-1234',
+      email: 'jane@example.com',
+      hometown_city: 'Baltimore',
+      hometown_state: 'MD',
+      college_major: 'Computer Science',
+      current_year_in_school: 'Senior',
+      why_are_you_interested_in_this_role_: 'I want to contribute to the mission.',
+    })
+
+    expect(res.status).toBe(409)
+    expect(await res.json()).toEqual({ error: 'Opportunity not open for applications' })
+    expect(updateContactProperties).not.toHaveBeenCalled()
+    expect(associateContactToOpportunity).not.toHaveBeenCalled()
   })
 })

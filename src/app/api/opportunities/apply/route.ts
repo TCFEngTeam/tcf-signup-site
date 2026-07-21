@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { getContactProperty, 
+import { getContactProperty,
+         isOpportunityOpen,
          updateContactProperties,
          associateContactToOpportunity,
          disassociateContactFromOpportunity } from '@/lib/hubspot/api'
@@ -138,6 +139,14 @@ export async function POST(req: Request) {
       return jsonWithCors({ error: 'Missing opportunityId' }, req, { status: 400 })
     }
 
+    if (!isOpportunityOpen(opportunityId)) {
+      return jsonWithCors(
+        { error: 'Opportunity not open for applications' },
+        req,
+        { status: 409 }
+      )
+    }
+
     const source = body && typeof body === 'object' && !Array.isArray(body)
       ? getSourcePayload(body)
       : {}
@@ -173,7 +182,10 @@ export async function POST(req: Request) {
     return jsonWithCors({ success: true }, req)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
-    const status = message === 'Contact not found' ? 404 : 500
+    const status =
+      message === 'Contact not found' || message === 'Opportunity not found'
+        ? 404
+        : 500
     return jsonWithCors({ error: message }, req, { status })
   }
 }
