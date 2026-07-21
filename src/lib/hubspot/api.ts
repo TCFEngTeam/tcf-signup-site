@@ -1377,3 +1377,32 @@ export async function getApplicantsForOpportunities(
   debug.push('getApplicantsForOpportunities final result:', finalResult);
   return [finalResult, debug];
 }
+
+export async function isOpportunityOpen(opportunityId: string): Promise<boolean> {
+  if (!getApiKey()) {
+    throw new Error('HUBSPOT_API_KEY is not configured')
+  }
+
+  const url = new URL(`${HUBSPOT_API_BASE}/crm/v3/objects/0-420/${opportunityId}`)
+  url.searchParams.set('properties', "hs_pipeline_stage")
+
+  const response = await hubspotFetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${getApiKey()}`,
+      'Content-Type': 'application/json',
+    },
+  })
+
+  const parsed = await safeParseResponse(response)
+  if (!response.ok) {
+    const msg =
+      (parsed && (parsed.message || parsed.error || parsed.text)) || response.statusText
+    throw new Error(`Failed to fetch opportunity property: ${msg}`)
+  }
+
+  const stage = parsed?.properties?.hs_pipeline_stage ?? null
+  if (!stage) return false;
+
+  return stage === "6f14f8f1-407b-4b5b-99a7-db681b779076";
+}
