@@ -263,6 +263,9 @@ export type PagesContent = {
     waitlistHeading: string
     thankYou: string
     waitlistThankYou: string
+    communityImpactBeforeLink: string
+    communityImpactLinkLabel: string
+    communityImpactLinkUrl: string
     nextStepsHeading: string
     waitlistNextStepsHeading: string
     backToEvents: string

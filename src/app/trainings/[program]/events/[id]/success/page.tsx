@@ -91,6 +91,17 @@ export default async function ProgramEventSuccessPage({
               <p className="helper-text max-w-md mx-auto">
                 {isWaitlist ? success.waitlistThankYou : success.thankYou}
               </p>
+              <p className="helper-text max-w-md mx-auto">
+                {success.communityImpactBeforeLink}{' '}
+                <a
+                  href={success.communityImpactLinkUrl}
+                  className="font-semibold text-blue-800 underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {success.communityImpactLinkLabel}
+                </a>
+              </p>
             </div>
 
             <div

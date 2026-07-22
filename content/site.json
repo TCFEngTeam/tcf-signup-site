@@ -23,12 +23,12 @@
     "waitlistSubmitLabel": "Join waitlist",
     "submittingLabel": "Submitting…",
     "smsConsent": {
-      "heading": "SMS Communication Consent",
-      "introBold": "Trusted Care Foundation uses text messaging to send reminders and updates about trainings, events, and opportunities.",
+      "heading": "Communication Consent",
+      "introBold": "Trusted Care Foundation sends reminders and updates about this training.",
       "legalBeforeLink": "Message and data rates may apply. Reply STOP to opt out at any time; reply HELP for help. By selecting Yes below, I agree to the SMS Terms and acknowledge the SMS Privacy Policy:",
       "policyLinkText": "SMS Privacy Policy & SMS Terms",
-      "yesLabel": "I consent to receive SMS marketing text messages.",
-      "noLabel": "I do not consent to receiving marketing text messages."
+      "yesLabel": "I consent to receive messaging from Trusted Care Foundation.",
+      "noLabel": "I do not consent to receive SMS messaging from Trusted Care Foundation."
     }
   },
   "nav": []
