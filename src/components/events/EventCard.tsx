@@ -99,14 +99,14 @@ export default function EventCard({ event, program, openSignupInNewTab }: EventC
         {waitlistOpen ? (
           <Link
             href={trainingsEventPath(program, event?.id ?? '')}
-            className="btn-primary inline-flex justify-center mt-3"
+            className="btn-primary event-cta inline-flex justify-center"
             {...signupLinkProps}
           >
             {card.joinWaitlist}
           </Link>
         ) : signupBlocked ? (
           <span
-            className={`btn-primary btn-primary--inactive inline-flex justify-center mt-3${
+            className={`btn-primary btn-primary--inactive event-cta inline-flex justify-center${
               event?.registrationClosed ? ' btn-primary--registration-closed' : ''
             }`}
             aria-disabled="true"
@@ -116,7 +116,7 @@ export default function EventCard({ event, program, openSignupInNewTab }: EventC
         ) : (
           <Link
             href={trainingsEventPath(program, event?.id ?? '')}
-            className="btn-primary inline-flex justify-center mt-3"
+            className="btn-primary event-cta inline-flex justify-center"
             {...signupLinkProps}
           >
             {card.signUp}
